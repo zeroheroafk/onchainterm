@@ -7,6 +7,7 @@ import { LayoutProvider, useLayout } from "@/components/terminal/layout/layout-c
 import { WidgetGrid } from "@/components/terminal/layout/widget-grid"
 import { WidgetCatalogDrawer } from "@/components/terminal/layout/widget-catalog-drawer"
 import { PresetBar } from "@/components/terminal/layout/preset-bar"
+import { CommandBar } from "@/components/terminal/command-bar"
 import { CRTOverlay } from "@/components/effects/CRTOverlay"
 import type { TerminalWidgetContext } from "@/components/terminal/layout/widget-registry"
 
@@ -55,6 +56,7 @@ function TerminalHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
+        <CommandBar />
         {/* Theme picker */}
         <div className="relative">
           <button
