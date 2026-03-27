@@ -26,6 +26,8 @@ const DefiDashboard = lazy(() => import("@/components/terminal/defi-dashboard").
 const LiquidationsFeed = lazy(() => import("@/components/terminal/liquidations").then(m => ({ default: m.LiquidationsFeed })))
 const Heatmap = lazy(() => import("@/components/terminal/heatmap").then(m => ({ default: m.Heatmap })))
 const ExchangeFlows = lazy(() => import("@/components/terminal/exchange-flows").then(m => ({ default: m.ExchangeFlows })))
+const WatchlistWidget = lazy(() => import("@/components/terminal/watchlist").then(m => ({ default: m.WatchlistWidget })))
+const PnlCalculator = lazy(() => import("@/components/terminal/pnl-calculator").then(m => ({ default: m.PnlCalculator })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 
 function WidgetLoadingFallback() {
@@ -71,11 +73,11 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "portfolio":
       return <PortfolioWidget />
     case "watchlist":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Watchlist coming soon</div>
+      return <WatchlistWidget />
     case "converter":
       return <ConverterWidget />
     case "pnl-calculator":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">P&L Calculator coming soon</div>
+      return <PnlCalculator />
     case "notes":
       return <NotesWidget />
     case "alerts":

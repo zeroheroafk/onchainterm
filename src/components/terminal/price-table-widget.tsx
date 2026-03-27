@@ -20,6 +20,41 @@ function PercentCell({ value }: { value: number | null }) {
   return <span className={color}>{formatPercentage(value)}</span>
 }
 
+function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
+  if (!prices || prices.length < 2) return null
+
+  // Downsample to ~30 points for performance
+  const step = Math.max(1, Math.floor(prices.length / 30))
+  const sampled = prices.filter((_, i) => i % step === 0)
+
+  const min = Math.min(...sampled)
+  const max = Math.max(...sampled)
+  const range = max - min || 1
+  const w = 60
+  const h = 20
+
+  const points = sampled.map((p, i) => {
+    const x = (i / (sampled.length - 1)) * w
+    const y = h - ((p - min) / range) * h
+    return `${x},${y}`
+  }).join(" ")
+
+  const color = change >= 0 ? "#16c784" : "#ea3943"
+
+  return (
+    <svg width={w} height={h} className="shrink-0">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   const { data, isLoading, error } = useCryptoPrices()
   const [sortKey, setSortKey] = useState<SortKey>("rank")
@@ -99,6 +134,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
             <SortHeader label="1H" sortKeyVal="1h" />
             <SortHeader label="24H" sortKeyVal="24h" />
             <SortHeader label="7D" sortKeyVal="7d" className="hidden xl:table-cell" />
+            <th className="py-1.5 px-2 text-right text-[10px] uppercase tracking-wider text-muted-foreground hidden 2xl:table-cell">7D Chart</th>
             <SortHeader label="MCap" sortKeyVal="mcap" className="hidden lg:table-cell" />
             <SortHeader label="Vol 24H" sortKeyVal="vol" className="hidden xl:table-cell" />
           </tr>
@@ -134,6 +170,12 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               </td>
               <td className="py-1.5 px-2 text-right font-mono hidden xl:table-cell">
                 <PercentCell value={coin.price_change_percentage_7d_in_currency} />
+              </td>
+              <td className="py-1.5 px-2 text-right hidden 2xl:table-cell">
+                <MiniSparkline
+                  prices={coin.sparkline_in_7d?.price || []}
+                  change={coin.price_change_percentage_7d_in_currency ?? 0}
+                />
               </td>
               <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden lg:table-cell">
                 {formatLargeNumber(coin.market_cap)}
