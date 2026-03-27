@@ -1,40 +1,39 @@
 import { NextResponse } from "next/server"
 
-const CRYPTOPANIC_URL = "https://cryptopanic.com/api/free/v1/posts/"
+const CRYPTOCOMPARE_URL = "https://min-api.cryptocompare.com/data/v2/news/"
 
-interface CryptoPanicPost {
+interface CCNewsItem {
   title: string
   url: string
-  source: { title: string }
-  published_at: string
-  currencies?: { code: string }[]
-  kind: string
+  source: string
+  published_on: number
+  categories: string
+  body: string
 }
 
 export async function GET() {
   try {
     const res = await fetch(
-      `${CRYPTOPANIC_URL}?auth_token=free&public=true&kind=news`,
-      { next: { revalidate: 30 } } // cache 30 seconds
+      `${CRYPTOCOMPARE_URL}?lang=EN&limit=30`,
+      { next: { revalidate: 30 } }
     )
 
     if (!res.ok) {
-      throw new Error(`CryptoPanic API error: ${res.status}`)
+      throw new Error(`CryptoCompare API error: ${res.status}`)
     }
 
     const data = await res.json()
 
-    if (!data.results || !Array.isArray(data.results)) {
-      throw new Error("Invalid response from CryptoPanic")
+    if (!data.Data || !Array.isArray(data.Data)) {
+      throw new Error("Invalid response from CryptoCompare")
     }
 
-    const news = data.results.map((post: CryptoPanicPost) => ({
-      title: post.title,
-      url: post.url,
-      source: post.source.title,
-      published_at: post.published_at,
-      currencies: post.currencies?.map((c) => c.code) || [],
-      kind: post.kind,
+    const news = data.Data.map((item: CCNewsItem) => ({
+      title: item.title,
+      url: item.url,
+      source: item.source,
+      published_at: new Date(item.published_on * 1000).toISOString(),
+      currencies: extractCurrencies(item.categories),
     }))
 
     return NextResponse.json({ news })
@@ -42,4 +41,13 @@ export async function GET() {
     const message = err instanceof Error ? err.message : "Failed to fetch news"
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+function extractCurrencies(categories: string): string[] {
+  if (!categories) return []
+  const cryptoTags = ["BTC", "ETH", "SOL", "XRP", "BNB", "ADA", "DOGE", "DOT", "AVAX", "MATIC", "LINK", "UNI", "ATOM", "LTC", "NEAR", "APT", "ARB", "OP", "SUI", "TRX"]
+  return categories
+    .split("|")
+    .map(c => c.trim().toUpperCase())
+    .filter(c => cryptoTags.includes(c))
 }

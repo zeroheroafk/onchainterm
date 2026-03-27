@@ -113,7 +113,7 @@ export function NewsWidget() {
 
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          CryptoPanic · {news.length} articles
+          CryptoCompare · {news.length} articles
         </span>
       </div>
     </div>
