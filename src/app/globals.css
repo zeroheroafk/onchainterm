@@ -1,0 +1,272 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Default theme: Matrix (clean green) */
+  --background: #0f0f0f;
+  --foreground: #e0e0e0;
+  --card: #1a1a1a;
+  --card-foreground: #e0e0e0;
+  --popover: #1a1a1a;
+  --popover-foreground: #e0e0e0;
+  --primary: #22c55e;
+  --primary-foreground: #0f0f0f;
+  --secondary: #252525;
+  --secondary-foreground: #b0b0b0;
+  --muted: #252525;
+  --muted-foreground: #808080;
+  --accent: #4ade80;
+  --accent-foreground: #0f0f0f;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #333333;
+  --input: #252525;
+  --ring: #22c55e;
+  --chart-1: #22c55e;
+  --chart-2: #16a34a;
+  --chart-3: #6b8cae;
+  --chart-4: #ef4444;
+  --chart-5: #8b6bbf;
+  --radius: 0.5rem;
+  --sidebar: #141414;
+  --sidebar-foreground: #e0e0e0;
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-accent: #252525;
+  --sidebar-accent-foreground: #e0e0e0;
+  --sidebar-border: #333333;
+  --sidebar-ring: #22c55e;
+
+  /* Terminal-specific colors (used by crypto widgets) */
+  --color-positive: #22c55e;
+  --color-negative: #ef4444;
+  --color-amber: #f59e0b;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Semantic crypto colors */
+  --color-positive: var(--color-positive);
+  --color-negative: var(--color-negative);
+  --color-amber: var(--color-amber);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ── Selection ── */
+::selection {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--primary);
+}
+
+/* ── Scroll animation (ticker) ── */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  animation: scroll 60s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Ticker animation */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* ── Free-position widget layout ── */
+
+.widget-grid-editing {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    color-mix(in srgb, var(--primary) 2%, transparent) 20px,
+    color-mix(in srgb, var(--primary) 2%, transparent) 40px
+  );
+}
+
+@keyframes widget-flash-anim {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); }
+  50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 0%, transparent); }
+}
+
+.widget-flash {
+  animation: widget-flash-anim 0.75s ease-out 2;
+}
+
+.widget-positioned {
+  transition: left 150ms ease-out, top 150ms ease-out, width 150ms ease-out, height 150ms ease-out;
+}
+
+.widget-dragging {
+  transition: none !important;
+  will-change: transform;
+}
+
+.widget-grid-editing .widget-panel {
+  transition: box-shadow 200ms ease;
+}
+
+.widget-grid-editing .widget-panel:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ── CRT Retro Theme (conditional on .crt-active) ── */
+
+.crt-active .crt-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+}
+
+.crt-active .crt-vignette {
+  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+/* Glow effects only in CRT mode */
+.crt-active .glow-green {
+  text-shadow: 0 0 5px #00ff41, 0 0 10px #00ff4180;
+}
+
+.crt-active .glow-amber {
+  text-shadow: 0 0 5px #ffb000, 0 0 10px #ffb00080;
+}
+
+/* Subtle flicker in CRT mode */
+@keyframes subtle-flicker {
+  0%, 100% { opacity: 0.98; }
+  50% { opacity: 1; }
+}
+
+.crt-active body {
+  animation: subtle-flicker 4s infinite;
+}
+
+/* Pulse glow for CRT mode */
+@keyframes pulse-glow {
+  0%, 100% { text-shadow: 0 0 5px color-mix(in srgb, var(--primary) 50%, transparent); }
+  50% { text-shadow: 0 0 15px color-mix(in srgb, var(--primary) 50%, transparent), 0 0 30px color-mix(in srgb, var(--primary) 50%, transparent); }
+}
+
+.crt-active .animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* CRT scrollbar override */
+.crt-active ::-webkit-scrollbar-thumb {
+  background: #00cc33;
+}
+
+.crt-active ::-webkit-scrollbar-thumb:hover {
+  background: #00ff41;
+}
+
+/* Mono font override for retro theme */
+.font-mono-override body {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
