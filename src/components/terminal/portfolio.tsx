@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { Plus, Trash2, Wallet } from "lucide-react"
+import { Plus, Trash2, Wallet, Download } from "lucide-react"
 import { useCryptoPrices } from "@/hooks/useCryptoPrices"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
 
@@ -115,6 +115,28 @@ export function PortfolioWidget() {
     return coin?.current_price ?? null
   }
 
+  const exportCsv = useCallback(() => {
+    if (entries.length === 0) return
+    const rows = [["Symbol", "Amount", "Buy Price", "Current Price", "Value", "P&L", "P&L %"]]
+    entries.forEach(e => {
+      const cp = getCurrentPrice(e)
+      const value = cp ? cp * e.amount : 0
+      const cost = e.buyPrice * e.amount
+      const pnl = value - cost
+      const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0
+      rows.push([e.symbol, String(e.amount), String(e.buyPrice), cp ? String(cp) : "N/A", value.toFixed(2), pnl.toFixed(2), `${pnlPct.toFixed(2)}%`])
+    })
+    const csv = rows.map(r => r.join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `portfolio_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, marketData])
+
   let totalValue = 0
   let totalCost = 0
   entries.forEach(e => {
@@ -152,7 +174,18 @@ export function PortfolioWidget() {
             <Wallet className="size-3" />
             <span className="text-[10px] uppercase tracking-wider">Portfolio Value</span>
           </div>
-          <span className="text-sm font-bold text-foreground">{formatLargeNumber(totalValue)}</span>
+          <div className="flex items-center gap-1.5">
+            {entries.length > 0 && (
+              <button
+                onClick={exportCsv}
+                className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+                title="Export CSV"
+              >
+                <Download className="size-3" />
+              </button>
+            )}
+            <span className="text-sm font-bold text-foreground">{formatLargeNumber(totalValue)}</span>
+          </div>
         </div>
         {entries.length > 0 && (
           <div className={`text-[10px] text-right font-mono ${totalPnl >= 0 ? "text-green-400" : "text-red-400"}`}>

@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Activity, RefreshCw, ExternalLink, ArrowRight } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Activity, RefreshCw, ExternalLink, ArrowRight, Volume2, VolumeX } from "lucide-react"
+
+const WHALE_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipGJdWBYX3uRmpWAfXd8jZiXj4B3dn6OmZmUhXx5gI6YlpKEe3l/jZeVkoR7eX+Nl5WShHt5f42XlZKEe3l/jZeVkoR7eYA="
 
 interface WhaleTx {
   hash: string
@@ -48,6 +50,17 @@ export function WhaleAlerts() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [latestBlock, setLatestBlock] = useState<number | null>(null)
+  const [soundEnabled, setSoundEnabled] = useState(true)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const seenHashesRef = useRef<Set<string>>(new Set())
+
+  const playSound = useCallback(() => {
+    if (!soundEnabled) return
+    try {
+      if (!audioRef.current) audioRef.current = new Audio(WHALE_SOUND_URL)
+      audioRef.current.play().catch(() => {})
+    } catch {}
+  }, [soundEnabled])
 
   const fetchWhales = useCallback(async () => {
     try {
@@ -55,6 +68,14 @@ export function WhaleAlerts() {
       if (!res.ok) throw new Error("Failed to fetch whale data")
       const data = await res.json()
       if (data.error) throw new Error(data.error)
+
+      // Check for new transactions (sound alert)
+      if (seenHashesRef.current.size > 0) {
+        const hasNew = data.transactions.some((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
+        if (hasNew) playSound()
+      }
+      data.transactions.forEach((tx: WhaleTx) => seenHashesRef.current.add(tx.hash))
+
       setTransactions(data.transactions)
       setLatestBlock(data.latestBlock)
       setLastUpdated(new Date())
@@ -64,7 +85,7 @@ export function WhaleAlerts() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [playSound])
 
   useEffect(() => {
     fetchWhales()
@@ -98,6 +119,13 @@ export function WhaleAlerts() {
           {latestBlock && (
             <span className="text-[9px] text-muted-foreground/60 font-mono">#{latestBlock.toLocaleString()}</span>
           )}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title={soundEnabled ? "Mute alerts" : "Unmute alerts"}
+          >
+            {soundEnabled ? <Volume2 className="size-3" /> : <VolumeX className="size-3" />}
+          </button>
           <button
             onClick={fetchWhales}
             className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"

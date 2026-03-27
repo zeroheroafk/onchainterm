@@ -29,6 +29,7 @@ const ExchangeFlows = lazy(() => import("@/components/terminal/exchange-flows").
 const WatchlistWidget = lazy(() => import("@/components/terminal/watchlist").then(m => ({ default: m.WatchlistWidget })))
 const PnlCalculator = lazy(() => import("@/components/terminal/pnl-calculator").then(m => ({ default: m.PnlCalculator })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
+const AlertsWidget = lazy(() => import("@/components/terminal/alerts").then(m => ({ default: m.AlertsWidget })))
 
 function WidgetLoadingFallback() {
   return (
@@ -81,7 +82,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "notes":
       return <NotesWidget />
     case "alerts":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Alerts coming soon</div>
+      return <AlertsWidget />
     case "wallet-tracker":
       return <WalletTracker />
     case "chat":
