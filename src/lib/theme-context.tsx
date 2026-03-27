@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 
-export type ThemeId = "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
+export type ThemeId = "bloomberg" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
 
 export interface ThemeConfig {
   id: ThemeId
@@ -36,6 +36,8 @@ export interface ThemeConfig {
   crtEffects?: boolean
   /** Optional monospace font override for the entire terminal */
   monoFont?: boolean
+  /** If true, activates Bloomberg terminal styling (sharp corners, orange headers, dense layout) */
+  bloombergMode?: boolean
 }
 
 const DARK_BASE = {
@@ -61,6 +63,37 @@ const DARK_BASE = {
 }
 
 export const THEMES: ThemeConfig[] = [
+  {
+    id: "bloomberg",
+    label: "Bloomberg",
+    primary: "#ff8c00",
+    primaryForeground: "#0a0e17",
+    accent: "#ffb800",
+    accentForeground: "#0a0e17",
+    ring: "#ff8c00",
+    chart1: "#ff8c00",
+    chart2: "#ffb800",
+    background: "#0a0e17",
+    foreground: "#d4d8e0",
+    card: "#101829",
+    cardForeground: "#d4d8e0",
+    popover: "#101829",
+    popoverForeground: "#d4d8e0",
+    secondary: "#182238",
+    secondaryForeground: "#8a9ab5",
+    muted: "#182238",
+    mutedForeground: "#5a6a85",
+    border: "#1e2d4a",
+    input: "#182238",
+    sidebar: "#080d16",
+    sidebarForeground: "#d4d8e0",
+    sidebarAccent: "#182238",
+    sidebarAccentForeground: "#d4d8e0",
+    sidebarBorder: "#1e2d4a",
+    swatch: ["#0a0e17", "#ff8c00"],
+    bloombergMode: true,
+    monoFont: true,
+  },
   {
     id: "matrix",
     label: "Matrix",
@@ -272,10 +305,17 @@ function applyTheme(theme: ThemeConfig) {
   } else {
     root.classList.remove("font-mono-override")
   }
+
+  // Toggle Bloomberg mode
+  if (theme.bloombergMode) {
+    root.classList.add("bloomberg-active")
+  } else {
+    root.classList.remove("bloomberg-active")
+  }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeId, setThemeId] = useState<ThemeId>("matrix")
+  const [themeId, setThemeId] = useState<ThemeId>("bloomberg")
   const theme = getTheme(themeId)
 
   useEffect(() => {

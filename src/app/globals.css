@@ -4,40 +4,40 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Default theme: Matrix (clean green) */
-  --background: #0f0f0f;
-  --foreground: #e0e0e0;
-  --card: #1a1a1a;
-  --card-foreground: #e0e0e0;
-  --popover: #1a1a1a;
-  --popover-foreground: #e0e0e0;
-  --primary: #22c55e;
-  --primary-foreground: #0f0f0f;
-  --secondary: #252525;
-  --secondary-foreground: #b0b0b0;
-  --muted: #252525;
-  --muted-foreground: #808080;
-  --accent: #4ade80;
-  --accent-foreground: #0f0f0f;
+  /* Default theme: Bloomberg (dark navy + orange) */
+  --background: #0a0e17;
+  --foreground: #d4d8e0;
+  --card: #101829;
+  --card-foreground: #d4d8e0;
+  --popover: #101829;
+  --popover-foreground: #d4d8e0;
+  --primary: #ff8c00;
+  --primary-foreground: #0a0e17;
+  --secondary: #182238;
+  --secondary-foreground: #8a9ab5;
+  --muted: #182238;
+  --muted-foreground: #5a6a85;
+  --accent: #ffb800;
+  --accent-foreground: #0a0e17;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #333333;
-  --input: #252525;
-  --ring: #22c55e;
-  --chart-1: #22c55e;
-  --chart-2: #16a34a;
+  --border: #1e2d4a;
+  --input: #182238;
+  --ring: #ff8c00;
+  --chart-1: #ff8c00;
+  --chart-2: #ffb800;
   --chart-3: #6b8cae;
   --chart-4: #ef4444;
   --chart-5: #8b6bbf;
-  --radius: 0.5rem;
-  --sidebar: #141414;
-  --sidebar-foreground: #e0e0e0;
-  --sidebar-primary: #22c55e;
-  --sidebar-primary-foreground: #0f0f0f;
-  --sidebar-accent: #252525;
-  --sidebar-accent-foreground: #e0e0e0;
-  --sidebar-border: #333333;
-  --sidebar-ring: #22c55e;
+  --radius: 0px;
+  --sidebar: #080d16;
+  --sidebar-foreground: #d4d8e0;
+  --sidebar-primary: #ff8c00;
+  --sidebar-primary-foreground: #0a0e17;
+  --sidebar-accent: #182238;
+  --sidebar-accent-foreground: #d4d8e0;
+  --sidebar-border: #1e2d4a;
+  --sidebar-ring: #ff8c00;
 
   /* Terminal-specific colors (used by crypto widgets) */
   --color-positive: #22c55e;
@@ -269,4 +269,89 @@
 
 .animate-blink {
   animation: blink 1s step-end infinite;
+}
+
+/* ── Bloomberg Terminal Mode (conditional on .bloomberg-active) ── */
+
+/* Sharp corners everywhere */
+.bloomberg-active {
+  --radius: 0px;
+}
+
+.bloomberg-active *,
+.bloomberg-active *::before,
+.bloomberg-active *::after {
+  border-radius: 0 !important;
+}
+
+/* Flat design — remove all shadows */
+.bloomberg-active [class*="shadow"] {
+  box-shadow: none !important;
+}
+
+/* Tighter scrollbars with orange accent */
+.bloomberg-active ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.bloomberg-active ::-webkit-scrollbar-thumb {
+  background: #ff8c0066;
+}
+
+.bloomberg-active ::-webkit-scrollbar-thumb:hover {
+  background: #ff8c00;
+}
+
+/* Widget panel headers — solid orange title bar */
+.bloomberg-active .widget-panel > div:first-child {
+  background: linear-gradient(180deg, #c06800 0%, #a85c00 100%) !important;
+  border-bottom: 1px solid #ffb80033 !important;
+}
+
+.bloomberg-active .widget-panel > div:first-child span,
+.bloomberg-active .widget-panel > div:first-child svg {
+  color: #ffffff !important;
+}
+
+.bloomberg-active .widget-panel > div:first-child button {
+  color: #ffffffcc !important;
+}
+
+.bloomberg-active .widget-panel > div:first-child button:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Dense widget panels */
+.bloomberg-active .widget-panel {
+  border: 1px solid #1e2d4a !important;
+}
+
+/* Selection override for Bloomberg orange */
+.bloomberg-active ::selection {
+  background: color-mix(in srgb, #ff8c00 25%, transparent);
+  color: #ffb800;
+}
+
+/* Bloomberg status bar styling */
+.bloomberg-active .bloomberg-fn-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  background: #ff8c00;
+  color: #0a0e17;
+  margin-right: 2px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+.bloomberg-active .bloomberg-fn-label {
+  font-size: 9px;
+  color: #d4d8e0;
+  margin-right: 10px;
+  letter-spacing: 0.03em;
 }
