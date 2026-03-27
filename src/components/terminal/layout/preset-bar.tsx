@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Plus, X, Pencil, Trash2, Check, Layout } from "lucide-react"
+import { useTheme } from "@/lib/theme-context"
 import { useLayout } from "./layout-context"
 import type { AnyPreset } from "./default-layouts"
 
 export function PresetBar() {
+  const { theme } = useTheme()
+  const isBloomberg = theme.bloombergMode
   const {
     activePresetId, allPresets, applyPreset,
     saveCurrentAsPreset, deletePreset, renamePreset,
@@ -47,7 +50,7 @@ export function PresetBar() {
   }
 
   return (
-    <div className="hidden md:flex items-center gap-1.5 border-t border-border bg-secondary/20 px-3 py-1.5 shrink-0">
+    <div className={`hidden md:flex items-center gap-1.5 border-t border-border bg-secondary/20 px-3 shrink-0 ${isBloomberg ? "py-0.5" : "py-1.5"}`}>
       <div className="flex items-center gap-1.5 text-muted-foreground/50 mr-1 shrink-0">
         <Layout className="size-3" />
         <span className="text-[9px] font-medium uppercase tracking-widest select-none">Presets</span>
@@ -78,7 +81,7 @@ export function PresetBar() {
                 <>
                   <button
                     onClick={() => applyPreset(preset.id)}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${isBloomberg ? "font-mono" : "rounded-md"} ${
                       isActive
                         ? "bg-primary/15 text-primary border border-primary/30"
                         : "text-foreground/60 border border-transparent hover:bg-secondary hover:text-foreground/80"
