@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { ExternalLink, RefreshCw } from "lucide-react"
 
 interface NewsItem {
@@ -8,19 +8,8 @@ interface NewsItem {
   url: string
   source: string
   published_at: string
+  currencies: string[]
 }
-
-// Simulated crypto news — in production, use CryptoPanic API or similar
-const MOCK_NEWS: NewsItem[] = [
-  { title: "Bitcoin reaches new monthly high amid institutional buying", url: "#", source: "CryptoNews", published_at: new Date().toISOString() },
-  { title: "Ethereum L2 networks see record transaction volume", url: "#", source: "The Block", published_at: new Date(Date.now() - 3600000).toISOString() },
-  { title: "SEC considering new framework for crypto regulation", url: "#", source: "Reuters", published_at: new Date(Date.now() - 7200000).toISOString() },
-  { title: "Solana DeFi TVL surpasses $10B milestone", url: "#", source: "DeFiLlama", published_at: new Date(Date.now() - 10800000).toISOString() },
-  { title: "Major bank announces Bitcoin custody service launch", url: "#", source: "Bloomberg", published_at: new Date(Date.now() - 14400000).toISOString() },
-  { title: "NFT market shows signs of recovery with new collections", url: "#", source: "NFTNow", published_at: new Date(Date.now() - 18000000).toISOString() },
-  { title: "Cross-chain bridges process $500M in 24 hours", url: "#", source: "Dune", published_at: new Date(Date.now() - 21600000).toISOString() },
-  { title: "Stablecoin market cap reaches all-time high of $200B", url: "#", source: "CoinDesk", published_at: new Date(Date.now() - 25200000).toISOString() },
-]
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -33,24 +22,38 @@ function timeAgo(dateStr: string): string {
 export function NewsWidget() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const loadNews = () => {
-    setLoading(true)
-    // Simulate loading delay
-    setTimeout(() => {
-      setNews(MOCK_NEWS)
+  const fetchNews = useCallback(async () => {
+    try {
+      const res = await fetch("/api/news")
+      if (!res.ok) throw new Error("Failed to fetch news")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setNews(data.news)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load")
+    } finally {
       setLoading(false)
-    }, 500)
-  }
+    }
+  }, [])
 
-  useEffect(() => { loadNews() }, [])
+  useEffect(() => {
+    fetchNews()
+    const interval = setInterval(fetchNews, 120_000) // refresh every 2 min
+    return () => clearInterval(interval)
+  }, [fetchNews])
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Latest News</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Crypto News</span>
+          <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+        </div>
         <button
-          onClick={loadNews}
+          onClick={fetchNews}
           className="p-1 text-muted-foreground hover:text-primary transition-colors"
           title="Refresh"
         >
@@ -58,9 +61,14 @@ export function NewsWidget() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto min-h-0">
         {loading && news.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading news...</div>
+        ) : error && news.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
+            <span className="text-red-400">{error}</span>
+            <button onClick={fetchNews} className="text-primary hover:underline">Retry</button>
+          </div>
         ) : (
           <div className="divide-y divide-border/50">
             {news.map((item, i) => (
@@ -81,11 +89,32 @@ export function NewsWidget() {
                   <span className="font-medium">{item.source}</span>
                   <span>&middot;</span>
                   <span>{timeAgo(item.published_at)}</span>
+                  {item.currencies.length > 0 && (
+                    <>
+                      <span>&middot;</span>
+                      <div className="flex items-center gap-1">
+                        {item.currencies.slice(0, 3).map((c) => (
+                          <span key={c} className="rounded bg-primary/10 px-1 py-0 text-primary font-mono">
+                            {c}
+                          </span>
+                        ))}
+                        {item.currencies.length > 3 && (
+                          <span className="text-muted-foreground/60">+{item.currencies.length - 3}</span>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </a>
             ))}
           </div>
         )}
+      </div>
+
+      <div className="border-t border-border px-3 py-1 shrink-0 text-center">
+        <span className="text-[8px] text-muted-foreground">
+          CryptoPanic · {news.length} articles
+        </span>
       </div>
     </div>
   )
