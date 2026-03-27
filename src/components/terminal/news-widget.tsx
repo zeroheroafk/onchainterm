@@ -41,7 +41,7 @@ export function NewsWidget() {
 
   useEffect(() => {
     fetchNews()
-    const interval = setInterval(fetchNews, 120_000) // refresh every 2 min
+    const interval = setInterval(fetchNews, 30_000) // refresh every 30s
     return () => clearInterval(interval)
   }, [fetchNews])
 

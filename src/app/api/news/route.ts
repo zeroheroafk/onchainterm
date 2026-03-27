@@ -15,7 +15,7 @@ export async function GET() {
   try {
     const res = await fetch(
       `${CRYPTOPANIC_URL}?auth_token=free&public=true&kind=news`,
-      { next: { revalidate: 120 } } // cache 2 minutes
+      { next: { revalidate: 30 } } // cache 30 seconds
     )
 
     if (!res.ok) {
