@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 
-export type ThemeId = "bloomberg" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
+export type ThemeId = "bloomberg" | "neon" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
 
 export interface ThemeConfig {
   id: ThemeId
@@ -38,6 +38,8 @@ export interface ThemeConfig {
   monoFont?: boolean
   /** If true, activates Bloomberg terminal styling (sharp corners, orange headers, dense layout) */
   bloombergMode?: boolean
+  /** If true, activates retro-futuristic neon mode (grid bg, glitch, neon glow) */
+  neonMode?: boolean
 }
 
 const DARK_BASE = {
@@ -92,6 +94,37 @@ export const THEMES: ThemeConfig[] = [
     sidebarBorder: "#1e2d4a",
     swatch: ["#0a0e17", "#ff8c00"],
     bloombergMode: true,
+    monoFont: true,
+  },
+  {
+    id: "neon",
+    label: "Neon 80s",
+    primary: "#00d4ff",
+    primaryForeground: "#0a0a12",
+    accent: "#ff00aa",
+    accentForeground: "#0a0a12",
+    ring: "#00d4ff",
+    chart1: "#00d4ff",
+    chart2: "#ff00aa",
+    background: "#0a0a12",
+    foreground: "#e0e4f0",
+    card: "#0f0f1e",
+    cardForeground: "#e0e4f0",
+    popover: "#0f0f1e",
+    popoverForeground: "#e0e4f0",
+    secondary: "#161630",
+    secondaryForeground: "#8888bb",
+    muted: "#161630",
+    mutedForeground: "#5a5a8a",
+    border: "#1a1a3e",
+    input: "#161630",
+    sidebar: "#08080e",
+    sidebarForeground: "#e0e4f0",
+    sidebarAccent: "#161630",
+    sidebarAccentForeground: "#e0e4f0",
+    sidebarBorder: "#1a1a3e",
+    swatch: ["#0a0a12", "#00d4ff"],
+    neonMode: true,
     monoFont: true,
   },
   {
@@ -311,6 +344,13 @@ function applyTheme(theme: ThemeConfig) {
     root.classList.add("bloomberg-active")
   } else {
     root.classList.remove("bloomberg-active")
+  }
+
+  // Toggle Neon retro-futuristic mode
+  if (theme.neonMode) {
+    root.classList.add("neon-active")
+  } else {
+    root.classList.remove("neon-active")
   }
 }
 

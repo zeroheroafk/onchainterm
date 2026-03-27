@@ -28,13 +28,15 @@ function TerminalHeader() {
   const { theme, themeId, setTheme } = useTheme()
   const [showThemes, setShowThemes] = useState(false)
   const isBloomberg = theme.bloombergMode
+  const isNeon = theme.neonMode
 
   return (
     <div className={`flex items-center justify-between border-b border-border px-3 shrink-0 ${isBloomberg ? "bg-card py-1" : "bg-card px-4 py-2"}`}>
       <div className="flex items-center gap-3">
-        <h1 className={`font-bold uppercase tracking-widest text-primary ${isBloomberg ? "text-xs font-mono" : "text-sm"}`}>
+        <h1 className={`font-bold uppercase tracking-widest text-primary ${isBloomberg ? "text-xs font-mono" : "text-sm"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
           {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
         </h1>
+        {isNeon && <span className="neon-cursor" />}
         {isBloomberg ? (
           <div className="hidden sm:flex items-center gap-2 text-[9px] font-mono">
             <span className="text-muted-foreground">|</span>
@@ -42,6 +44,10 @@ function TerminalHeader() {
             <span className="text-muted-foreground">|</span>
             <BloombergClock />
           </div>
+        ) : isNeon ? (
+          <span className="hidden sm:inline text-[9px] text-accent uppercase tracking-wider font-mono neon-text-pulse">
+            // CRYPTO MARKET INTELLIGENCE
+          </span>
         ) : (
           <span className="text-[9px] text-muted-foreground uppercase tracking-wider hidden sm:inline">
             Crypto Market Intelligence
@@ -144,6 +150,12 @@ function TerminalContent() {
       <PresetBar />
       <WidgetCatalogDrawer />
       {theme.crtEffects && <CRTOverlay />}
+      {theme.neonMode && (
+        <>
+          <div className="neon-grid-overlay" />
+          <div className="neon-scanlines" />
+        </>
+      )}
     </div>
   )
 }

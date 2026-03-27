@@ -355,3 +355,153 @@
   margin-right: 10px;
   letter-spacing: 0.03em;
 }
+
+/* ── Neon 80s Retro-Futuristic Mode (conditional on .neon-active) ── */
+
+/* Translucent grid pattern background */
+.neon-active body {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
+}
+
+/* Animated perspective grid on the widget area */
+.neon-active .neon-grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: neon-grid-drift 20s linear infinite;
+}
+
+@keyframes neon-grid-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+/* Neon glow on widget panel headers — electric blue with magenta border */
+.neon-active .widget-panel > div:first-child {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(255, 0, 170, 0.1) 100%) !important;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3) !important;
+  box-shadow: 0 1px 8px rgba(0, 212, 255, 0.1), inset 0 0 12px rgba(0, 212, 255, 0.05) !important;
+}
+
+/* Neon glow on header text */
+.neon-active .widget-panel > div:first-child span {
+  text-shadow: 0 0 6px rgba(0, 212, 255, 0.6), 0 0 12px rgba(0, 212, 255, 0.3) !important;
+}
+
+.neon-active .widget-panel > div:first-child svg {
+  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.5));
+}
+
+/* Widget panel border glow */
+.neon-active .widget-panel {
+  border: 1px solid rgba(0, 212, 255, 0.15) !important;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.05), inset 0 0 10px rgba(0, 212, 255, 0.02) !important;
+}
+
+.neon-active .widget-panel:hover {
+  border-color: rgba(0, 212, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.08), inset 0 0 15px rgba(0, 212, 255, 0.03) !important;
+}
+
+/* Neon selection — magenta */
+.neon-active ::selection {
+  background: rgba(255, 0, 170, 0.3);
+  color: #ff00aa;
+}
+
+/* Neon scrollbar */
+.neon-active ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.neon-active ::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+}
+
+.neon-active ::-webkit-scrollbar-thumb:hover {
+  background: #00d4ff;
+  box-shadow: 0 0 6px rgba(0, 212, 255, 0.5);
+}
+
+/* ── Glitch effect for neon title text ── */
+@keyframes neon-glitch {
+  0%, 92%, 100% {
+    transform: translate(0);
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.7), 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+  93% {
+    transform: translate(-2px, 1px);
+    text-shadow: 2px 0 #ff00aa, -2px 0 #00d4ff;
+  }
+  95% {
+    transform: translate(2px, -1px);
+    text-shadow: -2px 0 #ff00aa, 2px 0 #00d4ff;
+  }
+  97% {
+    transform: translate(-1px, 0);
+    text-shadow: 1px 0 #ff00aa, -1px 0 #00d4ff;
+  }
+}
+
+.neon-active .neon-glitch-text {
+  animation: neon-glitch 4s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.7), 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+/* Magenta blinking cursor for neon mode */
+@keyframes neon-cursor-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #ff00aa, 0 0 12px rgba(255, 0, 170, 0.4); }
+  50% { opacity: 0; box-shadow: none; }
+}
+
+.neon-active .neon-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: #ff00aa;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: neon-cursor-blink 1s step-end infinite;
+}
+
+/* Neon pulse glow on primary-colored text */
+@keyframes neon-text-pulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(0, 212, 255, 0.5), 0 0 12px rgba(0, 212, 255, 0.2); }
+  50% { text-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 25px rgba(0, 212, 255, 0.4), 0 0 40px rgba(0, 212, 255, 0.15); }
+}
+
+.neon-active .neon-text-pulse {
+  animation: neon-text-pulse 3s ease-in-out infinite;
+}
+
+/* Subtle scanline overlay for retro CRT feel (lighter than CRT theme) */
+.neon-active .neon-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.06) 3px,
+    rgba(0, 0, 0, 0.06) 6px
+  );
+}
+
+/* Chromatic aberration border effect on focused inputs */
+.neon-active input:focus,
+.neon-active textarea:focus {
+  border-color: #00d4ff !important;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3), 0 0 2px rgba(255, 0, 170, 0.2) !important;
+}
