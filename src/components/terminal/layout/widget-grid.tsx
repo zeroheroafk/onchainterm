@@ -21,6 +21,8 @@ const NotesWidget = lazy(() => import("@/components/terminal/notes-widget").then
 const NewsWidget = lazy(() => import("@/components/terminal/news-widget").then(m => ({ default: m.NewsWidget })))
 const ChatWidget = lazy(() => import("@/components/terminal/chat-widget").then(m => ({ default: m.ChatWidget })))
 const WhaleAlerts = lazy(() => import("@/components/terminal/whale-alerts").then(m => ({ default: m.WhaleAlerts })))
+const FearGreedIndex = lazy(() => import("@/components/terminal/fear-greed").then(m => ({ default: m.FearGreedIndex })))
+const DefiDashboard = lazy(() => import("@/components/terminal/defi-dashboard").then(m => ({ default: m.DefiDashboard })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 
 function WidgetLoadingFallback() {
@@ -53,6 +55,10 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <GasTracker />
     case "whale-alerts":
       return <WhaleAlerts />
+    case "fear-greed":
+      return <FearGreedIndex />
+    case "defi-dashboard":
+      return <DefiDashboard />
     case "portfolio":
       return <PortfolioWidget />
     case "watchlist":

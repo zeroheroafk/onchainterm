@@ -18,6 +18,8 @@ import {
   MessageSquare,
   Activity,
   Search,
+  Gauge,
+  Layers,
   type LucideIcon,
 } from "lucide-react"
 
@@ -33,7 +35,7 @@ export interface TerminalWidgetContext {
 
 export type WidgetId =
   | "price-table" | "price-chart" | "market-overview" | "top-movers" | "trending" | "coin-detail"
-  | "gas-tracker" | "whale-alerts"
+  | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard"
   | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
 
@@ -131,6 +133,26 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     category: "trade",
     defaultSize: { w: 35, h: 50 },
     minSize: { w: 280, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "fear-greed",
+    titleKey: "widget.fearGreed",
+    fallbackTitle: "Fear & Greed",
+    icon: Gauge,
+    category: "market",
+    defaultSize: { w: 25, h: 45 },
+    minSize: { w: 220, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "defi-dashboard",
+    titleKey: "widget.defiDashboard",
+    fallbackTitle: "DeFi Dashboard",
+    icon: Layers,
+    category: "market",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 280, h: 280 },
     singleton: true,
   },
   // ─── Tools ───

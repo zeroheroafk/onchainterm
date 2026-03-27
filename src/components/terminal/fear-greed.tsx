@@ -1,0 +1,124 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { RefreshCw } from "lucide-react"
+
+interface FearGreedEntry {
+  value: number
+  classification: string
+  timestamp: number
+}
+
+function getColor(value: number): string {
+  if (value <= 20) return "#ea3943" // Extreme Fear
+  if (value <= 40) return "#ea8c00" // Fear
+  if (value <= 60) return "#f5d100" // Neutral
+  if (value <= 80) return "#16c784" // Greed
+  return "#00b57c" // Extreme Greed
+}
+
+function getGaugeRotation(value: number): number {
+  // Map 0-100 to -90 to 90 degrees
+  return (value / 100) * 180 - 90
+}
+
+export function FearGreedIndex() {
+  const [entries, setEntries] = useState<FearGreedEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/fear-greed")
+      if (!res.ok) throw new Error("Failed to fetch")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setEntries(data.entries)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 300_000) // 5 min
+    return () => clearInterval(interval)
+  }, [fetchData])
+
+  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading...</div>
+  if (error && entries.length === 0) return (
+    <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
+      <span className="text-red-400">{error}</span>
+      <button onClick={fetchData} className="text-primary hover:underline">Retry</button>
+    </div>
+  )
+
+  const current = entries[0]
+  if (!current) return null
+
+  const color = getColor(current.value)
+  const rotation = getGaugeRotation(current.value)
+
+  return (
+    <div className="h-full flex flex-col p-3 gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between shrink-0">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fear & Greed Index</span>
+        <button onClick={fetchData} className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors">
+          <RefreshCw className="size-3" />
+        </button>
+      </div>
+
+      {/* Gauge */}
+      <div className="flex flex-col items-center gap-2 flex-1 justify-center">
+        <div className="relative w-40 h-20 overflow-hidden">
+          {/* Semicircle background */}
+          <svg viewBox="0 0 200 100" className="w-full h-full">
+            {/* Background arc */}
+            <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="var(--border)" strokeWidth="16" strokeLinecap="round" />
+            {/* Colored arc segments */}
+            <path d="M 10 100 A 90 90 0 0 1 46 28" fill="none" stroke="#ea3943" strokeWidth="16" strokeLinecap="round" />
+            <path d="M 46 28 A 90 90 0 0 1 100 10" fill="none" stroke="#ea8c00" strokeWidth="16" />
+            <path d="M 100 10 A 90 90 0 0 1 154 28" fill="none" stroke="#f5d100" strokeWidth="16" />
+            <path d="M 154 28 A 90 90 0 0 1 190 100" fill="none" stroke="#16c784" strokeWidth="16" strokeLinecap="round" />
+            {/* Needle */}
+            <g transform={`rotate(${rotation} 100 100)`}>
+              <line x1="100" y1="100" x2="100" y2="25" stroke={color} strokeWidth="3" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="5" fill={color} />
+            </g>
+          </svg>
+        </div>
+
+        {/* Value */}
+        <div className="text-center">
+          <div className="text-3xl font-bold font-mono" style={{ color }}>{current.value}</div>
+          <div className="text-sm font-medium" style={{ color }}>{current.classification}</div>
+        </div>
+      </div>
+
+      {/* History (last 7 days) */}
+      <div className="shrink-0 space-y-1">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Last 7 Days</div>
+        <div className="flex items-center gap-1">
+          {entries.slice(0, 7).reverse().map((entry, i) => (
+            <div key={i} className="flex-1 text-center">
+              <div
+                className="h-6 rounded-sm flex items-center justify-center text-[8px] font-bold text-white"
+                style={{ backgroundColor: getColor(entry.value) }}
+              >
+                {entry.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="shrink-0 text-center">
+        <span className="text-[8px] text-muted-foreground">Alternative.me · Updates every ~8h</span>
+      </div>
+    </div>
+  )
+}
