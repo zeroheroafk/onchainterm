@@ -23,6 +23,9 @@ const ChatWidget = lazy(() => import("@/components/terminal/chat-widget").then(m
 const WhaleAlerts = lazy(() => import("@/components/terminal/whale-alerts").then(m => ({ default: m.WhaleAlerts })))
 const FearGreedIndex = lazy(() => import("@/components/terminal/fear-greed").then(m => ({ default: m.FearGreedIndex })))
 const DefiDashboard = lazy(() => import("@/components/terminal/defi-dashboard").then(m => ({ default: m.DefiDashboard })))
+const LiquidationsFeed = lazy(() => import("@/components/terminal/liquidations").then(m => ({ default: m.LiquidationsFeed })))
+const Heatmap = lazy(() => import("@/components/terminal/heatmap").then(m => ({ default: m.Heatmap })))
+const ExchangeFlows = lazy(() => import("@/components/terminal/exchange-flows").then(m => ({ default: m.ExchangeFlows })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 
 function WidgetLoadingFallback() {
@@ -59,6 +62,12 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <FearGreedIndex />
     case "defi-dashboard":
       return <DefiDashboard />
+    case "liquidations":
+      return <LiquidationsFeed />
+    case "heatmap":
+      return <Heatmap />
+    case "exchange-flows":
+      return <ExchangeFlows />
     case "portfolio":
       return <PortfolioWidget />
     case "watchlist":

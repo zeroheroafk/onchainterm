@@ -20,6 +20,9 @@ import {
   Search,
   Gauge,
   Layers,
+  Zap,
+  Grid3x3,
+  ArrowUpDown,
   type LucideIcon,
 } from "lucide-react"
 
@@ -35,7 +38,7 @@ export interface TerminalWidgetContext {
 
 export type WidgetId =
   | "price-table" | "price-chart" | "market-overview" | "top-movers" | "trending" | "coin-detail"
-  | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard"
+  | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard" | "liquidations" | "heatmap" | "exchange-flows"
   | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
 
@@ -153,6 +156,36 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     category: "market",
     defaultSize: { w: 35, h: 55 },
     minSize: { w: 280, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "liquidations",
+    titleKey: "widget.liquidations",
+    fallbackTitle: "Liquidations",
+    icon: Zap,
+    category: "trade",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "heatmap",
+    titleKey: "widget.heatmap",
+    fallbackTitle: "Market Heatmap",
+    icon: Grid3x3,
+    category: "market",
+    defaultSize: { w: 40, h: 50 },
+    minSize: { w: 300, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "exchange-flows",
+    titleKey: "widget.exchangeFlows",
+    fallbackTitle: "Exchange Flows",
+    icon: ArrowUpDown,
+    category: "trade",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 280 },
     singleton: true,
   },
   // ─── Tools ───
