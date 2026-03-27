@@ -20,6 +20,8 @@ const ConverterWidget = lazy(() => import("@/components/terminal/converter").the
 const NotesWidget = lazy(() => import("@/components/terminal/notes-widget").then(m => ({ default: m.NotesWidget })))
 const NewsWidget = lazy(() => import("@/components/terminal/news-widget").then(m => ({ default: m.NewsWidget })))
 const ChatWidget = lazy(() => import("@/components/terminal/chat-widget").then(m => ({ default: m.ChatWidget })))
+const WhaleAlerts = lazy(() => import("@/components/terminal/whale-alerts").then(m => ({ default: m.WhaleAlerts })))
+const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 
 function WidgetLoadingFallback() {
   return (
@@ -50,7 +52,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "gas-tracker":
       return <GasTracker />
     case "whale-alerts":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Whale alerts coming soon</div>
+      return <WhaleAlerts />
     case "portfolio":
       return <PortfolioWidget />
     case "watchlist":
@@ -63,6 +65,8 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <NotesWidget />
     case "alerts":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Alerts coming soon</div>
+    case "wallet-tracker":
+      return <WalletTracker />
     case "chat":
       return <ChatWidget />
     case "news":

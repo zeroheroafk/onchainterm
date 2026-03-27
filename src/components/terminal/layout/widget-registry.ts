@@ -17,6 +17,7 @@ import {
   BellRing,
   MessageSquare,
   Activity,
+  Search,
   type LucideIcon,
 } from "lucide-react"
 
@@ -33,7 +34,7 @@ export interface TerminalWidgetContext {
 export type WidgetId =
   | "price-table" | "price-chart" | "market-overview" | "top-movers" | "trending" | "coin-detail"
   | "gas-tracker" | "whale-alerts"
-  | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts"
+  | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
 
 export type WidgetCategory = "market" | "trade" | "tools" | "comms"
@@ -191,6 +192,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     category: "tools",
     defaultSize: { w: 30, h: 55 },
     minSize: { w: 280, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "wallet-tracker",
+    titleKey: "widget.walletTracker",
+    fallbackTitle: "Wallet Tracker",
+    icon: Search,
+    category: "tools",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 280, h: 280 },
     singleton: true,
   },
   // ─── Comms ───

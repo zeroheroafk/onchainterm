@@ -52,6 +52,7 @@ export function CommandBar() {
     { id: "alerts", label: "Alerts", description: "Price alerts and notifications", keywords: ["alert", "notification", "alarm", "trigger", "price alert"], icon: BellRing, category: "widget", action: () => handleWidgetAction("alerts") },
     { id: "chat", label: "Market Chat", description: "Community chat room", keywords: ["chat", "message", "talk", "discuss", "community", "room"], icon: MessagesSquare, category: "widget", action: () => handleWidgetAction("chat") },
     { id: "news", label: "Crypto News", description: "Latest crypto headlines", keywords: ["news", "headline", "article", "blog", "media", "press", "update"], icon: Newspaper, category: "widget", action: () => handleWidgetAction("news") },
+    { id: "wallet-tracker", label: "Wallet Tracker", description: "Look up any Ethereum wallet", keywords: ["wallet", "address", "etherscan", "balance", "lookup", "track", "0x"], icon: Search, category: "widget", action: () => handleWidgetAction("wallet-tracker") },
     { id: "private-messages", label: "Messages", description: "Private messages", keywords: ["dm", "pm", "private", "inbox", "direct"], icon: MessageSquare, category: "widget", action: () => handleWidgetAction("private-messages") },
     { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]
