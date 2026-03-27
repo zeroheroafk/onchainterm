@@ -11,29 +11,35 @@ interface WhaleTx {
   timestamp: number
   fromLabel: string
   toLabel: string
+  block: number
 }
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return "just now"
+  const secs = Math.floor(diff / 1000)
+  if (secs < 60) return `${secs}s ago`
+  const mins = Math.floor(secs / 60)
   if (mins < 60) return `${mins}m ago`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
 
 function formatEth(value: number): string {
   if (value >= 10000) return `${(value / 1000).toFixed(1)}K`
   if (value >= 1000) return `${(value / 1000).toFixed(2)}K`
-  return value.toFixed(2)
+  return value.toFixed(1)
 }
 
 function getValueColor(value: number): string {
   if (value >= 10000) return "text-red-400"
   if (value >= 1000) return "text-amber-400"
+  if (value >= 500) return "text-yellow-400"
   return "text-green-400"
+}
+
+function isKnownLabel(label: string): boolean {
+  return !label.includes("...")
 }
 
 export function WhaleAlerts() {
@@ -41,6 +47,7 @@ export function WhaleAlerts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [latestBlock, setLatestBlock] = useState<number | null>(null)
 
   const fetchWhales = useCallback(async () => {
     try {
@@ -49,6 +56,7 @@ export function WhaleAlerts() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setTransactions(data.transactions)
+      setLatestBlock(data.latestBlock)
       setLastUpdated(new Date())
       setError(null)
     } catch (err) {
@@ -60,12 +68,12 @@ export function WhaleAlerts() {
 
   useEffect(() => {
     fetchWhales()
-    const interval = setInterval(fetchWhales, 60_000) // refresh every 60s
+    const interval = setInterval(fetchWhales, 30_000) // refresh every 30s
     return () => clearInterval(interval)
   }, [fetchWhales])
 
   if (loading && transactions.length === 0) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading whale alerts...</div>
+    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Scanning recent blocks...</div>
   }
 
   if (error && transactions.length === 0) {
@@ -81,32 +89,42 @@ export function WhaleAlerts() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Activity className="size-3.5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Whale Alerts · Live</span>
-          <span className="text-[9px] text-muted-foreground/60">≥100 ETH</span>
+        <div className="flex items-center gap-2">
+          <Activity className="size-3.5 text-muted-foreground" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ETH Whale Alerts</span>
+          <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
         </div>
-        <button
-          onClick={fetchWhales}
-          className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw className="size-3" />
-        </button>
+        <div className="flex items-center gap-2">
+          {latestBlock && (
+            <span className="text-[9px] text-muted-foreground/60 font-mono">#{latestBlock.toLocaleString()}</span>
+          )}
+          <button
+            onClick={fetchWhales}
+            className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="size-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Threshold info */}
+      <div className="px-3 py-1 border-b border-border/50 bg-secondary/10 text-[9px] text-muted-foreground/60 shrink-0">
+        Scanning last 10 blocks · Showing transfers ≥ 50 ETH · Sorted by value
       </div>
 
       {/* Transaction list */}
       <div className="flex-1 overflow-auto min-h-0">
         {transactions.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-            No large transactions found recently
+            No large transfers in recent blocks
           </div>
         ) : (
           <div className="divide-y divide-border/50">
             {transactions.map((tx) => (
               <div key={tx.hash} className="px-3 py-2 hover:bg-secondary/30 transition-colors">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center gap-1.5">
                     <span className={`text-sm font-bold font-mono ${getValueColor(tx.value)}`}>
                       {formatEth(tx.value)} ETH
                     </span>
@@ -125,11 +143,17 @@ export function WhaleAlerts() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 text-[10px]">
-                  <span className="text-muted-foreground truncate max-w-[100px]" title={tx.from}>
+                  <span
+                    className={`truncate max-w-[120px] ${isKnownLabel(tx.fromLabel) ? "text-primary/80 font-medium" : "text-muted-foreground"}`}
+                    title={tx.from}
+                  >
                     {tx.fromLabel}
                   </span>
                   <ArrowRight className="size-3 text-muted-foreground/50 shrink-0" />
-                  <span className="text-muted-foreground truncate max-w-[100px]" title={tx.to}>
+                  <span
+                    className={`truncate max-w-[120px] ${isKnownLabel(tx.toLabel) ? "text-primary/80 font-medium" : "text-muted-foreground"}`}
+                    title={tx.to}
+                  >
                     {tx.toLabel}
                   </span>
                 </div>
@@ -142,7 +166,7 @@ export function WhaleAlerts() {
       {/* Footer */}
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          Etherscan · Monitoring {13} exchange wallets · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+          Etherscan · {transactions.length} whale txs found · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
         </span>
       </div>
     </div>

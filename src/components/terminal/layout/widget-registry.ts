@@ -126,7 +126,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
   {
     id: "whale-alerts",
     titleKey: "widget.whaleAlerts",
-    fallbackTitle: "Whale Alerts",
+    fallbackTitle: "ETH Whale Alerts",
     icon: Activity,
     category: "trade",
     defaultSize: { w: 35, h: 50 },
