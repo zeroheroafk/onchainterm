@@ -9,7 +9,7 @@ interface PriceTableWidgetProps {
   onSelectSymbol: (symbol: string) => void
 }
 
-type SortKey = "rank" | "price" | "1h" | "24h" | "7d" | "mcap"
+type SortKey = "rank" | "price" | "1h" | "24h" | "7d" | "mcap" | "vol"
 type SortDir = "asc" | "desc"
 
 function PercentCell({ value }: { value: number | null }) {
@@ -48,6 +48,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
           case "24h": return coin.price_change_percentage_24h
           case "7d": return coin.price_change_percentage_7d_in_currency ?? 0
           case "mcap": return coin.market_cap
+          case "vol": return coin.total_volume
         }
       }
       return (getValue(a) - getValue(b)) * dir
@@ -97,7 +98,9 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
             <SortHeader label="Price" sortKeyVal="price" />
             <SortHeader label="1H" sortKeyVal="1h" />
             <SortHeader label="24H" sortKeyVal="24h" />
+            <SortHeader label="7D" sortKeyVal="7d" className="hidden xl:table-cell" />
             <SortHeader label="MCap" sortKeyVal="mcap" className="hidden lg:table-cell" />
+            <SortHeader label="Vol 24H" sortKeyVal="vol" className="hidden xl:table-cell" />
           </tr>
         </thead>
         <tbody>
@@ -114,8 +117,10 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               <td className="py-1.5 px-2 text-muted-foreground">{coin.market_cap_rank}</td>
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={coin.image} alt="" className="size-4 shrink-0 rounded-full" />
                   <span className="font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
-                  <span className="text-muted-foreground text-[10px] hidden xl:inline">{coin.name}</span>
+                  <span className="text-muted-foreground text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
                 </div>
               </td>
               <td className="py-1.5 px-2 text-right font-mono text-amber-400">
@@ -127,8 +132,14 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               <td className="py-1.5 px-2 text-right font-mono">
                 <PercentCell value={coin.price_change_percentage_24h} />
               </td>
+              <td className="py-1.5 px-2 text-right font-mono hidden xl:table-cell">
+                <PercentCell value={coin.price_change_percentage_7d_in_currency} />
+              </td>
               <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden lg:table-cell">
                 {formatLargeNumber(coin.market_cap)}
+              </td>
+              <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden xl:table-cell">
+                {formatLargeNumber(coin.total_volume)}
               </td>
             </tr>
           ))}
