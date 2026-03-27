@@ -1,76 +1,153 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Fuel } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Fuel, RefreshCw } from "lucide-react"
 
 interface GasData {
   low: number
   average: number
   high: number
+  baseFee: number
+  lastBlock: number
+}
+
+function getGasColor(gwei: number) {
+  if (gwei <= 15) return "text-green-400"
+  if (gwei <= 40) return "text-amber-400"
+  return "text-red-400"
+}
+
+function getGasLabel(gwei: number) {
+  if (gwei <= 10) return "Very Low"
+  if (gwei <= 20) return "Low"
+  if (gwei <= 40) return "Normal"
+  if (gwei <= 80) return "High"
+  return "Very High"
 }
 
 export function GasTracker() {
-  const [ethGas, setEthGas] = useState<GasData | null>(null)
+  const [gasData, setGasData] = useState<GasData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  useEffect(() => {
-    async function fetchGas() {
-      try {
-        // Use a public ETH gas estimation based on block data
-        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true")
-        if (res.ok) {
-          // Simulate gas tiers based on typical ranges (real gas API would be better)
-          setEthGas({
-            low: Math.floor(Math.random() * 10) + 5,
-            average: Math.floor(Math.random() * 15) + 15,
-            high: Math.floor(Math.random() * 30) + 30,
-          })
-        }
-      } catch {
-        // silent
-      } finally {
-        setLoading(false)
-      }
+  const fetchGas = useCallback(async () => {
+    try {
+      const res = await fetch("/api/gas")
+      if (!res.ok) throw new Error("Failed to fetch gas data")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setGasData(data)
+      setLastUpdated(new Date())
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
     }
-    fetchGas()
-    const interval = setInterval(fetchGas, 30_000)
-    return () => clearInterval(interval)
   }, [])
 
-  if (loading) {
+  useEffect(() => {
+    fetchGas()
+    const interval = setInterval(fetchGas, 15_000) // refresh every 15s
+    return () => clearInterval(interval)
+  }, [fetchGas])
+
+  if (loading && !gasData) {
     return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading gas prices...</div>
   }
 
+  if (error && !gasData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
+        <span className="text-red-400">{error}</span>
+        <button onClick={fetchGas} className="text-primary hover:underline">Retry</button>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-full p-3 space-y-3">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Fuel className="size-4" />
-        <span className="text-[10px] font-bold uppercase tracking-wider">Ethereum Gas</span>
+    <div className="h-full flex flex-col p-3 gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Fuel className="size-4" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">ETH Gas · Live</span>
+        </div>
+        <button
+          onClick={fetchGas}
+          className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw className="size-3" />
+        </button>
       </div>
 
-      {ethGas && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-            <div className="text-[9px] uppercase text-green-400 font-medium mb-1">Slow</div>
-            <div className="text-lg font-bold text-foreground">{ethGas.low}</div>
-            <div className="text-[9px] text-muted-foreground">Gwei</div>
+      {gasData && (
+        <>
+          {/* Gas tiers */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-green-400 font-medium mb-1">🐢 Slow</div>
+              <div className="text-lg font-bold text-foreground">{gasData.low}</div>
+              <div className="text-[9px] text-muted-foreground">Gwei</div>
+            </div>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-amber-400 font-medium mb-1">⚡ Standard</div>
+              <div className="text-lg font-bold text-foreground">{gasData.average}</div>
+              <div className="text-[9px] text-muted-foreground">Gwei</div>
+            </div>
+            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-red-400 font-medium mb-1">🚀 Fast</div>
+              <div className="text-lg font-bold text-foreground">{gasData.high}</div>
+              <div className="text-[9px] text-muted-foreground">Gwei</div>
+            </div>
           </div>
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
-            <div className="text-[9px] uppercase text-amber-400 font-medium mb-1">Average</div>
-            <div className="text-lg font-bold text-foreground">{ethGas.average}</div>
-            <div className="text-[9px] text-muted-foreground">Gwei</div>
+
+          {/* Base fee & network status */}
+          <div className="space-y-1.5 text-[10px]">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-muted-foreground">Base Fee</span>
+              <span className="font-mono text-foreground">{gasData.baseFee.toFixed(2)} Gwei</span>
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-muted-foreground">Network</span>
+              <span className={`font-medium ${getGasColor(gasData.average)}`}>
+                {getGasLabel(gasData.average)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-muted-foreground">Last Block</span>
+              <span className="font-mono text-foreground">#{gasData.lastBlock.toLocaleString()}</span>
+            </div>
           </div>
-          <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-            <div className="text-[9px] uppercase text-red-400 font-medium mb-1">Fast</div>
-            <div className="text-lg font-bold text-foreground">{ethGas.high}</div>
-            <div className="text-[9px] text-muted-foreground">Gwei</div>
+
+          {/* Estimated costs */}
+          <div className="border-t border-border pt-2 space-y-1 text-[10px]">
+            <div className="text-muted-foreground font-medium uppercase tracking-wider mb-1">Est. Transaction Cost (21k gas)</div>
+            {[
+              { label: "Slow", gwei: gasData.low },
+              { label: "Standard", gwei: gasData.average },
+              { label: "Fast", gwei: gasData.high },
+            ].map(({ label, gwei }) => {
+              const ethCost = (gwei * 21000) / 1e9
+              return (
+                <div key={label} className="flex items-center justify-between px-1">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="font-mono text-foreground">{ethCost.toFixed(6)} ETH</span>
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </>
       )}
 
-      <p className="text-[9px] text-muted-foreground text-center">
-        Estimated gas prices (Gwei) for ETH transactions
-      </p>
+      {/* Footer */}
+      <div className="mt-auto shrink-0 text-center">
+        <span className="text-[8px] text-muted-foreground">
+          Etherscan Gas Oracle · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+        </span>
+      </div>
     </div>
   )
 }

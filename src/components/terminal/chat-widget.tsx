@@ -3,13 +3,13 @@
 import { useState, useRef, useEffect, useCallback, type FormEvent } from "react"
 import { Send, MessagesSquare } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
+import { supabase } from "@/lib/supabase"
 
 interface ChatMessage {
   id: string
-  user: string
+  username: string
   text: string
-  timestamp: Date
-  isSystem?: boolean
+  created_at: string
 }
 
 // 12-color palettes for username coloring (dark/light)
@@ -34,34 +34,14 @@ function getUserColor(username: string, isLight: boolean): string {
   return colors[Math.abs(hash) % colors.length]
 }
 
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString("en-US", {
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
   })
 }
-
-// Simulated market chatter for realistic feel
-const BOT_MESSAGES: { user: string; text: string }[] = [
-  { user: "CryptoTrader", text: "BTC looking bullish on the 4H chart" },
-  { user: "DeFiAnon", text: "ETH gas fees are finally reasonable today" },
-  { user: "WhaleWatcher", text: "Just saw a 500 BTC transfer to Coinbase" },
-  { user: "AltSzn", text: "SOL ecosystem has been on fire lately" },
-  { user: "BTCMaxi", text: "Stack sats. Simple as." },
-  { user: "ChartGuru", text: "RSI divergence forming on ETH daily" },
-  { user: "DeFiAnon", text: "New L2 airdrop farming opportunity just dropped" },
-  { user: "NftCollector", text: "NFT floor prices recovering slowly" },
-  { user: "CryptoTrader", text: "Funding rates turning negative, shorts getting confident" },
-  { user: "WhaleWatcher", text: "Binance cold wallet just moved 10k ETH" },
-  { user: "OnchainAlpha", text: "Smart money accumulating heavily past 24h" },
-  { user: "AltSzn", text: "AVAX and LINK looking ready for a breakout" },
-  { user: "ChartGuru", text: "Support holding well at these levels" },
-  { user: "BTCMaxi", text: "Halving supply shock hasn't even started yet" },
-  { user: "DeFiAnon", text: "TVL on Arbitrum just hit a new ATH" },
-  { user: "OnchainAlpha", text: "Exchange outflows increasing, bullish signal" },
-]
 
 function generateUsername(): string {
   const adjectives = ["Crypto", "Onchain", "DeFi", "Block", "Hash", "Moon", "Alpha", "Based"]
@@ -71,29 +51,29 @@ function generateUsername(): string {
   return `${adj}${noun}${Math.floor(Math.random() * 99)}`
 }
 
+const STORED_USERNAME_KEY = "onchainterm_chat_username"
+
+function getOrCreateUsername(): string {
+  if (typeof window === "undefined") return generateUsername()
+  const stored = localStorage.getItem(STORED_USERNAME_KEY)
+  if (stored) return stored
+  const name = generateUsername()
+  localStorage.setItem(STORED_USERNAME_KEY, name)
+  return name
+}
+
 export function ChatWidget() {
   const { themeId } = useTheme()
   const isLight = themeId === "light"
-  const [myUsername] = useState(() => generateUsername())
-
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const now = Date.now()
-    // Pre-populate with a few recent messages
-    return [
-      { id: "sys", user: "System", text: "Welcome to OnchainTerm Market Chat. Be respectful and stay on topic.", timestamp: new Date(now - 300000), isSystem: true },
-      { id: "b1", user: "CryptoTrader", text: "BTC looking bullish on the 4H chart", timestamp: new Date(now - 180000) },
-      { id: "b2", user: "DeFiAnon", text: "ETH gas fees are finally reasonable today", timestamp: new Date(now - 120000) },
-      { id: "b3", user: "WhaleWatcher", text: "Just saw a 500 BTC transfer to Coinbase", timestamp: new Date(now - 60000) },
-      { id: "b4", user: "OnchainAlpha", text: "Smart money accumulating heavily past 24h", timestamp: new Date(now - 30000) },
-    ]
-  })
-
+  const [myUsername] = useState(() => getOrCreateUsername())
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [lastSentAt, setLastSentAt] = useState(0)
+  const [connected, setConnected] = useState(false)
+  const [userCount, setUserCount] = useState(1)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const botIndexRef = useRef(4) // start after the pre-populated ones
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -102,87 +82,132 @@ export function ChatWidget() {
     }
   }, [messages])
 
-  // Simulated bot messages every 15-45s
+  // Load recent messages + subscribe to real-time
   useEffect(() => {
-    const scheduleNext = () => {
-      const delay = 15000 + Math.random() * 30000
-      return setTimeout(() => {
-        const botMsg = BOT_MESSAGES[botIndexRef.current % BOT_MESSAGES.length]
-        botIndexRef.current++
-        setMessages(prev => [...prev, {
-          id: `bot-${Date.now()}`,
-          user: botMsg.user,
-          text: botMsg.text,
-          timestamp: new Date(),
-        }])
-        timerId = scheduleNext()
-      }, delay)
-    }
-    let timerId = scheduleNext()
-    return () => clearTimeout(timerId)
-  }, [])
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-  const handleSubmit = useCallback((e: FormEvent) => {
+    async function init() {
+      // Fetch last 50 messages
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .order("created_at", { ascending: true })
+        .limit(50)
+
+      if (data) {
+        setMessages(data)
+      }
+
+      // Subscribe to new messages via real-time
+      channel = supabase
+        .channel("chat_messages")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "chat_messages" },
+          (payload) => {
+            const newMsg = payload.new as ChatMessage
+            setMessages((prev) => {
+              // Deduplicate
+              if (prev.some((m) => m.id === newMsg.id)) return prev
+              return [...prev, newMsg]
+            })
+          }
+        )
+        .subscribe((status) => {
+          setConnected(status === "SUBSCRIBED")
+        })
+
+      // Presence for online user count
+      const presenceChannel = supabase.channel("chat_presence", {
+        config: { presence: { key: myUsername } },
+      })
+
+      presenceChannel
+        .on("presence", { event: "sync" }, () => {
+          const state = presenceChannel.presenceState()
+          setUserCount(Object.keys(state).length)
+        })
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await presenceChannel.track({ username: myUsername, online_at: new Date().toISOString() })
+          }
+        })
+    }
+
+    init()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+      supabase.removeChannel(supabase.channel("chat_presence"))
+    }
+  }, [myUsername])
+
+  const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault()
     const text = input.trim()
     if (!text || isSending) return
-
     if (text.length > 300) return
 
     const now = Date.now()
-    if (now - lastSentAt < 2000) return
+    if (now - lastSentAt < 2000) return // Rate limit: 2s
 
     setIsSending(true)
     setInput("")
 
-    // Simulate network delay
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: `msg-${Date.now()}`,
-        user: myUsername,
-        text,
-        timestamp: new Date(),
-      }])
-      setLastSentAt(Date.now())
-      setIsSending(false)
-      inputRef.current?.focus()
-    }, 100)
+    const { error } = await supabase
+      .from("chat_messages")
+      .insert({ username: myUsername, text })
+
+    if (error) {
+      setInput(text) // Restore input on error
+    }
+
+    setLastSentAt(Date.now())
+    setIsSending(false)
+    inputRef.current?.focus()
   }, [input, isSending, lastSentAt, myUsername])
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-2 border-b border-border px-3 py-2">
-        <MessagesSquare className="size-3 text-primary" />
-        <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
-          Community Chat
-        </h2>
+      <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
+        <div className="flex items-center gap-2">
+          <MessagesSquare className="size-3 text-primary" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+            Market Chat
+          </h2>
+          <span className={`text-[9px] font-medium ${connected ? "text-green-400" : "text-muted-foreground"}`}>
+            {connected ? "● LIVE" : "● Connecting..."}
+          </span>
+        </div>
+        <span className="text-[9px] text-muted-foreground">
+          {userCount} online
+        </span>
       </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-auto">
         <div className="flex flex-col gap-0.5 p-2">
+          {messages.length === 0 && (
+            <div className="text-center text-xs text-muted-foreground py-8">
+              No messages yet. Say something!
+            </div>
+          )}
           {messages.map((msg) => (
             <div key={msg.id} className="flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30">
               <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums font-mono">
-                {formatTime(msg.timestamp)}
+                {formatTime(msg.created_at)}
               </span>
               <div className="flex-1 min-w-0">
-                {msg.isSystem ? (
-                  <span className="text-xs text-amber-400 font-medium">{msg.text}</span>
-                ) : (
-                  <>
-                    <span className={`text-xs font-bold ${
-                      msg.user === myUsername
-                        ? "text-primary"
-                        : getUserColor(msg.user, isLight)
-                    }`}>
-                      {msg.user}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground/40">{" : "}</span>
-                    <span className="text-xs leading-relaxed text-foreground/90">{msg.text}</span>
-                  </>
-                )}
+                <span className={`text-xs font-bold ${
+                  msg.username === myUsername
+                    ? "text-primary"
+                    : getUserColor(msg.username, isLight)
+                }`}>
+                  {msg.username}
+                </span>
+                <span className="text-[10px] text-muted-foreground/40">{" : "}</span>
+                <span className="text-xs leading-relaxed text-foreground/90">{msg.text}</span>
               </div>
             </div>
           ))}

@@ -20,6 +20,16 @@ const ConverterWidget = lazy(() => import("@/components/terminal/converter").the
 const NotesWidget = lazy(() => import("@/components/terminal/notes-widget").then(m => ({ default: m.NotesWidget })))
 const NewsWidget = lazy(() => import("@/components/terminal/news-widget").then(m => ({ default: m.NewsWidget })))
 const ChatWidget = lazy(() => import("@/components/terminal/chat-widget").then(m => ({ default: m.ChatWidget })))
+const WhaleAlerts = lazy(() => import("@/components/terminal/whale-alerts").then(m => ({ default: m.WhaleAlerts })))
+const FearGreedIndex = lazy(() => import("@/components/terminal/fear-greed").then(m => ({ default: m.FearGreedIndex })))
+const DefiDashboard = lazy(() => import("@/components/terminal/defi-dashboard").then(m => ({ default: m.DefiDashboard })))
+const LiquidationsFeed = lazy(() => import("@/components/terminal/liquidations").then(m => ({ default: m.LiquidationsFeed })))
+const Heatmap = lazy(() => import("@/components/terminal/heatmap").then(m => ({ default: m.Heatmap })))
+const ExchangeFlows = lazy(() => import("@/components/terminal/exchange-flows").then(m => ({ default: m.ExchangeFlows })))
+const WatchlistWidget = lazy(() => import("@/components/terminal/watchlist").then(m => ({ default: m.WatchlistWidget })))
+const PnlCalculator = lazy(() => import("@/components/terminal/pnl-calculator").then(m => ({ default: m.PnlCalculator })))
+const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
+const AlertsWidget = lazy(() => import("@/components/terminal/alerts").then(m => ({ default: m.AlertsWidget })))
 
 function WidgetLoadingFallback() {
   return (
@@ -50,19 +60,31 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "gas-tracker":
       return <GasTracker />
     case "whale-alerts":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Whale alerts coming soon</div>
+      return <WhaleAlerts />
+    case "fear-greed":
+      return <FearGreedIndex />
+    case "defi-dashboard":
+      return <DefiDashboard />
+    case "liquidations":
+      return <LiquidationsFeed />
+    case "heatmap":
+      return <Heatmap />
+    case "exchange-flows":
+      return <ExchangeFlows />
     case "portfolio":
       return <PortfolioWidget />
     case "watchlist":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Watchlist coming soon</div>
+      return <WatchlistWidget />
     case "converter":
       return <ConverterWidget />
     case "pnl-calculator":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">P&L Calculator coming soon</div>
+      return <PnlCalculator />
     case "notes":
       return <NotesWidget />
     case "alerts":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Alerts coming soon</div>
+      return <AlertsWidget />
+    case "wallet-tracker":
+      return <WalletTracker />
     case "chat":
       return <ChatWidget />
     case "news":

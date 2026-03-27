@@ -1,0 +1,140 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { RefreshCw, Zap } from "lucide-react"
+
+interface Liquidation {
+  symbol: string
+  side: "long" | "short"
+  amount: number
+  price: number
+  exchange: string
+  timestamp: number
+}
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts
+  const secs = Math.floor(diff / 1000)
+  if (secs < 60) return `${secs}s ago`
+  const mins = Math.floor(secs / 60)
+  if (mins < 60) return `${mins}m ago`
+  return `${Math.floor(mins / 60)}h ago`
+}
+
+function formatAmount(n: number): string {
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`
+  return `$${n.toLocaleString()}`
+}
+
+export function LiquidationsFeed() {
+  const [liquidations, setLiquidations] = useState<Liquidation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [estimated, setEstimated] = useState(false)
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/liquidations")
+      if (!res.ok) throw new Error("Failed to fetch")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setLiquidations(data.liquidations)
+      setEstimated(data.estimated ?? false)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 30_000)
+    return () => clearInterval(interval)
+  }, [fetchData])
+
+  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading liquidations...</div>
+  if (error && liquidations.length === 0) return (
+    <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
+      <span className="text-red-400">{error}</span>
+      <button onClick={fetchData} className="text-primary hover:underline">Retry</button>
+    </div>
+  )
+
+  const totalLongs = liquidations.filter(l => l.side === "long").reduce((s, l) => s + l.amount, 0)
+  const totalShorts = liquidations.filter(l => l.side === "short").reduce((s, l) => s + l.amount, 0)
+  const longPct = totalLongs + totalShorts > 0 ? (totalLongs / (totalLongs + totalShorts)) * 100 : 50
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+        <div className="flex items-center gap-2">
+          <Zap className="size-3.5 text-amber-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Liquidations</span>
+          {estimated && <span className="text-[8px] text-muted-foreground/50">EST</span>}
+        </div>
+        <button onClick={fetchData} className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors">
+          <RefreshCw className="size-3" />
+        </button>
+      </div>
+
+      {/* Long/Short ratio bar */}
+      <div className="px-3 py-2 border-b border-border/50 shrink-0">
+        <div className="flex items-center justify-between text-[9px] mb-1">
+          <span className="text-red-400 font-medium">Longs {formatAmount(totalLongs)}</span>
+          <span className="text-green-400 font-medium">Shorts {formatAmount(totalShorts)}</span>
+        </div>
+        <div className="h-2 rounded-full bg-green-500/30 overflow-hidden">
+          <div
+            className="h-full bg-red-500 rounded-full transition-all"
+            style={{ width: `${longPct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Feed */}
+      <div className="flex-1 overflow-auto min-h-0">
+        {liquidations.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No recent liquidations</div>
+        ) : (
+          <div className="divide-y divide-border/50">
+            {liquidations.map((liq, i) => (
+              <div key={`${liq.symbol}-${liq.timestamp}-${i}`} className="px-3 py-1.5 hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      liq.side === "long"
+                        ? "bg-red-500/15 text-red-400"
+                        : "bg-green-500/15 text-green-400"
+                    }`}>
+                      {liq.side === "long" ? "LONG" : "SHORT"}
+                    </span>
+                    <span className="text-xs font-bold text-foreground">{liq.symbol}</span>
+                  </div>
+                  <span className={`text-xs font-bold font-mono ${
+                    liq.amount >= 500000 ? "text-amber-400" : "text-foreground"
+                  }`}>
+                    {formatAmount(liq.amount)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-0.5 text-[9px] text-muted-foreground">
+                  <span>{liq.exchange} @ ${liq.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                  <span>{timeAgo(liq.timestamp)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-border px-3 py-1 shrink-0 text-center">
+        <span className="text-[8px] text-muted-foreground">
+          {estimated ? "Estimated from price volatility" : "CoinGlass"} · {liquidations.length} events
+        </span>
+      </div>
+    </div>
+  )
+}

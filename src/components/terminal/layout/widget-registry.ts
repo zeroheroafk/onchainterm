@@ -17,6 +17,12 @@ import {
   BellRing,
   MessageSquare,
   Activity,
+  Search,
+  Gauge,
+  Layers,
+  Zap,
+  Grid3x3,
+  ArrowUpDown,
   type LucideIcon,
 } from "lucide-react"
 
@@ -32,8 +38,8 @@ export interface TerminalWidgetContext {
 
 export type WidgetId =
   | "price-table" | "price-chart" | "market-overview" | "top-movers" | "trending" | "coin-detail"
-  | "gas-tracker" | "whale-alerts"
-  | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts"
+  | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard" | "liquidations" | "heatmap" | "exchange-flows"
+  | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
 
 export type WidgetCategory = "market" | "trade" | "tools" | "comms"
@@ -125,11 +131,61 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
   {
     id: "whale-alerts",
     titleKey: "widget.whaleAlerts",
-    fallbackTitle: "Whale Alerts",
+    fallbackTitle: "ETH Whale Alerts",
     icon: Activity,
     category: "trade",
     defaultSize: { w: 35, h: 50 },
     minSize: { w: 280, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "fear-greed",
+    titleKey: "widget.fearGreed",
+    fallbackTitle: "Fear & Greed",
+    icon: Gauge,
+    category: "market",
+    defaultSize: { w: 25, h: 45 },
+    minSize: { w: 220, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "defi-dashboard",
+    titleKey: "widget.defiDashboard",
+    fallbackTitle: "DeFi Dashboard",
+    icon: Layers,
+    category: "market",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 280, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "liquidations",
+    titleKey: "widget.liquidations",
+    fallbackTitle: "Liquidations",
+    icon: Zap,
+    category: "trade",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "heatmap",
+    titleKey: "widget.heatmap",
+    fallbackTitle: "Market Heatmap",
+    icon: Grid3x3,
+    category: "market",
+    defaultSize: { w: 40, h: 50 },
+    minSize: { w: 300, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "exchange-flows",
+    titleKey: "widget.exchangeFlows",
+    fallbackTitle: "Exchange Flows",
+    icon: ArrowUpDown,
+    category: "trade",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 280 },
     singleton: true,
   },
   // ─── Tools ───
@@ -191,6 +247,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     category: "tools",
     defaultSize: { w: 30, h: 55 },
     minSize: { w: 280, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "wallet-tracker",
+    titleKey: "widget.walletTracker",
+    fallbackTitle: "Wallet Tracker",
+    icon: Search,
+    category: "tools",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 280, h: 280 },
     singleton: true,
   },
   // ─── Comms ───
