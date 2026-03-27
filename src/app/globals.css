@@ -161,41 +161,6 @@
   animation: fade-in 0.5s ease-out;
 }
 
-/* ── Command Bar / Command Palette ── */
-
-.command-bar-modal {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border);
-  border-radius: var(--radius);
-}
-
-@keyframes command-bar-in {
-  0% { opacity: 0; transform: translate(-50%, -8px) scale(0.98); }
-  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-
-.command-bar-modal {
-  animation: command-bar-in 0.15s ease-out;
-}
-
-/* Bloomberg override: sharp command bar */
-.bloomberg-active .command-bar-modal {
-  border-radius: 0 !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px #1e2d4a;
-}
-
-.bloomberg-active .command-bar-trigger {
-  border-radius: 0 !important;
-}
-
-/* Neon override: glow on command bar */
-.neon-active .command-bar-modal {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.08), 0 0 0 1px rgba(0, 212, 255, 0.2);
-}
-
-.neon-active .command-bar-trigger:hover {
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.15);
-  border-color: rgba(0, 212, 255, 0.3) !important;
-}
 
 /* ── Free-position widget layout ── */
 
