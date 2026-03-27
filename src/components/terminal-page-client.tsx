@@ -56,7 +56,6 @@ function TerminalHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <CommandBar />
         {/* Theme picker */}
         <div className="relative">
           <button
@@ -147,6 +146,7 @@ function TerminalContent() {
   return (
     <div className="flex h-screen flex-col">
       <TerminalHeader />
+      <CommandBar />
       <ActionBar />
       <WidgetGrid context={context} />
       <PresetBar />
