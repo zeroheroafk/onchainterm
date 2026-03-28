@@ -258,13 +258,46 @@ function TerminalHeader() {
   )
 }
 
-function ActionBar() {
+function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onShowPresets: () => void }) {
   const { theme } = useTheme()
+  const { addWidget, removeWidget, isWidgetActive, bringToFront, focusWidget } = useLayout()
   const isBloomberg = theme.bloombergMode
 
-  // Fn keys are clickable — dispatch the actual key event
-  const handleFnClick = (fnKey: string) => {
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: fnKey, bubbles: true }))
+  const toggleWidget = (widgetId: string) => {
+    if (isWidgetActive(widgetId)) {
+      removeWidget(widgetId)
+    } else {
+      addWidget(widgetId)
+      bringToFront(widgetId)
+      focusWidget(widgetId)
+    }
+  }
+
+  const handleFnClick = (key: string) => {
+    switch (key) {
+      case "F1": onShowHelp(); break
+      case "F2": {
+        const input = document.querySelector<HTMLInputElement>('[aria-label="Command bar search"]')
+        input?.focus()
+        break
+      }
+      case "F3": toggleWidget("price-chart"); break
+      case "F4": toggleWidget("price-table"); break
+      case "F5": toggleWidget("news"); break
+      case "F6": toggleWidget("portfolio"); break
+      case "F7": toggleWidget("watchlist"); break
+      case "F8": toggleWidget("chat"); break
+      case "F9": toggleWidget("trading-signals"); break
+      case "F10": onShowPresets(); break
+      case "F11":
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {})
+        } else {
+          document.documentElement.requestFullscreen().catch(() => {})
+        }
+        break
+      case "F12": toggleWidget("theme-creator"); break
+    }
   }
 
   const FN_KEYS = [
@@ -316,7 +349,7 @@ function TerminalContent() {
     <div className="flex h-screen flex-col">
       <TerminalHeader />
       <CommandBar />
-      <ActionBar />
+      <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />
       <WidgetGrid context={context} />
       <PresetBar />
       <WidgetCatalogDrawer />
