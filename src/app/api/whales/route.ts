@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
-import { etherscanFetch } from "@/lib/etherscan"
 
-// Known exchange/entity labels for identification
+// Known exchange/entity labels
 const KNOWN_LABELS: Record<string, string> = {
   "0x28c6c06298d514db089934071355e5743bf21d60": "Binance 14",
   "0x21a31ee1afc51d94c2efccaa2092ad1028285549": "Binance 36",
@@ -41,13 +40,7 @@ interface BlockTx {
   hash: string
   from: string
   to: string
-  value: string // hex
-}
-
-interface EtherscanBlockResult {
-  transactions: BlockTx[]
-  timestamp: string // hex
-  number: string // hex
+  value: string
 }
 
 function shortenAddress(addr: string): string {
@@ -58,15 +51,25 @@ function getLabel(addr: string): string {
   return KNOWN_LABELS[addr.toLowerCase()] || shortenAddress(addr)
 }
 
+const ETHERSCAN_BASE = "https://api.etherscan.io/api"
+
+async function etherscanCall(params: string): Promise<Record<string, unknown>> {
+  const apiKey = process.env.ETHERSCAN_API_KEY
+  if (!apiKey) throw new Error("Etherscan API key not configured")
+  const res = await fetch(`${ETHERSCAN_BASE}?${params}&apikey=${apiKey}`, {
+    next: { revalidate: 15 },
+  })
+  if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
+  return res.json()
+}
+
 export async function GET() {
   try {
     // 1. Get latest block number
-    const blockNumData = await etherscanFetch("module=proxy&action=eth_blockNumber", 10)
+    const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
     const latestBlock = parseInt(blockNumData.result as string, 16)
 
-    // 2. Fetch last 10 blocks (covers ~2 minutes of activity)
-    const blockNumbers = Array.from({ length: 10 }, (_, i) => latestBlock - i)
-
+    // 2. Fetch last 5 blocks sequentially to avoid rate limits
     const allTxs: {
       hash: string
       from: string
@@ -78,28 +81,27 @@ export async function GET() {
       block: number
     }[] = []
 
-    // Fetch blocks in batches of 5 to respect rate limits
-    for (let i = 0; i < blockNumbers.length; i += 5) {
-      const batch = blockNumbers.slice(i, i + 5)
-      const results = await Promise.allSettled(
-        batch.map(async (blockNum) => {
-          const hexBlock = "0x" + blockNum.toString(16)
-          const data = await etherscanFetch(`module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`, 15)
-          return data.result as EtherscanBlockResult | null
-        })
-      )
+    for (let i = 0; i < 5; i++) {
+      const blockNum = latestBlock - i
+      const hexBlock = "0x" + blockNum.toString(16)
+      try {
+        const data = await etherscanCall(
+          `module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`
+        )
+        const block = data.result as {
+          transactions: BlockTx[]
+          timestamp: string
+          number: string
+        } | null
+        if (!block) continue
 
-      for (const result of results) {
-        if (result.status !== "fulfilled" || !result.value) continue
-        const block = result.value
         const blockTimestamp = parseInt(block.timestamp, 16) * 1000
-        const blockNum = parseInt(block.number, 16)
+        const blkNum = parseInt(block.number, 16)
 
         for (const tx of block.transactions) {
           const valueWei = parseInt(tx.value, 16)
           const valueEth = valueWei / 1e18
-
-          if (valueEth < 50) continue // Filter: >= 50 ETH
+          if (valueEth < 50) continue
 
           allTxs.push({
             hash: tx.hash,
@@ -109,22 +111,23 @@ export async function GET() {
             timestamp: blockTimestamp,
             fromLabel: getLabel(tx.from),
             toLabel: tx.to ? getLabel(tx.to) : "Contract Creation",
-            block: blockNum,
+            block: blkNum,
           })
         }
+      } catch (e) {
+        console.error(`[whales] block ${blockNum} failed:`, e)
       }
     }
 
-    // Sort by value descending (biggest first)
     allTxs.sort((a, b) => b.value - a.value)
-    const top = allTxs.slice(0, 25)
 
     return NextResponse.json({
-      transactions: top,
+      transactions: allTxs.slice(0, 25),
       latestBlock,
-      blocksScanned: 10,
+      blocksScanned: 5,
     })
   } catch (err) {
+    console.error("[whales] fatal:", err)
     const message = err instanceof Error ? err.message : "Failed to fetch whale data"
     return NextResponse.json({ error: message }, { status: 500 })
   }

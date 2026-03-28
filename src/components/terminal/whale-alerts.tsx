@@ -138,7 +138,7 @@ export function WhaleAlerts() {
 
       {/* Threshold info */}
       <div className="px-3 py-1 border-b border-border/50 bg-secondary/10 text-[9px] text-muted-foreground/60 shrink-0">
-        Scanning last 10 blocks · Showing transfers ≥ 50 ETH · Sorted by value
+        Scanning last 5 blocks · Showing transfers ≥ 50 ETH · Sorted by value
       </div>
 
       {/* Transaction list */}
