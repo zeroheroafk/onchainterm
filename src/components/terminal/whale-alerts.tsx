@@ -5,6 +5,7 @@ import { Activity, RefreshCw, ExternalLink, ArrowRight, Volume2, VolumeX } from 
 import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 import { useLastUpdated } from "@/hooks/useLastUpdated"
 import { useSound } from "@/lib/sound-context"
+import { useNotifications } from "@/lib/notification-context"
 
 const WHALE_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipGJdWBYX3uRmpWAfXd8jZiXj4B3dn6OmZmUhXx5gI6YlpKEe3l/jZeVkoR7eX+Nl5WShHt5f42XlZKEe3l/jZeVkoR7eYA="
 
@@ -59,6 +60,7 @@ export function WhaleAlerts() {
   const animatedTxRef = useRef<Set<string>>(new Set())
   const isInitialLoadRef = useRef(true)
   const { playSound: playSoundGlobal } = useSound()
+  const { addNotification } = useNotifications()
   const { markUpdated: markHookUpdated, formatLastUpdated } = useLastUpdated()
 
   const playSound = useCallback(() => {
@@ -78,10 +80,13 @@ export function WhaleAlerts() {
 
       // Check for new transactions (sound alert)
       if (seenHashesRef.current.size > 0) {
-        const hasNew = data.transactions.some((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
-        if (hasNew) {
+        const newTxs = data.transactions.filter((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
+        if (newTxs.length > 0) {
           playSound()
           playSoundGlobal("whale")
+          newTxs.forEach((tx: WhaleTx) => {
+            addNotification("whale", "Whale Alert", `${formatEth(tx.value)} ETH transfer detected`)
+          })
         }
       }
       data.transactions.forEach((tx: WhaleTx) => seenHashesRef.current.add(tx.hash))
@@ -102,7 +107,7 @@ export function WhaleAlerts() {
     } finally {
       setLoading(false)
     }
-  }, [playSound, playSoundGlobal, markHookUpdated])
+  }, [playSound, playSoundGlobal, addNotification, markHookUpdated])
 
   useEffect(() => {
     fetchWhales()

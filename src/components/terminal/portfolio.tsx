@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { Plus, Trash2, Wallet, Download, Search, Loader2, X } from "lucide-react"
+import { Plus, Trash2, Wallet, Download, Search, Loader2, X, PieChart } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
 import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
@@ -31,6 +31,7 @@ interface SearchCoin {
 }
 
 const STORAGE_KEY = "onchainterm_portfolio"
+const HISTORY_KEY = "onchainterm-portfolio-history"
 
 const PIE_COLORS = [
   "#f7931a", "#627eea", "#00d4aa", "#e84142", "#2775ca",
@@ -47,6 +48,27 @@ function loadPortfolio(): PortfolioEntry[] {
 
 function savePortfolio(entries: PortfolioEntry[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)) } catch {}
+}
+
+function PortfolioSparkline({ history }: { history: { t: number; v: number }[] }) {
+  if (history.length < 2) return null
+  const values = history.map(h => h.v)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const w = 120, h = 24
+  const points = values.map((v, i) =>
+    `${(i / (values.length - 1)) * w},${h - ((v - min) / range) * h}`
+  ).join(" ")
+  const isUp = values[values.length - 1] >= values[0]
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50">
+      <span className="text-[8px] text-muted-foreground uppercase">Value History</span>
+      <svg width={w} height={h} className="flex-1">
+        <polyline points={points} fill="none" stroke={isUp ? "#22c55e" : "#ef4444"} strokeWidth="1.5" />
+      </svg>
+    </div>
+  )
 }
 
 function MiniPieChart({ slices }: { slices: { pct: number; color: string; label: string }[] }) {
@@ -99,6 +121,8 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const { data: marketData, isLoading: pricesLoading } = useMarketData()
   const { toast } = useToast()
   const [entries, setEntries] = useState<PortfolioEntry[]>([])
+  const [valueHistory, setValueHistory] = useState<{t: number, v: number}[]>([])
+  const lastHistoryTime = useRef<number>(0)
   const [showAdd, setShowAdd] = useState(false)
   const [amount, setAmount] = useState("")
   const [buyPrice, setBuyPrice] = useState("")
@@ -111,7 +135,17 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [selectedCoin, setSelectedCoin] = useState<SearchCoin | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => { setEntries(loadPortfolio()) }, [])
+  useEffect(() => {
+    setEntries(loadPortfolio())
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setValueHistory(parsed)
+        if (parsed.length > 0) lastHistoryTime.current = parsed[parsed.length - 1].t
+      }
+    } catch {}
+  }, [])
 
   // Fetch prices for coins not in marketData
   useEffect(() => {
@@ -230,6 +264,19 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const totalPnl = totalValue - totalCost
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0
 
+  // Track portfolio value history (throttled to 1 per minute, max 100 points)
+  useEffect(() => {
+    if (totalValue <= 0) return
+    const now = Date.now()
+    if (now - lastHistoryTime.current < 60_000) return
+    lastHistoryTime.current = now
+    setValueHistory(prev => {
+      const next = [...prev, { t: now, v: totalValue }].slice(-100)
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [totalValue])
+
   const pieSlices = useMemo(() => {
     if (entries.length === 0 || totalValue === 0) return []
     const slices: { pct: number; color: string; label: string }[] = []
@@ -276,6 +323,9 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
         )}
       </div>
 
+      {/* Value sparkline */}
+      <PortfolioSparkline history={valueHistory} />
+
       {/* Pie chart */}
       {pieSlices.length > 0 && (
         <div className="border-b border-border px-3 py-2 shrink-0 flex items-center gap-3">
@@ -298,8 +348,10 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
             <CardsSkeleton count={4} />
           </div>
         ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            No holdings yet. Click + to add.
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <PieChart className="size-8 opacity-20" />
+            <span className="text-[10px]">No holdings yet</span>
+            <span className="text-[8px]">Click + below to add your first holding</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">

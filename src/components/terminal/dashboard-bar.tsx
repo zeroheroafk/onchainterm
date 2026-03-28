@@ -76,9 +76,9 @@ export function DashboardBar() {
         </span>
       </div>
 
-      <span className="text-border">|</span>
+      <span className="text-border hidden sm:inline">|</span>
 
-      <div className="flex items-center gap-1">
+      <div className="hidden sm:flex items-center gap-1">
         <Activity className="size-2.5 text-muted-foreground" />
         <span className="text-muted-foreground">Vol</span>
         <span className="text-foreground font-bold">{formatCompact(stats.totalVolume)}</span>
@@ -93,8 +93,8 @@ export function DashboardBar() {
 
       {fearGreed && (
         <>
-          <span className="text-border">|</span>
-          <div className="flex items-center gap-1">
+          <span className="text-border hidden sm:inline">|</span>
+          <div className="hidden sm:flex items-center gap-1">
             <Shield className="size-2.5 text-muted-foreground" />
             <span className="text-muted-foreground">F&G</span>
             <span className={`font-bold ${fgColor(fearGreed.value)}`}>{fearGreed.value}</span>

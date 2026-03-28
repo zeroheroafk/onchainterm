@@ -31,6 +31,7 @@ export function FundingRates() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [search, setSearch] = useState("")
   const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchFunding = useCallback(async () => {
@@ -77,8 +78,10 @@ export function FundingRates() {
     )
   }
 
-  const positiveCount = data?.filter((d) => d.fundingRate > 0).length ?? 0
-  const negativeCount = data?.filter((d) => d.fundingRate < 0).length ?? 0
+  const filtered = data?.filter(d => d.symbol.toLowerCase().includes(search.toLowerCase())) || []
+
+  const positiveCount = filtered.filter((d) => d.fundingRate > 0).length
+  const negativeCount = filtered.filter((d) => d.fundingRate < 0).length
 
   return (
     <div className="h-full flex flex-col p-3 gap-2">
@@ -128,6 +131,17 @@ export function FundingRates() {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="shrink-0 px-1">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter..."
+          className="bg-secondary/50 border border-border px-1.5 py-0.5 text-[9px] text-foreground w-20 outline-none focus:border-primary/40 font-mono"
+        />
+      </div>
+
       {/* Summary */}
       <div className="flex items-center gap-3 text-[10px] px-1">
         <span className="text-red-400 font-medium">
@@ -151,7 +165,7 @@ export function FundingRates() {
           </div>
 
           {/* Table rows */}
-          {data.map((item) => {
+          {filtered.map((item) => {
             const rate = item.fundingRate
             const rateColor =
               rate > 0.1 ? "text-red-400 font-bold" :

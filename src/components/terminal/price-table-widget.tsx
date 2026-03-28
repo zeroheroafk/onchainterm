@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import { Download } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
 import { useLastUpdated } from "@/hooks/useLastUpdated"
+import { useToast } from "@/lib/toast-context"
 import type { CoinMarketData } from "@/types/market"
 
 interface PriceTableWidgetProps {
@@ -61,6 +63,7 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
 export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   const { data, isLoading, error } = useMarketData()
   const { showMenu } = useCoinContextMenu()
+  const { toast } = useToast()
   const [sortKey, setSortKey] = useState<SortKey>("rank")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -181,6 +184,22 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
     </th>
   )
 
+  const exportCSV = useCallback(() => {
+    const header = "Rank,Symbol,Name,Price,24h Change,Market Cap,Volume"
+    const rows = sorted.map((coin, i) =>
+      `${i + 1},${coin.symbol.toUpperCase()},${coin.name},${coin.current_price},${coin.price_change_percentage_24h?.toFixed(2)}%,${coin.market_cap},${coin.total_volume}`
+    )
+    const csv = [header, ...rows].join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `market-data-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast("Exported to CSV", "success")
+  }, [sorted, toast])
+
   if (isLoading && data.length === 0) {
     return (
       <div className="p-2">
@@ -200,8 +219,13 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   return (
     <div ref={tableRef} tabIndex={0} onKeyDown={handleKeyDown} className="h-full overflow-auto focus:outline-none">
       {formatLastUpdated() && (
-        <div className="text-right px-2 pt-1">
+        <div className="flex items-center justify-end gap-2 px-2 pt-1">
           <span className="text-[8px] text-muted-foreground">Updated {formatLastUpdated()}</span>
+          {sorted.length > 0 && (
+            <button onClick={exportCSV} className="text-muted-foreground hover:text-primary transition-colors" title="Export CSV">
+              <Download className="size-3" />
+            </button>
+          )}
         </div>
       )}
       <table className="w-full text-xs">

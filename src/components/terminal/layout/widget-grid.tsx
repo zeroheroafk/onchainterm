@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback, memo, useMemo, lazy, Suspense } from "react"
+import { useRef, useCallback, memo, useMemo, useState, useEffect, lazy, Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import { useLayout } from "./layout-context"
 import { WidgetWrapper } from "./widget-wrapper"
@@ -376,13 +376,51 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
 // ─── Main Grid ───────────────────────────────────────────────────────────
 
 export function WidgetGrid({ context }: WidgetGridProps) {
-  const { layout, activeWidgets, isLocked } = useLayout()
+  const { layout, activeWidgets, isLocked, removeWidget, widgetRefs } = useLayout()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
 
   const visiblePositions = useMemo(
     () => layout.filter((p) => activeWidgets.includes(p.id)),
     [layout, activeWidgets]
   )
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-1 p-1">
+          {visiblePositions.map((pos) => {
+            const def = getWidgetDef(pos.id)
+            if (!def) return null
+            return (
+              <div key={pos.id} className="h-80 shrink-0">
+                <WidgetWrapper
+                  ref={(el: HTMLDivElement | null) => { widgetRefs.current[pos.id] = el }}
+                  title={def.fallbackTitle}
+                  icon={def.icon}
+                  isLocked={true}
+                  onRemove={() => removeWidget(pos.id)}
+                >
+                  <WidgetErrorBoundary widgetTitle={def.fallbackTitle}>
+                    <Suspense fallback={<WidgetLoadingFallback />}>
+                      {renderWidget(pos.id as WidgetId, context)}
+                    </Suspense>
+                  </WidgetErrorBoundary>
+                </WidgetWrapper>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

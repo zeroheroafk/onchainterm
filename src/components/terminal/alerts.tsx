@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Bell, BellRing, Plus, Trash2, Volume2, VolumeX, ArrowUp, ArrowDown } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { useSound } from "@/lib/sound-context"
+import { useNotifications } from "@/lib/notification-context"
 import { formatPrice } from "@/lib/constants"
 
 interface PriceAlert {
@@ -45,6 +46,7 @@ function saveAlerts(alerts: PriceAlert[]) {
 export function AlertsWidget() {
   const { data: marketData } = useMarketData()
   const { playSound: playSoundGlobal } = useSound()
+  const { addNotification } = useNotifications()
   const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [symbol, setSymbol] = useState("")
@@ -122,6 +124,9 @@ export function AlertsWidget() {
         // Global sound system
         playSoundGlobal("alert")
 
+        // Notification center
+        addNotification("alert", "Price Alert", `${alert.symbol} hit ${alert.direction === "above" ? "above" : "below"} $${alert.targetPrice}`)
+
         return { ...alert, triggered: true }
       }
       return alert
@@ -136,7 +141,7 @@ export function AlertsWidget() {
     for (const coin of marketData) {
       prevPricesRef.current.set(coin.id, coin.current_price)
     }
-  }, [marketData, alerts, soundEnabled, notificationsEnabled, playSoundGlobal])
+  }, [marketData, alerts, soundEnabled, notificationsEnabled, playSoundGlobal, addNotification])
 
   const addAlert = useCallback(() => {
     const sym = symbol.trim()
@@ -213,10 +218,10 @@ export function AlertsWidget() {
       {/* Alert list */}
       <div className="flex-1 overflow-auto min-h-0">
         {alerts.length === 0 && !showAdd ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-2 p-4">
-            <BellRing className="size-8 opacity-20" />
-            <span>No price alerts set</span>
-            <span className="text-[9px]">Get notified when a coin hits your target price</span>
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <Bell className="size-8 opacity-20" />
+            <span className="text-[10px]">No active alerts</span>
+            <span className="text-[8px]">Set a price alert to get notified</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">

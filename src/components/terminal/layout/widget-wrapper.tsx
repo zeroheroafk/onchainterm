@@ -1,7 +1,7 @@
 "use client"
 
-import { forwardRef, useState } from "react"
-import { ChevronDown, ChevronUp, GripVertical, X } from "lucide-react"
+import { forwardRef, useEffect, useState } from "react"
+import { ChevronDown, ChevronUp, GripVertical, Maximize2, Minimize2, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface WidgetWrapperProps {
@@ -16,17 +16,28 @@ interface WidgetWrapperProps {
 export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
   function WidgetWrapper({ title, icon: Icon, isLocked, onRemove, onDragStart, children }, ref) {
     const [collapsed, setCollapsed] = useState(false)
+    const [fullscreen, setFullscreen] = useState(false)
+
+    useEffect(() => {
+      if (!fullscreen) return
+      const handler = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setFullscreen(false)
+      }
+      window.addEventListener("keydown", handler)
+      return () => window.removeEventListener("keydown", handler)
+    }, [fullscreen])
 
     return (
       <div
         ref={ref}
-        className="flex h-full w-full flex-col overflow-hidden rounded border border-border bg-card transition-colors widget-panel"
+        className={`${fullscreen ? "fixed inset-0 z-[100]" : ""} flex h-full w-full flex-col overflow-hidden rounded border border-border bg-card transition-colors widget-panel`}
       >
         <div
           className={`flex h-8 shrink-0 items-center justify-between border-b border-border bg-secondary/30 px-2 shadow-[0_1px_2px_rgba(0,0,0,0.2)] ${
             !isLocked ? "cursor-grab active:cursor-grabbing" : ""
           }`}
           onMouseDown={!isLocked ? onDragStart : undefined}
+          onDoubleClick={() => setFullscreen(f => !f)}
         >
           <div className="flex items-center gap-2 overflow-hidden">
             {!isLocked && (
@@ -40,6 +51,14 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
             </span>
           </div>
           <div className="flex items-center gap-0.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); setFullscreen(f => !f) }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="rounded p-0.5 text-muted-foreground hover:text-primary transition-colors"
+              title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+            >
+              {fullscreen ? <Minimize2 className="size-3" /> : <Maximize2 className="size-3" />}
+            </button>
             <button
               onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c) }}
               onMouseDown={(e) => e.stopPropagation()}

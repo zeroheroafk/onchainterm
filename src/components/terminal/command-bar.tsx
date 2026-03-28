@@ -8,6 +8,7 @@ import {
   LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
+import { useMarketData } from "@/lib/market-data-context"
 import { FN_KEY_MAP, LETTER_KEY_MAP } from "@/hooks/useKeyboardShortcuts"
 
 // Build reverse map: widget ID → shortcut key label
@@ -31,6 +32,24 @@ interface CommandItem {
   action: () => void
 }
 
+function MiniSparkline({ prices }: { prices: number[] }) {
+  if (prices.length < 2) return null
+  const recent = prices.slice(-20)
+  const min = Math.min(...recent)
+  const max = Math.max(...recent)
+  const range = max - min || 1
+  const w = 40, h = 12
+  const points = recent.map((p, i) =>
+    `${(i / (recent.length - 1)) * w},${h - ((p - min) / range) * h}`
+  ).join(" ")
+  const isUp = recent[recent.length - 1] >= recent[0]
+  return (
+    <svg width={w} height={h} className="shrink-0">
+      <polyline points={points} fill="none" stroke={isUp ? "#22c55e" : "#ef4444"} strokeWidth="1" />
+    </svg>
+  )
+}
+
 export function CommandBar() {
   const [query, setQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
@@ -38,6 +57,7 @@ export function CommandBar() {
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isWidgetActive, focusWidget, addWidget, bringToFront, removeWidget, setCatalogOpen } = useLayout()
+  const { data: coins } = useMarketData()
 
   const handleWidgetAction = useCallback((widgetId: string) => {
     if (isWidgetActive(widgetId)) {
@@ -215,6 +235,23 @@ export function CommandBar() {
       {/* Dropdown results */}
       {isOpen && filtered.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card shadow-lg animate-dropdown">
+          {!query.trim() && coins.length > 0 && (
+            <div className="border-b border-border px-2 py-1.5">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-wider">Quick Prices</span>
+              <div className="mt-1 flex flex-col gap-0.5">
+                {coins.slice(0, 5).map(coin => (
+                  <div key={coin.id} className="flex items-center gap-2 px-1 py-0.5 text-[10px]">
+                    <span className="text-foreground font-bold w-10 truncate">{coin.symbol?.toUpperCase()}</span>
+                    <span className="text-amber-400 font-mono">${coin.current_price?.toLocaleString()}</span>
+                    <span className={coin.price_change_percentage_24h >= 0 ? "text-green-400" : "text-red-400"}>
+                      {coin.price_change_percentage_24h >= 0 ? "+" : ""}{coin.price_change_percentage_24h?.toFixed(1)}%
+                    </span>
+                    <MiniSparkline prices={coin.sparkline_in_7d?.price || []} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {filtered.map((cmd, i) => {
             const Icon = cmd.icon
             const isActive = cmd.category === "widget" && isWidgetActive(cmd.id)

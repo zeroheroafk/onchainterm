@@ -19,6 +19,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { ShortcutsHelp } from "@/components/terminal/shortcuts-help"
 import { PresetManager } from "@/components/terminal/preset-manager"
 import { SoundProvider, useSound } from "@/lib/sound-context"
+import { NotificationProvider } from "@/lib/notification-context"
+import { NotificationBell } from "@/components/terminal/notification-panel"
 import { CoinContextMenuProvider } from "@/components/terminal/coin-context-menu"
 
 function BloombergClock() {
@@ -199,7 +201,7 @@ function TerminalHeader() {
   const isNeon = theme.neonMode
 
   return (
-    <div className={`flex items-center justify-between border-b border-border px-3 shrink-0 ${isBloomberg ? "bg-card py-1" : "bg-card px-4 py-2"}`}>
+    <div className={`flex items-center justify-between border-b border-border px-3 shrink-0 ${isBloomberg ? "bg-card py-1" : "bg-card sm:px-4 py-1.5 sm:py-2"}`}>
       <div className="flex items-center gap-3">
         <h1 className={`font-bold uppercase tracking-widest text-primary ${isBloomberg ? "text-xs font-mono" : "text-sm"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
           {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
@@ -223,6 +225,8 @@ function TerminalHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
+        {/* Notifications */}
+        <NotificationBell />
         {/* User auth */}
         <UserMenu />
         {/* Sound toggle */}
@@ -384,6 +388,7 @@ export function TerminalPageClient() {
   return (
     <ThemeProvider>
       <SoundProvider>
+        <NotificationProvider>
         <AuthProvider>
           <MarketDataProvider>
             <LayoutProvider>
@@ -391,6 +396,7 @@ export function TerminalPageClient() {
             </LayoutProvider>
           </MarketDataProvider>
         </AuthProvider>
+        </NotificationProvider>
       </SoundProvider>
     </ThemeProvider>
   )

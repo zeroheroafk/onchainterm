@@ -224,8 +224,10 @@ export function TradeJournal() {
       {/* Trade list */}
       <div className="flex-1 overflow-auto">
         {trades.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            No trades logged yet. Click + to add.
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <BookOpen className="size-8 opacity-20" />
+            <span className="text-[10px]">No trades logged yet</span>
+            <span className="text-[8px]">Click + above to log your first trade</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
