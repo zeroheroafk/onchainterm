@@ -55,12 +55,22 @@ const ETHERSCAN_BASE = "https://api.etherscan.io/api"
 
 async function etherscanCall(params: string): Promise<Record<string, unknown>> {
   const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) throw new Error("Etherscan API key not configured")
-  const res = await fetch(`${ETHERSCAN_BASE}?${params}&apikey=${apiKey}`, {
-    next: { revalidate: 15 },
-  })
+  const url = apiKey
+    ? `${ETHERSCAN_BASE}?${params}&apikey=${apiKey}`
+    : `${ETHERSCAN_BASE}?${params}`
+  const res = await fetch(url, { next: { revalidate: 15 } })
   if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
-  return res.json()
+  const data = await res.json()
+
+  // If API key is invalid, retry without it
+  if ((data.status === "0" || data.message === "NOTOK") && apiKey) {
+    console.warn("[whales] API key invalid, retrying without key")
+    const fallbackRes = await fetch(`${ETHERSCAN_BASE}?${params}`, { next: { revalidate: 15 } })
+    if (!fallbackRes.ok) throw new Error(`Etherscan HTTP ${fallbackRes.status}`)
+    return fallbackRes.json()
+  }
+
+  return data
 }
 
 export async function GET() {
