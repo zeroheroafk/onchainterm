@@ -41,7 +41,7 @@ export function NewsWidget() {
 
   useEffect(() => {
     fetchNews()
-    const interval = setInterval(fetchNews, 30_000) // refresh every 30s
+    const interval = setInterval(fetchNews, 5 * 60_000) // refresh every 5min (server caches 10min)
     return () => clearInterval(interval)
   }, [fetchNews])
 
@@ -113,7 +113,7 @@ export function NewsWidget() {
 
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          CryptoCompare · {news.length} articles
+          GNews · {news.length} articles
         </span>
       </div>
     </div>
