@@ -58,7 +58,7 @@ export function PnlCalculator() {
 
       <div className="flex-1 overflow-auto p-3 space-y-3">
         {/* Position type toggle */}
-        <div className="flex rounded overflow-hidden border border-border/30 rounded-md">
+        <div className="flex rounded overflow-hidden border border-border/30 rounded-lg">
           <button
             onClick={() => setPositionType("long")}
             className={`flex-1 py-1.5 text-[10px] font-bold transition-colors ${
@@ -145,7 +145,7 @@ export function PnlCalculator() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Total Fees</span>
-              <span className="text-xs num text-amber-400">-${result.totalFees.toFixed(2)}</span>
+              <span className="text-xs num text-foreground/70">-${result.totalFees.toFixed(2)}</span>
             </div>
             <div className="h-px bg-border" />
             <div className="flex items-center justify-between">

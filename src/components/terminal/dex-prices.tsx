@@ -166,7 +166,7 @@ export function DexPrices() {
                 <td className="py-1.5 px-2">
                   <ChainBadge chain={token.chain} />
                 </td>
-                <td className="py-1.5 px-2 text-right num text-amber-400">
+                <td className="py-1.5 px-2 text-right num text-foreground">
                   {token.priceUsd
                     ? formatPrice(parseFloat(token.priceUsd))
                     : "--"}

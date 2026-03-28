@@ -28,7 +28,6 @@ function PercentCell({ value }: { value: number | null }) {
 function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
   if (!prices || prices.length < 2) return <span className="text-muted-foreground text-[10px]">—</span>
 
-  // Downsample to ~30 points for performance
   const step = Math.max(1, Math.floor(prices.length / 30))
   const sampled = prices.filter((_, i) => i % step === 0)
 
@@ -40,14 +39,25 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
 
   const points = sampled.map((p, i) => {
     const x = (i / (sampled.length - 1)) * w
-    const y = h - ((p - min) / range) * h
+    const y = h - ((p - min) / range) * (h - 2) - 1
     return `${x},${y}`
   }).join(" ")
 
-  const color = change >= 0 ? "#16c784" : "#ea3943"
+  // Area fill points: same as line but close the path at bottom
+  const areaPoints = `0,${h} ${points} ${w},${h}`
+
+  const color = change >= 0 ? "#2dd4a0" : "#f87171"
+  const gradId = change >= 0 ? "sparkGradUp" : "sparkGradDown"
 
   return (
     <svg width={w} height={h} className="shrink-0">
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${gradId})`} />
       <polyline
         points={points}
         fill="none"

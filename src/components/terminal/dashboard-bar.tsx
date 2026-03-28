@@ -89,7 +89,7 @@ export function DashboardBar() {
 
       <div className="flex items-center gap-1">
         <span className="text-muted-foreground/60">BTC.D</span>
-        <AnimatedNumber value={stats.btcDominance} format={(v) => `${v.toFixed(1)}%`} className="text-amber-400 font-bold" />
+        <AnimatedNumber value={stats.btcDominance} format={(v) => `${v.toFixed(1)}%`} className="text-foreground/90 font-bold" />
       </div>
 
       {fearGreed && (

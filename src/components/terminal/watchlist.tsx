@@ -517,7 +517,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-xs num text-amber-400">
+                      <div className="text-xs num text-foreground">
                         {coin.price !== null ? formatPrice(coin.price) : "—"}
                       </div>
                       <div className="flex items-center gap-1.5 justify-end">

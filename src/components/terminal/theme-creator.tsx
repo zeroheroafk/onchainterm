@@ -250,7 +250,7 @@ export function ThemeCreator() {
           Preview
         </div>
         <div
-          className="rounded-md border p-3"
+          className="rounded-lg border p-3"
           style={{
             background: colors["--background"],
             borderColor: colors["--border"],

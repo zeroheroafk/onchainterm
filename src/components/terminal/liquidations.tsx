@@ -130,7 +130,7 @@ export function LiquidationsFeed() {
                       <span className="text-xs font-bold text-foreground">{liq.symbol}</span>
                     </div>
                     <span className={`text-xs font-bold num ${
-                      liq.amount >= 500000 ? "text-amber-400" : "text-foreground"
+                      liq.amount >= 500000 ? "text-foreground" : "text-foreground"
                     }`}>
                       {formatAmount(liq.amount)}
                     </span>
