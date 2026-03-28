@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { ExternalLink, RefreshCw } from "lucide-react"
 
 interface NewsItem {
@@ -23,6 +23,9 @@ export function NewsWidget() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [newCount, setNewCount] = useState(0)
+  const seenTitlesRef = useRef<Set<string>>(new Set())
+  const lastFetchRef = useRef<number>(0)
 
   const fetchNews = useCallback(async () => {
     try {
@@ -30,7 +33,20 @@ export function NewsWidget() {
       if (!res.ok) throw new Error("Failed to fetch news")
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setNews(data.news)
+
+      const items = data.news as NewsItem[]
+
+      // Count new articles since last fetch
+      if (seenTitlesRef.current.size > 0) {
+        const fresh = items.filter(n => !seenTitlesRef.current.has(n.title)).length
+        if (fresh > 0) setNewCount(fresh)
+      }
+
+      // Track all seen titles
+      items.forEach(n => seenTitlesRef.current.add(n.title))
+      lastFetchRef.current = Date.now()
+
+      setNews(items)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
@@ -41,9 +57,17 @@ export function NewsWidget() {
 
   useEffect(() => {
     fetchNews()
-    const interval = setInterval(fetchNews, 2 * 60_000) // refresh every 2min (server caches 3min)
+    const interval = setInterval(fetchNews, 2 * 60_000)
     return () => clearInterval(interval)
   }, [fetchNews])
+
+  // Clear "new" badge after 30s
+  useEffect(() => {
+    if (newCount > 0) {
+      const t = setTimeout(() => setNewCount(0), 30_000)
+      return () => clearTimeout(t)
+    }
+  }, [newCount])
 
   return (
     <div className="flex h-full flex-col">
@@ -51,6 +75,11 @@ export function NewsWidget() {
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Crypto News</span>
           <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          {newCount > 0 && (
+            <span className="text-[9px] bg-primary text-primary-foreground px-1.5 rounded-full font-bold animate-pulse">
+              {newCount} NEW
+            </span>
+          )}
         </div>
         <button
           onClick={fetchNews}
@@ -80,6 +109,9 @@ export function NewsWidget() {
                 className="flex flex-col gap-1 px-3 py-2.5 hover:bg-secondary/30 transition-colors group"
               >
                 <div className="flex items-start gap-2">
+                  {(Date.now() - new Date(item.published_at).getTime()) < 5 * 60_000 && (
+                    <span className="shrink-0 mt-0.5 size-1.5 rounded-full bg-green-400 animate-pulse" title="Just published" />
+                  )}
                   <p className="text-xs text-foreground leading-tight flex-1 group-hover:text-primary transition-colors">
                     {item.title}
                   </p>
