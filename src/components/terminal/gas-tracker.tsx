@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Fuel, RefreshCw } from "lucide-react"
+import { Fuel, RefreshCw, Clock, Zap, Rocket } from "lucide-react"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface GasData {
   low: number
@@ -54,7 +55,7 @@ export function GasTracker() {
   }, [fetchGas])
 
   if (loading && !gasData) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading gas prices...</div>
+    return <CardsSkeleton count={3} />
   }
 
   if (error && !gasData) {
@@ -87,18 +88,18 @@ export function GasTracker() {
         <>
           {/* Gas tiers */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-green-400 font-medium mb-1">🐢 Slow</div>
+            <div className="hover-lift rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-green-400 font-medium mb-1 flex items-center justify-center gap-1"><Clock className="size-3" /> Slow</div>
               <div className="text-lg font-bold text-foreground">{gasData.low}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-amber-400 font-medium mb-1">⚡ Standard</div>
+            <div className="hover-lift rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-amber-400 font-medium mb-1 flex items-center justify-center gap-1"><Zap className="size-3" /> Standard</div>
               <div className="text-lg font-bold text-foreground">{gasData.average}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
-            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-red-400 font-medium mb-1">🚀 Fast</div>
+            <div className="hover-lift rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-red-400 font-medium mb-1 flex items-center justify-center gap-1"><Rocket className="size-3" /> Fast</div>
               <div className="text-lg font-bold text-foreground">{gasData.high}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>

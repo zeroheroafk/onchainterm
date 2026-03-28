@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 import type { CoinMarketData } from "@/types/market"
 
 interface PriceTableWidgetProps {
@@ -60,6 +61,38 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   const [sortKey, setSortKey] = useState<SortKey>("rank")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [flashMap, setFlashMap] = useState<Record<string, "up" | "down">>({})
+  const prevPricesRef = useRef<Record<string, number>>({})
+
+  // Detect price changes and trigger flash animations
+  useEffect(() => {
+    if (!data.length) return
+    const prev = prevPricesRef.current
+    const newFlashes: Record<string, "up" | "down"> = {}
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
+    for (const coin of data) {
+      const prevPrice = prev[coin.id]
+      if (prevPrice !== undefined && coin.current_price !== prevPrice) {
+        newFlashes[coin.id] = coin.current_price > prevPrice ? "up" : "down"
+      }
+      prev[coin.id] = coin.current_price
+    }
+
+    if (Object.keys(newFlashes).length > 0) {
+      setFlashMap(f => ({ ...f, ...newFlashes }))
+      const timeout = setTimeout(() => {
+        setFlashMap(f => {
+          const next = { ...f }
+          for (const id of Object.keys(newFlashes)) delete next[id]
+          return next
+        })
+      }, 600)
+      timeouts.push(timeout)
+    }
+
+    return () => { timeouts.forEach(clearTimeout) }
+  }, [data])
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -109,8 +142,8 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
 
   if (isLoading && data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-        Loading market data...
+      <div className="p-2">
+        <TableSkeleton rows={8} />
       </div>
     )
   }
@@ -144,11 +177,11 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
             <tr
               key={coin.id}
               onClick={() => handleClick(coin)}
-              className={`border-b border-border/50 cursor-pointer transition-colors ${
+              className={`border-b border-border/50 cursor-pointer transition-colors duration-150 ${
                 selectedId === coin.id
                   ? "bg-primary/10"
-                  : "hover:bg-secondary/50"
-              }`}
+                  : "hover:bg-secondary/40"
+              } ${flashMap[coin.id] === "up" ? "flash-up" : flashMap[coin.id] === "down" ? "flash-down" : ""}`}
             >
               <td className="py-1.5 px-2 text-muted-foreground">{coin.market_cap_rank}</td>
               <td className="py-1.5 px-2">

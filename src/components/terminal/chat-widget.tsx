@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, type FormEvent } from "react"
 import { Send, MessagesSquare } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
 import { useAuth } from "@/lib/auth-context"
+import { useToast } from "@/lib/toast-context"
 import { supabase } from "@/lib/supabase"
 
 interface ChatMessage {
@@ -77,6 +78,7 @@ function getOrCreateUsername(): string {
 export function ChatWidget() {
   const { themeId } = useTheme()
   const { user, username: authUsername } = useAuth()
+  const { toast } = useToast()
   const isLight = themeId === "light"
   const [fallbackUsername] = useState(() => getOrCreateUsername())
   const myUsername = authUsername || fallbackUsername
@@ -89,6 +91,8 @@ export function ChatWidget() {
   const [userCount, setUserCount] = useState(1)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const initialLoadDoneRef = useRef(false)
+  const animatedIdsRef = useRef<Set<string>>(new Set())
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -104,6 +108,9 @@ export function ChatWidget() {
     let broadcastChannel: ReturnType<typeof supabase.channel> | null = null
 
     async function init() {
+      initialLoadDoneRef.current = false
+      animatedIdsRef.current.clear()
+
       if (activeRoom === "general") {
         // General room: persisted via postgres_changes (backward compatible)
         const { data } = await supabase
@@ -114,6 +121,7 @@ export function ChatWidget() {
 
         if (data) {
           setMessages(data)
+          initialLoadDoneRef.current = true
         }
 
         pgChannel = supabase
@@ -123,6 +131,9 @@ export function ChatWidget() {
             { event: "INSERT", schema: "public", table: "chat_messages" },
             (payload) => {
               const newMsg = payload.new as ChatMessage
+              if (initialLoadDoneRef.current) {
+                animatedIdsRef.current.add(newMsg.id)
+              }
               setMessages((prev) => {
                 if (prev.some((m) => m.id === newMsg.id)) return prev
                 return [...prev, newMsg]
@@ -135,11 +146,13 @@ export function ChatWidget() {
       } else {
         // Other rooms: ephemeral broadcast channels (live-only, no persistence)
         setMessages([])
+        initialLoadDoneRef.current = true
 
         broadcastChannel = supabase
           .channel(channelName)
           .on("broadcast", { event: "message" }, (payload) => {
             const msg = payload.payload as ChatMessage
+            animatedIdsRef.current.add(msg.id)
             setMessages((prev) => {
               if (prev.some((m) => m.id === msg.id)) return prev
               return [...prev, msg]
@@ -198,6 +211,8 @@ export function ChatWidget() {
 
       if (error) {
         setInput(text) // Restore input on error
+      } else {
+        toast("Message sent", "success")
       }
     } else {
       // Broadcast for topic rooms (ephemeral)
@@ -210,6 +225,7 @@ export function ChatWidget() {
       }
 
       // Add to local state immediately
+      animatedIdsRef.current.add(msg.id)
       setMessages((prev) => [...prev, msg])
 
       // Broadcast to others
@@ -219,12 +235,13 @@ export function ChatWidget() {
         event: "message",
         payload: msg,
       })
+      toast("Message sent", "success")
     }
 
     setLastSentAt(Date.now())
     setIsSending(false)
     inputRef.current?.focus()
-  }, [input, isSending, lastSentAt, myUsername, activeRoom, user])
+  }, [input, isSending, lastSentAt, myUsername, activeRoom, user, toast])
 
   const handleRoomChange = useCallback((room: RoomId) => {
     setActiveRoom(room)
@@ -268,7 +285,7 @@ export function ChatWidget() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-auto">
-        <div className="flex flex-col gap-0.5 p-2">
+        <div key={activeRoom} className="tab-content flex flex-col gap-0.5 p-2">
           {activeRoom !== "general" && messages.length === 0 && (
             <div className="text-center text-xs text-muted-foreground py-8 space-y-1">
               <div>No messages in #{activeRoom} yet.</div>
@@ -283,7 +300,7 @@ export function ChatWidget() {
             </div>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className="flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30">
+            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
               <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums font-mono">
                 {formatTime(msg.created_at)}
               </span>

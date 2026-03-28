@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatPrice, formatPercentage } from "@/lib/constants"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface MoverCoin {
   id: string
@@ -69,13 +70,13 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
 
       <div className="flex-1 overflow-auto">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading...</div>
+          <FeedSkeleton rows={5} />
         ) : list.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No data</div>
         ) : (
-          <div className="divide-y divide-border/50">
-            {list.map((coin) => (
-              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer" onClick={() => onSelectSymbol?.(coin.id)}>
+          <div key={tab} className="divide-y divide-border/50 tab-content">
+            {list.map((coin, i) => (
+              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => onSelectSymbol?.(coin.id)}>
                 <div>
                   <span className="text-xs font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                   <span className="text-[10px] text-muted-foreground ml-1.5">{coin.name}</span>

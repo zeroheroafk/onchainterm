@@ -185,12 +185,14 @@
 }
 
 .widget-positioned {
-  transition: left 150ms ease-out, top 150ms ease-out, width 150ms ease-out, height 150ms ease-out;
+  transition: left 120ms ease-out, top 120ms ease-out, width 120ms ease-out, height 120ms ease-out;
 }
 
 .widget-dragging {
   transition: none !important;
   will-change: transform;
+  opacity: 0.92;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .widget-grid-editing .widget-panel {
@@ -199,6 +201,115 @@
 
 .widget-grid-editing .widget-panel:hover {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ── Micro-interaction Animations ── */
+
+/* Price flash: green pulse when price goes up */
+@keyframes price-flash-up {
+  0% { background-color: rgba(34, 197, 94, 0.3); }
+  100% { background-color: transparent; }
+}
+
+/* Price flash: red pulse when price goes down */
+@keyframes price-flash-down {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: price-flash-up 0.6s ease-out;
+}
+
+.flash-down {
+  animation: price-flash-down 0.6s ease-out;
+}
+
+/* Slide in from left for new feed items */
+@keyframes slide-in-left {
+  0% { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+/* Slide down for expanding sections/forms */
+@keyframes slide-down {
+  0% { opacity: 0; max-height: 0; overflow: hidden; }
+  100% { opacity: 1; max-height: 500px; overflow: hidden; }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease-out forwards;
+}
+
+/* New item glow pulse border */
+@keyframes item-glow {
+  0% { box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.6), 0 0 8px rgba(255, 140, 0, 0.3); }
+  100% { box-shadow: 0 0 0 0px transparent, 0 0 0px transparent; }
+}
+
+.animate-item-glow {
+  animation: item-glow 1.5s ease-out;
+}
+
+/* Smooth number counter transition */
+.number-transition {
+  transition: color 0.3s ease;
+}
+
+/* Skeleton shimmer (better than plain pulse) */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--secondary) 25%, color-mix(in srgb, var(--secondary) 50%, var(--muted-foreground)) 50%, var(--secondary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Dropdown slide animation */
+@keyframes dropdown-slide {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-dropdown {
+  animation: dropdown-slide 0.15s ease-out;
+}
+
+/* Scale up on hover for interactive cards */
+.hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Tab crossfade transition */
+.tab-content {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Progress bar smooth fill */
+.progress-fill {
+  transition: width 0.5s ease-out;
+}
+
+/* Resize handle hover feedback */
+.widget-positioned:hover .resize-handle-indicator {
+  opacity: 1;
+}
+
+.resize-handle-indicator {
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */

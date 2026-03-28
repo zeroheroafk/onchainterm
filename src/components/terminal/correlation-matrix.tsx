@@ -2,6 +2,7 @@
 
 import { useRef, useMemo, useEffect } from "react"
 import { Grid3x3, Info } from "lucide-react"
+import { ChartSkeleton } from "@/components/terminal/widget-skeleton"
 import { useMarketData } from "@/lib/market-data-context"
 
 const TRACKED_SYMBOLS = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK", "AVAX", "DOT"]
@@ -123,11 +124,7 @@ export function CorrelationMatrix() {
       {/* Matrix or fallback */}
       <div className="flex-1 overflow-auto min-h-0 p-2">
         {!matrix ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-1">
-            <Grid3x3 className="size-5 opacity-40" />
-            <span>Collecting data... ({pointCount}/{MAX_DATA_POINTS} points)</span>
-            <span className="text-[9px] opacity-60">Need at least {MIN_DATA_POINTS} snapshots</span>
-          </div>
+          <ChartSkeleton />
         ) : (
           <div className="overflow-auto">
             <table className="border-collapse w-full">
@@ -157,7 +154,7 @@ export function CorrelationMatrix() {
                       return (
                         <td
                           key={colSym}
-                          className="text-center text-[9px] font-mono px-0.5 py-0.5"
+                          className="text-center text-[9px] font-mono px-0.5 py-0.5 hover:ring-1 hover:ring-primary/50 transition-all duration-100"
                           style={{
                             backgroundColor: isDiagonal ? "rgb(39,39,42)" : correlationColor(r),
                             minWidth: "32px",
@@ -181,15 +178,7 @@ export function CorrelationMatrix() {
       {/* Legend */}
       <div className="border-t border-border px-3 py-1 shrink-0 flex items-center justify-center gap-1.5">
         <span className="text-[8px] text-red-400">-1</span>
-        <div className="flex gap-0">
-          {[-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1].map((v) => (
-            <div
-              key={v}
-              className="w-3 h-2 first:rounded-l-sm last:rounded-r-sm"
-              style={{ backgroundColor: correlationColor(v) }}
-            />
-          ))}
-        </div>
+        <div className="h-2 flex-1 rounded" style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #eab308, #22c55e, #3b82f6)' }} />
         <span className="text-[8px] text-green-400">+1</span>
       </div>
     </div>

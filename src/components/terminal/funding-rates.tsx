@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Percent, RefreshCw, Info } from "lucide-react"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface FundingItem {
   symbol: string
@@ -61,11 +62,7 @@ export function FundingRates() {
   }, [])
 
   if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-        Loading funding rates...
-      </div>
-    )
+    return <TableSkeleton rows={8} />
   }
 
   if (error && !data) {
@@ -153,13 +150,20 @@ export function FundingRates() {
 
           {/* Table rows */}
           {data.map((item) => {
-            const isPositive = item.fundingRate > 0
-            const rateColor = isPositive ? "text-red-400" : "text-green-400"
-            const prefix = isPositive ? "+" : ""
+            const rate = item.fundingRate
+            const rateColor =
+              rate > 0.1 ? "text-red-400 font-bold" :
+              rate > 0.05 ? "text-red-400" :
+              rate > 0 ? "text-red-400/70" :
+              rate < -0.1 ? "text-green-400 font-bold" :
+              rate < -0.05 ? "text-green-400" :
+              rate < 0 ? "text-green-400/70" :
+              "text-muted-foreground"
+            const prefix = rate > 0 ? "+" : ""
             return (
               <div
                 key={item.symbol}
-                className="grid grid-cols-4 gap-1 px-1 py-1.5 text-[10px] border-b border-border/30 hover:bg-secondary/30 transition-colors"
+                className="grid grid-cols-4 gap-1 px-1 py-1.5 text-[10px] border-b border-border/30 hover:bg-secondary/30 transition-colors duration-100"
               >
                 <span className="font-mono font-medium text-foreground">{item.symbol}</span>
                 <span className={`text-right font-mono font-medium ${rateColor}`}>

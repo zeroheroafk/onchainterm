@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Plus, Trash2, Wallet, Download, Search, Loader2, X } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
+import { useToast } from "@/lib/toast-context"
 
 interface PortfolioEntry {
   id: string
@@ -72,7 +74,7 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
     const largeArc = angle > 180 ? 1 : 0
 
     if (slices.length === 1) {
-      return <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} />
+      return <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }} />
     }
 
     return (
@@ -80,6 +82,7 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
         key={i}
         d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
         fill={slice.color}
+        style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
       />
     )
   })
@@ -93,7 +96,8 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
 }
 
 export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
-  const { data: marketData } = useMarketData()
+  const { data: marketData, isLoading: pricesLoading } = useMarketData()
+  const { toast } = useToast()
   const [entries, setEntries] = useState<PortfolioEntry[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [amount, setAmount] = useState("")
@@ -178,12 +182,14 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     setAmount("")
     setBuyPrice("")
     setShowAdd(false)
-  }, [selectedCoin, amount, buyPrice, entries])
+    toast("Added to portfolio", "success")
+  }, [selectedCoin, amount, buyPrice, entries, toast])
 
   const removeEntry = (id: string) => {
     const updated = entries.filter(e => e.id !== id)
     setEntries(updated)
     savePortfolio(updated)
+    toast("Removed from portfolio")
   }
 
   const getCurrentPrice = (entry: PortfolioEntry) => {
@@ -287,7 +293,11 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
       {/* Entries list */}
       <div className="flex-1 overflow-auto">
-        {entries.length === 0 ? (
+        {pricesLoading && entries.length === 0 ? (
+          <div className="p-3">
+            <CardsSkeleton count={4} />
+          </div>
+        ) : entries.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
             No holdings yet. Click + to add.
           </div>
@@ -338,7 +348,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
       {/* Add form */}
       <div className="border-t border-border px-3 py-2 shrink-0">
         {showAdd ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="animate-slide-down flex flex-col gap-1.5">
             {/* Coin search */}
             {!selectedCoin ? (
               <div className="relative">

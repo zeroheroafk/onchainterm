@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Star, Plus, X, Search, Loader2, Share2, Check, Download, ChevronDown, Pencil, Trash2, FolderPlus } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
+import { useToast } from "@/lib/toast-context"
 
 const STORAGE_KEY = "onchainterm_watchlists"
 const WATCHLIST_META_KEY = "onchainterm_watchlist_meta"
@@ -61,7 +63,8 @@ function saveMeta(meta: Record<string, WatchlistCoinMeta>) {
 }
 
 export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
-  const { data: marketData } = useMarketData()
+  const { data: marketData, isLoading: marketLoading } = useMarketData()
+  const { toast } = useToast()
   const [watchlists, setWatchlists] = useState<Watchlist[]>([])
   const [activeListId, setActiveListId] = useState("default")
   const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>({})
@@ -187,7 +190,8 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     saveWatchlists(updated)
     setActiveListId(id)
     setShowListMenu(false)
-  }, [watchlists])
+    toast("List created", "success")
+  }, [watchlists, toast])
 
   const deleteList = useCallback((listId: string) => {
     if (watchlists.length <= 1) return
@@ -231,17 +235,19 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
   const removeCoin = useCallback((coinId: string) => {
     updateActiveList(l => ({ ...l, coins: l.coins.filter(id => id !== coinId) }))
-  }, [updateActiveList])
+    toast("Coin removed", "success")
+  }, [updateActiveList, toast])
 
   const shareWatchlist = useCallback(() => {
     const encoded = btoa(JSON.stringify(watchlist))
     const url = `${window.location.origin}?watchlist=${encoded}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
+      toast("Watchlist shared!", "success")
       if (shareTimer.current) clearTimeout(shareTimer.current)
       shareTimer.current = setTimeout(() => setCopied(false), 2000)
     }).catch(() => {})
-  }, [watchlist])
+  }, [watchlist, toast])
 
   const importSharedWatchlist = useCallback(() => {
     if (!importBanner) return
@@ -448,7 +454,11 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
       {/* Coin list */}
       <div className="flex-1 overflow-auto min-h-0">
-        {watchlist.length === 0 ? (
+        {marketLoading && watchlist.length > 0 && marketData.length === 0 ? (
+          <div className="p-3">
+            <TableSkeleton rows={5} />
+          </div>
+        ) : watchlist.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
             {watchlists.length > 1 ? "This watchlist is empty. Click + to add coins." : "Your watchlist is empty. Click + to add coins."}
           </div>
@@ -459,7 +469,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
               return (
                 <div
                   key={coinId}
-                  className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors cursor-pointer"
+                  className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors duration-150 cursor-pointer"
                   onClick={() => onSelectSymbol?.(coinId)}
                 >
                   <div className="flex items-center gap-2">

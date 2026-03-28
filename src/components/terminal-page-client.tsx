@@ -320,7 +320,7 @@ function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onSh
           <button
             key={key}
             onClick={() => handleFnClick(key)}
-            className={`flex items-center shrink-0 transition-colors hover:bg-primary/10 active:bg-primary/20 rounded-sm ${
+            className={`flex items-center shrink-0 transition-all duration-100 hover:bg-secondary hover-lift active:bg-primary/20 rounded-sm ${
               isBloomberg ? "" : "px-0.5"
             }`}
           >

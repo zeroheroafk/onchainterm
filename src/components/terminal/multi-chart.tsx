@@ -158,7 +158,7 @@ function ChartPane({
       {/* chart */}
       <div className="relative flex-1 min-h-0">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+          <div className="animate-fade-in absolute inset-0 z-10 flex items-center justify-center bg-background/80">
             <div className="flex flex-col items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span className="text-xs text-muted-foreground">
@@ -238,7 +238,8 @@ export function MultiChart() {
 
       {/* chart grid */}
       <div
-        className="flex-1 min-h-0 grid gap-1 p-1"
+        key={visibleCount}
+        className="tab-content flex-1 min-h-0 grid gap-1 p-1"
         style={gridStyle}
       >
         {Array.from({ length: visibleCount }).map((_, i) => {

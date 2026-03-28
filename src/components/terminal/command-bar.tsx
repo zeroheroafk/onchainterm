@@ -214,7 +214,7 @@ export function CommandBar() {
 
       {/* Dropdown results */}
       {isOpen && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card shadow-lg animate-dropdown">
           {filtered.map((cmd, i) => {
             const Icon = cmd.icon
             const isActive = cmd.category === "widget" && isWidgetActive(cmd.id)
@@ -235,7 +235,18 @@ export function CommandBar() {
                 <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : "opacity-60"}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium font-mono">{cmd.label}</span>
+                    <span className="text-xs font-medium font-mono">{(() => {
+                      if (!query.trim()) return cmd.label
+                      const idx = cmd.label.toLowerCase().indexOf(query.toLowerCase())
+                      if (idx === -1) return cmd.label
+                      return (
+                        <>
+                          {cmd.label.slice(0, idx)}
+                          <span className="text-primary">{cmd.label.slice(idx, idx + query.length)}</span>
+                          {cmd.label.slice(idx + query.length)}
+                        </>
+                      )
+                    })()}</span>
                     {isActive && (
                       <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">OPEN</span>
                     )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { RefreshCw } from "lucide-react"
+import { ChartSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface HeatmapCoin {
   id: string
@@ -83,7 +84,7 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
     }))
   }, [coins])
 
-  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading heatmap...</div>
+  if (loading) return <ChartSkeleton />
   if (error && coins.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
       <span className="text-red-400">{error}</span>
@@ -132,13 +133,16 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
             return (
               <div
                 key={coin.id}
-                className={`rounded-sm p-1.5 flex flex-col items-center justify-center cursor-pointer transition-colors hover:opacity-80 ${getColor(change)} ${getTextColor(change)}`}
+                className={`group relative rounded-sm p-1.5 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-105 hover:z-10 hover:brightness-110 ${getColor(change)} ${getTextColor(change)}`}
                 onClick={() => onSelectSymbol?.(coin.id)}
                 style={{ width: `${width}px`, height: `${width * 0.7}px`, minHeight: "40px" }}
-                title={`${coin.name}: ${formatPrice(coin.price)} (${sign}${change.toFixed(2)}%)`}
               >
                 <span className="text-[10px] font-bold leading-tight">{coin.symbol}</span>
                 <span className="text-[9px] font-mono leading-tight">{sign}{change.toFixed(1)}%</span>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex flex-col items-center justify-center text-[9px] rounded-sm">
+                  <span className="text-foreground font-bold">{coin.symbol}</span>
+                  <span className="text-foreground/80">{formatPrice(coin.price)}</span>
+                </div>
               </div>
             )
           })}

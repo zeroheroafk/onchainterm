@@ -21,7 +21,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
         className="flex h-full w-full flex-col overflow-hidden rounded border border-border bg-card transition-colors widget-panel"
       >
         <div
-          className={`flex h-8 shrink-0 items-center justify-between border-b border-border bg-secondary/30 px-2 ${
+          className={`flex h-8 shrink-0 items-center justify-between border-b border-border bg-secondary/30 px-2 shadow-[0_1px_2px_rgba(0,0,0,0.2)] ${
             !isLocked ? "cursor-grab active:cursor-grabbing" : ""
           }`}
           onMouseDown={!isLocked ? onDragStart : undefined}
@@ -41,7 +41,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
             <button
               onClick={(e) => { e.stopPropagation(); onRemove() }}
               onMouseDown={(e) => e.stopPropagation()}
-              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-destructive/20 hover:text-destructive"
               title="Remove widget"
             >
               <X className="size-3.5" />

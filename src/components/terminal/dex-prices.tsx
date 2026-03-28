@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { ArrowUpRight, Zap } from "lucide-react"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface DexToken {
   name: string
@@ -84,11 +85,7 @@ export function DexPrices() {
   }, [tokens, activeFilter])
 
   if (isLoading && tokens.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-        Loading DEX data...
-      </div>
-    )
+    return <TableSkeleton rows={6} />
   }
 
   if (error && tokens.length === 0) {
@@ -135,7 +132,7 @@ export function DexPrices() {
 
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-xs">
+        <table key={activeFilter} className="w-full text-xs tab-content">
           <thead className="sticky top-0 bg-card z-[1]">
             <tr className="border-b border-border">
               <th className="py-1.5 px-2 text-left text-[10px] uppercase tracking-wider text-muted-foreground">Token</th>
@@ -152,7 +149,7 @@ export function DexPrices() {
               <tr
                 key={`${token.chain}-${token.tokenAddress}-${i}`}
                 onClick={() => window.open(token.url, "_blank", "noopener,noreferrer")}
-                className="border-b border-border/50 cursor-pointer transition-colors hover:bg-secondary/50"
+                className="border-b border-border/50 cursor-pointer hover:bg-secondary/40 transition-colors duration-100"
               >
                 <td className="py-1.5 px-2">
                   <div className="flex items-center gap-1.5">

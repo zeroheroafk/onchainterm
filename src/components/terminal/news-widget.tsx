@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { ExternalLink, RefreshCw } from "lucide-react"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface NewsItem {
   title: string
@@ -24,7 +25,10 @@ export function NewsWidget() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [newCount, setNewCount] = useState(0)
+  const [clickedUrl, setClickedUrl] = useState<string | null>(null)
   const seenTitlesRef = useRef<Set<string>>(new Set())
+  const animatedUrlsRef = useRef<Set<string>>(new Set())
+  const isInitialLoadRef = useRef(true)
   const lastFetchRef = useRef<number>(0)
 
   const fetchNews = useCallback(async () => {
@@ -40,6 +44,12 @@ export function NewsWidget() {
       if (seenTitlesRef.current.size > 0) {
         const fresh = items.filter(n => !seenTitlesRef.current.has(n.title)).length
         if (fresh > 0) setNewCount(fresh)
+      }
+
+      // On initial load, mark all items as already animated
+      if (isInitialLoadRef.current) {
+        items.forEach(n => animatedUrlsRef.current.add(n.url || n.title))
+        isInitialLoadRef.current = false
       }
 
       // Track all seen titles
@@ -92,7 +102,7 @@ export function NewsWidget() {
 
       <div className="flex-1 overflow-auto min-h-0">
         {loading && news.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading news...</div>
+          <FeedSkeleton rows={4} />
         ) : error && news.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
             <span className="text-red-400">{error}</span>
@@ -100,13 +110,21 @@ export function NewsWidget() {
           </div>
         ) : (
           <div className="divide-y divide-border/50">
-            {news.map((item, i) => (
+            {news.map((item, i) => {
+              const itemKey = item.url || item.title
+              const isNew = !animatedUrlsRef.current.has(itemKey)
+              return (
               <a
-                key={item.url || item.title || i}
+                key={itemKey || i}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col gap-1 px-3 py-2.5 hover:bg-secondary/30 transition-colors group"
+                className={`flex flex-col gap-1 px-3 py-2.5 hover:bg-secondary/30 transition-colors group ${isNew ? "animate-slide-in" : ""} ${clickedUrl === item.url ? "flash-up" : ""}`}
+                onAnimationEnd={() => animatedUrlsRef.current.add(itemKey)}
+                onClick={() => {
+                  setClickedUrl(item.url)
+                  setTimeout(() => setClickedUrl(null), 400)
+                }}
               >
                 <div className="flex items-start gap-2">
                   {(Date.now() - new Date(item.published_at).getTime()) < 5 * 60_000 && (
@@ -138,7 +156,8 @@ export function NewsWidget() {
                   )}
                 </div>
               </a>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { RefreshCw, Zap } from "lucide-react"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface Liquidation {
   symbol: string
@@ -33,6 +34,8 @@ export function LiquidationsFeed() {
   const [error, setError] = useState<string | null>(null)
   const [estimated, setEstimated] = useState(false)
   const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null)
+  const seenLiqRef = useRef<Set<string>>(new Set())
+  const isInitialLoadRef = useRef(true)
 
   const fetchData = useCallback(async () => {
     try {
@@ -40,6 +43,14 @@ export function LiquidationsFeed() {
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
       if (data.error) throw new Error(data.error)
+      // On initial load, mark all items as already seen for animation purposes
+      if (isInitialLoadRef.current) {
+        data.liquidations.forEach((liq: Liquidation, i: number) =>
+          seenLiqRef.current.add(`${liq.symbol}-${liq.timestamp}-${i}`)
+        )
+        isInitialLoadRef.current = false
+      }
+
       setLiquidations(data.liquidations)
       setEstimated(data.estimated ?? false)
       setUnavailableMessage(data.message ?? null)
@@ -57,7 +68,7 @@ export function LiquidationsFeed() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading liquidations...</div>
+  if (loading) return <FeedSkeleton rows={5} />
   if (error && liquidations.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
       <span className="text-red-400">{error}</span>
@@ -93,7 +104,7 @@ export function LiquidationsFeed() {
             </div>
             <div className="h-2 rounded-full bg-green-500/30 overflow-hidden">
               <div
-                className="h-full bg-red-500 rounded-full transition-all"
+                className="h-full bg-red-500 rounded-full transition-all progress-fill"
                 style={{ width: `${longPct}%` }}
               />
             </div>
@@ -102,8 +113,11 @@ export function LiquidationsFeed() {
           {/* Feed */}
           <div className="flex-1 overflow-auto min-h-0">
             <div className="divide-y divide-border/50">
-              {liquidations.map((liq, i) => (
-                <div key={`${liq.symbol}-${liq.timestamp}-${i}`} className="px-3 py-1.5 hover:bg-secondary/30 transition-colors">
+              {liquidations.map((liq, i) => {
+                const liqKey = `${liq.symbol}-${liq.timestamp}-${i}`
+                const isNew = !seenLiqRef.current.has(liqKey)
+                return (
+                <div key={liqKey} className={`px-3 py-1.5 hover:bg-secondary/30 transition-colors ${isNew ? "animate-slide-in" : ""}`} onAnimationEnd={() => seenLiqRef.current.add(liqKey)}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -126,7 +140,8 @@ export function LiquidationsFeed() {
                     <span>{timeAgo(liq.timestamp)}</span>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
