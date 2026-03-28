@@ -228,7 +228,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
           )}
         </div>
       )}
-      <table className="w-full text-xs">
+      <table className="w-full text-xs sticky-col-first">
         <thead className="sticky top-0 z-[1]">
           <tr className="border-b border-border/50">
             <SortHeader label="#" sortKeyVal="rank" className="!text-left w-8" />

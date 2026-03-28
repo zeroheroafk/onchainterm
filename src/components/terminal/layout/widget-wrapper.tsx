@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react"
 interface WidgetWrapperProps {
   title: string
   icon: LucideIcon
+  status?: "live" | "stale" | "error"
   isLocked: boolean
   onRemove: () => void
   onDragStart?: (e: React.MouseEvent) => void
@@ -14,7 +15,7 @@ interface WidgetWrapperProps {
 }
 
 export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
-  function WidgetWrapper({ title, icon: Icon, isLocked, onRemove, onDragStart, children }, ref) {
+  function WidgetWrapper({ title, icon: Icon, status, isLocked, onRemove, onDragStart, children }, ref) {
     const [collapsed, setCollapsed] = useState(false)
     const [fullscreen, setFullscreen] = useState(false)
 
@@ -49,6 +50,12 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
             <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/90 select-none">
               {title}
             </span>
+            {status && (
+              <span className={`status-dot ${
+                status === "live" ? "status-dot-live" :
+                status === "stale" ? "status-dot-stale" : "status-dot-error"
+              }`} title={status === "live" ? "Live data" : status === "stale" ? "Data may be stale" : "Connection error"} />
+            )}
           </div>
           <div className="flex items-center gap-0.5">
             <button

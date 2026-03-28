@@ -445,9 +445,16 @@ button:focus-visible {
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, var(--secondary) 25%, color-mix(in srgb, var(--secondary) 50%, var(--muted-foreground)) 50%, var(--secondary) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    105deg,
+    var(--secondary) 0%,
+    var(--secondary) 35%,
+    color-mix(in srgb, var(--secondary) 40%, var(--muted-foreground)) 50%,
+    var(--secondary) 65%,
+    var(--secondary) 100%
+  );
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 2s ease-in-out infinite;
 }
 
 /* Dropdown slide animation */
@@ -585,6 +592,67 @@ button:focus-visible {
 .coin-avatar {
   border-radius: 50%;
   box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--border) 60%, transparent), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Row data update highlight ── */
+@keyframes row-update-flash {
+  0% { background-color: color-mix(in srgb, var(--primary) 15%, transparent); }
+  100% { background-color: transparent; }
+}
+
+.row-updated {
+  animation: row-update-flash 1s ease-out;
+}
+
+/* ── Widget keyboard focus glow ── */
+.widget-panel:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 15%, transparent), 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* ── Sticky first column for wide tables ── */
+.sticky-col-first td:first-child,
+.sticky-col-first th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+}
+
+.sticky-col-first td:first-child::after,
+.sticky-col-first th:first-child::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -8px;
+  bottom: 0;
+  width: 8px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.15), transparent);
+  pointer-events: none;
+}
+
+/* ── Widget status dots ── */
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-live {
+  background: var(--color-positive);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--color-positive) 50%, transparent);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-dot-stale {
+  background: var(--color-amber);
+  opacity: 0.7;
+}
+
+.status-dot-error {
+  background: var(--color-negative);
+  opacity: 0.8;
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */
