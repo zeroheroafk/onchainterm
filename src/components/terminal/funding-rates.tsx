@@ -54,9 +54,9 @@ export function FundingRates() {
     return () => clearInterval(interval)
   }, [fetchFunding])
 
-  // Tick every minute to update countdowns
+  // Tick every 30s to keep countdowns visually up-to-date between data refreshes
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
+    const interval = setInterval(() => setTick((t) => t + 1), 30_000)
     return () => clearInterval(interval)
   }, [])
 

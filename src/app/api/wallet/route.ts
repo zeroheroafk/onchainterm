@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { etherscanFetch } from "@/lib/etherscan"
 
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 60_000
+const TIMEOUT_MS = 8_000
+
 function shortenAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
@@ -11,13 +15,25 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid Ethereum address" }, { status: 400 })
   }
 
+  // Check cache
+  const cached = cache.get(address)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return NextResponse.json(cached.data)
+  }
+
   try {
-    // Fetch balance, transactions, and ERC-20 tokens in parallel
-    const [balanceData, txData, tokenData] = await Promise.all([
+    // Fetch balance, transactions, and ERC-20 tokens in parallel with timeout
+    const fetchAll = Promise.all([
       etherscanFetch(`module=account&action=balance&address=${address}&tag=latest`, 15),
       etherscanFetch(`module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=15&sort=desc`, 30),
       etherscanFetch(`module=account&action=tokentx&address=${address}&page=1&offset=10&startblock=0&endblock=99999999&sort=desc`, 30),
     ])
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out")), TIMEOUT_MS)
+    )
+
+    const [balanceData, txData, tokenData] = await Promise.race([fetchAll, timeout])
 
     // ETH balance
     const balanceWei = balanceData.status === "1" ? balanceData.result : "0"
@@ -34,7 +50,7 @@ export async function GET(req: NextRequest) {
           value: Number(tx.value) / 1e18,
           timestamp: Number(tx.timeStamp) * 1000,
           isError: tx.isError === "1",
-          method: tx.functionName ? tx.functionName.split("(")[0] : (Number(tx.value) > 0 ? "transfer" : "contract"),
+          method: tx.functionName?.split("(")[0] ?? (Number(tx.value) > 0 ? "transfer" : "contract"),
         }))
       : []
 
@@ -56,12 +72,17 @@ export async function GET(req: NextRequest) {
 
     const recentTokens = Array.from(tokenMap.values()).slice(0, 10)
 
-    return NextResponse.json({
+    const responseData = {
       address,
       balanceEth,
       transactions,
       recentTokens,
-    })
+    }
+
+    // Populate cache
+    cache.set(address, { data: responseData, timestamp: Date.now() })
+
+    return NextResponse.json(responseData)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch wallet data"
     return NextResponse.json({ error: message }, { status: 500 })

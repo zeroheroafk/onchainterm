@@ -167,9 +167,12 @@ export function PnlCalculator() {
               </span>
             </div>
             {result.liquidationPrice !== null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-red-400 font-medium">Liquidation Price</span>
-                <span className="text-xs font-mono text-red-400">${result.liquidationPrice.toFixed(2)}</span>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-red-400 font-medium">Liquidation Price</span>
+                  <span className="text-xs font-mono text-red-400">${result.liquidationPrice.toFixed(2)}</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground">* Approximate — varies by exchange</span>
               </div>
             )}
           </div>

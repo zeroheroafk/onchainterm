@@ -52,6 +52,7 @@ export function AlertsWidget() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const notifiedRef = useRef<Set<string>>(new Set())
+  const prevPricesRef = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     setAlerts(loadAlerts())
@@ -89,9 +90,12 @@ export function AlertsWidget() {
       const coin = marketData.find(c => c.id === alert.coinId || c.symbol.toLowerCase() === alert.symbol.toLowerCase())
       if (!coin) return alert
 
+      const currentPrice = coin.current_price
+      const prevPrice = prevPricesRef.current.get(coin.id) ?? currentPrice
+
       const shouldTrigger =
-        (alert.direction === "above" && coin.current_price >= alert.targetPrice) ||
-        (alert.direction === "below" && coin.current_price <= alert.targetPrice)
+        (alert.direction === "above" && prevPrice < alert.targetPrice && currentPrice >= alert.targetPrice) ||
+        (alert.direction === "below" && prevPrice > alert.targetPrice && currentPrice <= alert.targetPrice)
 
       if (shouldTrigger && !notifiedRef.current.has(alert.id)) {
         updated = true
@@ -121,6 +125,11 @@ export function AlertsWidget() {
     if (updated) {
       setAlerts(newAlerts)
       saveAlerts(newAlerts)
+    }
+
+    // Update previous prices for crossing detection on next tick
+    for (const coin of marketData) {
+      prevPricesRef.current.set(coin.id, coin.current_price)
     }
   }, [marketData, alerts, soundEnabled, notificationsEnabled])
 

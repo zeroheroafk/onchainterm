@@ -76,7 +76,7 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
   // Calculate relative sizes based on market cap (sqrt for better visual distribution)
   const sizedCoins = useMemo(() => {
     if (!coins.length) return []
-    const maxMcap = Math.max(...coins.map(c => c.marketCap))
+    const maxMcap = Math.max(...coins.map(c => c.marketCap), 1)
     return coins.map(c => ({
       ...c,
       relativeSize: Math.sqrt(c.marketCap / maxMcap),

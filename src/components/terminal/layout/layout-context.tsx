@@ -203,7 +203,11 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     [renameCustomPreset]
   )
 
-  if (!loaded || !presetsLoaded) return null
+  if (!loaded || !presetsLoaded) return (
+    <div className="flex h-screen items-center justify-center bg-background">
+      <div className="text-muted-foreground text-sm">Loading layout...</div>
+    </div>
+  )
 
   return (
     <LayoutContext.Provider
