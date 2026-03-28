@@ -172,38 +172,37 @@ export function TradingSignals() {
   // Vote on a signal
   const handleVote = useCallback(
     async (signalId: string, voteType: "up" | "down") => {
-      setVotes((prev) => {
-        const existing = prev[signalId]
-        let next: Record<string, "up" | "down">
+      // Compute the vote transition upfront to avoid reading stale state
+      const currentVote = votes[signalId] || null
+      const newVote = currentVote === voteType ? null : voteType
 
-        if (existing === voteType) {
-          // Remove vote
-          const { [signalId]: _, ...rest } = prev
-          next = rest
+      // Update votes state
+      setVotes((prev) => {
+        const next = { ...prev }
+        if (newVote) {
+          next[signalId] = newVote
         } else {
-          next = { ...prev, [signalId]: voteType }
+          delete next[signalId]
         }
         saveVotes(next)
         return next
       })
 
+      // Update signal counts using the pre-computed vote transition (not stale state)
       setSignals((prev) => {
-        const currentVote = votes[signalId]
         const next = prev.map((s) => {
           if (s.id !== signalId) return s
           let { upvotes, downvotes } = s
 
           // Remove previous vote
-          if (currentVote === "up") upvotes--
-          if (currentVote === "down") downvotes--
+          if (currentVote === "up") upvotes = Math.max(0, upvotes - 1)
+          if (currentVote === "down") downvotes = Math.max(0, downvotes - 1)
 
-          // Apply new vote (unless toggling off)
-          if (currentVote !== voteType) {
-            if (voteType === "up") upvotes++
-            if (voteType === "down") downvotes++
-          }
+          // Add new vote
+          if (newVote === "up") upvotes++
+          if (newVote === "down") downvotes++
 
-          return { ...s, upvotes: Math.max(0, upvotes), downvotes: Math.max(0, downvotes) }
+          return { ...s, upvotes, downvotes }
         })
         saveSignals(next)
 

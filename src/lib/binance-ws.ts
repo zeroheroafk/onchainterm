@@ -116,14 +116,13 @@ export function createBinanceWS(
         const data = msg.data
         if (!data || !data.s) return
 
-        const binanceSymbol = data.s.toLowerCase() + (data.s.toLowerCase().endsWith("usdt") ? "" : "")
         const sym = data.s.toLowerCase().endsWith("usdt") ? data.s.toLowerCase() : `${data.s.toLowerCase()}usdt`
         const coinId = BINANCE_TO_ID[sym]
         if (!coinId) return
 
         const close = parseFloat(data.c)
-        const open = parseFloat(data.o)
-        const change24h = open > 0 ? ((close - open) / open) * 100 : 0
+        const rawChange = parseFloat(data.P)
+        const change24h = isNaN(rawChange) ? 0 : rawChange
 
         latestPrices[coinId] = { price: close, priceChange24h: change24h }
 

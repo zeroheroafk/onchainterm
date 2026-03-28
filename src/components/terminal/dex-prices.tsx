@@ -79,7 +79,7 @@ export function DexPrices() {
   const filtered = useMemo(() => {
     if (activeFilter === "All") return tokens
     return tokens.filter(
-      (t) => t.chain === activeFilter.toLowerCase()
+      (t) => t.chain.toLowerCase() === activeFilter.toLowerCase()
     )
   }, [tokens, activeFilter])
 
@@ -158,7 +158,7 @@ export function DexPrices() {
                   <div className="flex items-center gap-1.5">
                     {token.icon && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={token.icon} alt="" className="size-4 shrink-0 rounded-full" />
+                      <img src={token.icon} alt="" className="size-4 shrink-0 rounded-full" onError={(e) => { e.currentTarget.style.display = "none" }} />
                     )}
                     <span className="font-bold text-foreground">{token.symbol}</span>
                     <span className="text-muted-foreground text-[10px] hidden xl:inline truncate max-w-[80px]">

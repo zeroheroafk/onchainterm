@@ -9,7 +9,8 @@ import { supabase } from "@/lib/supabase"
 interface ChatMessage {
   id: string
   username: string
-  text: string
+  content: string
+  user_id?: string
   created_at: string
 }
 
@@ -188,10 +189,12 @@ export function ChatWidget() {
     setInput("")
 
     if (activeRoom === "general") {
-      // Persist to database for General room
+      // Persist to database for General room (requires authentication)
+      if (!user) return
+
       const { error } = await supabase
         .from("chat_messages")
-        .insert({ username: myUsername, text })
+        .insert({ username: myUsername, content: text, user_id: user.id })
 
       if (error) {
         setInput(text) // Restore input on error
@@ -202,7 +205,7 @@ export function ChatWidget() {
       const msg: ChatMessage = {
         id: crypto.randomUUID(),
         username: myUsername,
-        text,
+        content: text,
         created_at: new Date().toISOString(),
       }
 
@@ -221,7 +224,7 @@ export function ChatWidget() {
     setLastSentAt(Date.now())
     setIsSending(false)
     inputRef.current?.focus()
-  }, [input, isSending, lastSentAt, myUsername, activeRoom])
+  }, [input, isSending, lastSentAt, myUsername, activeRoom, user])
 
   const handleRoomChange = useCallback((room: RoomId) => {
     setActiveRoom(room)
@@ -293,7 +296,7 @@ export function ChatWidget() {
                   {msg.username}
                 </span>
                 <span className="text-[10px] text-muted-foreground/40">{" : "}</span>
-                <span className="text-xs leading-relaxed text-foreground/90">{msg.text}</span>
+                <span className="text-xs leading-relaxed text-foreground/90">{msg.content}</span>
               </div>
             </div>
           ))}
@@ -301,33 +304,41 @@ export function ChatWidget() {
       </div>
 
       {/* Input */}
-      <form
-        onSubmit={handleSubmit}
-        className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
-      >
-        <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
-          <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
-            {myUsername}{">"}
+      {activeRoom === "general" && !user ? (
+        <div className="shrink-0 flex items-center justify-center border-t border-border bg-card px-3 py-2">
+          <span className="text-xs text-muted-foreground font-mono">
+            Sign in to chat in General
           </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Message #${activeRoom}...`}
-            disabled={isSending}
-            maxLength={300}
-            className="flex-1 bg-transparent py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 font-mono"
-          />
         </div>
-        <button
-          type="submit"
-          disabled={!input.trim() || isSending}
-          className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
         >
-          <Send className="size-3.5" />
-        </button>
-      </form>
+          <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
+            <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
+              {myUsername}{">"}
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Message #${activeRoom}...`}
+              disabled={isSending}
+              maxLength={300}
+              className="flex-1 bg-transparent py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 font-mono"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!input.trim() || isSending}
+            className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Send className="size-3.5" />
+          </button>
+        </form>
+      )}
     </div>
   )
 }
