@@ -205,9 +205,26 @@ function TerminalHeader() {
   return (
     <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5 header-glow"}`}>
       <div className="flex items-center gap-3">
-        <h1 className={`font-bold uppercase text-primary ${isBloomberg ? "text-xs font-mono tracking-widest" : "text-sm tracking-[0.2em] font-heading"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
-          {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
-        </h1>
+        {isBloomberg ? (
+          <h1 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
+            ONCHAINTERM
+          </h1>
+        ) : (
+          <h1 className={`flex items-center gap-0 ${isNeon ? "font-mono neon-glitch-text" : "font-heading"}`}>
+            {/* Logo mark */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mr-1.5 shrink-0 opacity-80">
+              <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.5" className="text-primary" />
+              <path d="M8 16V11L12 8L16 11V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" className="text-primary/60" />
+            </svg>
+            <span className="text-sm font-light tracking-[0.18em] uppercase text-foreground/90">
+              Onchain
+            </span>
+            <span className="text-sm font-bold tracking-[0.18em] uppercase text-gradient">
+              Term
+            </span>
+          </h1>
+        )}
         <span className="live-dot" title="Live data connected" />
         {isNeon && <span className="neon-cursor" />}
         {isBloomberg ? (
