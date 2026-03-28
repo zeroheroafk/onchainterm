@@ -6,7 +6,8 @@ export async function GET() {
     const data = await etherscanFetch("module=gastracker&action=gasoracle", 15)
 
     if (data.status !== "1" || !data.result) {
-      throw new Error((data.message as string) || (data.result as string) || "Etherscan returned no gas data")
+      console.error("[gas] Etherscan full response:", JSON.stringify(data))
+      throw new Error((data.result as string) || (data.message as string) || "Etherscan returned no gas data")
     }
 
     const result = data.result as Record<string, string>

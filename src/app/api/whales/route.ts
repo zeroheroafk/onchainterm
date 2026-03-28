@@ -51,30 +51,37 @@ function getLabel(addr: string): string {
   return KNOWN_LABELS[addr.toLowerCase()] || shortenAddress(addr)
 }
 
-const ETHERSCAN_BASE = "https://api.etherscan.io/api"
+const ETHERSCAN_BASE = "https://api.etherscan.io/v2/api"
 
-async function etherscanCall(params: string): Promise<Record<string, unknown>> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function etherscanCall(params: string): Promise<any> {
   const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) throw new Error("Etherscan API key not configured")
-  const res = await fetch(`${ETHERSCAN_BASE}?${params}&apikey=${apiKey}`, {
-    next: { revalidate: 15 },
-  })
+  const chainParam = params.includes("chainid=") ? "" : "&chainid=1"
+  const keyParam = apiKey ? `&apikey=${apiKey}` : ""
+  const url = `${ETHERSCAN_BASE}?${params}${chainParam}${keyParam}`
+  const res = await fetch(url, { next: { revalidate: 15 } })
   if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
-  return res.json()
+  const data = await res.json()
+  // V2 returns rate limit / error as { status: "0", message: "NOTOK", result: "error string" }
+  if (data.status === "0" || data.message === "NOTOK") {
+    throw new Error(`Etherscan: ${data.result || data.message}`)
+  }
+  return data
 }
 
 export async function GET() {
   try {
     // 1. Get latest block number
     const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
-    const latestBlock = parseInt(blockNumData.result as string, 16)
+    const blockResult = blockNumData.result
+    const latestBlock = typeof blockResult === "string" ? parseInt(blockResult, 16) : NaN
     if (isNaN(latestBlock)) {
       throw new Error("Invalid block number from Etherscan")
     }
 
-    // 2. Fetch last 15 blocks (~3 min) in batches of 3 to respect rate limits
-    const BLOCKS_TO_SCAN = 15
-    const BATCH_SIZE = 3
+    // 2. Fetch last 5 blocks in batches of 1 to respect V2 rate limits
+    const BLOCKS_TO_SCAN = 5
+    const BATCH_SIZE = 1
     const blockNumbers = Array.from({ length: BLOCKS_TO_SCAN }, (_, i) => latestBlock - i)
 
     const allTxs: {
@@ -96,11 +103,15 @@ export async function GET() {
           const data = await etherscanCall(
             `module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`
           )
-          return data.result as {
+          const blockData = data.result
+          // V2 may return null or have no transactions
+          if (!blockData || typeof blockData !== "object") return null
+          if (!Array.isArray(blockData.transactions)) return null
+          return blockData as {
             transactions: BlockTx[]
             timestamp: string
             number: string
-          } | null
+          }
         })
       )
 
@@ -132,6 +143,10 @@ export async function GET() {
             block: blkNum,
           })
         }
+      }
+      // Small delay between batches to avoid V2 rate limits
+      if (i + BATCH_SIZE < blockNumbers.length) {
+        await new Promise(r => setTimeout(r, 250))
       }
     }
 
