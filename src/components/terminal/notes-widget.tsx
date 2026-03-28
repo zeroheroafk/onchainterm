@@ -49,10 +49,10 @@ export function NotesWidget() {
         className="flex-1 w-full resize-none bg-transparent p-3 text-xs text-foreground outline-none placeholder:text-muted-foreground/50 font-mono"
         spellCheck={false}
       />
-      <div className="border-t border-border px-3 py-1 text-[9px] text-muted-foreground shrink-0 flex items-center justify-between">
-        <span className="text-[8px] text-muted-foreground">{content.length} chars</span>
-        {saveStatus === 'saving' && <span className="text-[9px] text-muted-foreground animate-pulse">Saving...</span>}
-        {saveStatus === 'saved' && <span className="text-[9px] text-green-400">✓ Saved</span>}
+      <div className="border-t border-border/20 px-3 py-1 text-[9px] text-muted-foreground shrink-0 flex items-center justify-between">
+        <span className="text-[8px] text-muted-foreground/30 num">{content.length} chars</span>
+        {saveStatus === 'saving' && <span className="text-[8px] text-muted-foreground/40 animate-pulse">Saving...</span>}
+        {saveStatus === 'saved' && <span className="text-[8px] text-positive/60">✓ Saved</span>}
       </div>
     </div>
   )

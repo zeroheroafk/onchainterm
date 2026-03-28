@@ -72,14 +72,14 @@ export function NftTracker() {
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Image className="size-4" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">
+          <Image className="size-3.5 opacity-60" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em]">
             NFT Floor Prices
           </span>
         </div>
         <button
           onClick={fetchNfts}
-          className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+          className="rounded-md p-1 text-muted-foreground/40 hover:text-primary hover:bg-secondary/50 transition-colors"
           title="Refresh"
         >
           <RefreshCw className="size-3" />
@@ -102,8 +102,8 @@ export function NftTracker() {
             nft.floorChange24h === null
               ? "text-muted-foreground"
               : nft.floorChange24h >= 0
-                ? "text-green-400"
-                : "text-red-400"
+                ? "text-positive"
+                : "text-negative"
 
           const changeText =
             nft.floorChange24h === null
@@ -122,7 +122,7 @@ export function NftTracker() {
                 {nft.name}
               </span>
               <div className="text-right">
-                <div className="text-foreground font-mono">
+                <div className="text-foreground num">
                   {nft.floorPrice.native.toFixed(
                     nft.floorPrice.native >= 1 ? 2 : 4
                   )}{" "}
@@ -132,10 +132,10 @@ export function NftTracker() {
                   {formatPrice(nft.floorPrice.usd)}
                 </div>
               </div>
-              <span className={`text-right font-mono ${changeColor}`}>
+              <span className={`text-right num ${changeColor}`}>
                 {changeText}
               </span>
-              <span className="text-right font-mono text-muted-foreground">
+              <span className="text-right num text-muted-foreground">
                 {nft.marketCap > 0 ? formatLargeNumber(nft.marketCap) : "N/A"}
               </span>
             </div>
@@ -145,7 +145,7 @@ export function NftTracker() {
 
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
-        <span className="text-[8px] text-muted-foreground">
+        <span className="text-[8px] text-muted-foreground/40">
           CoinGecko NFT Data
           {lastUpdated ? ` · Updated ${lastUpdated.toLocaleTimeString()}` : ""}
         </span>
