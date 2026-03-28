@@ -166,6 +166,14 @@ export function CommandBar() {
             setIsOpen(true)
           }}
           onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            // Delay so click on dropdown item can fire before closing
+            setTimeout(() => {
+              if (containerRef.current && !containerRef.current.contains(document.activeElement)) {
+                setIsOpen(false)
+              }
+            }, 150)
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Search commands, widgets, actions..."
           className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none font-mono"
