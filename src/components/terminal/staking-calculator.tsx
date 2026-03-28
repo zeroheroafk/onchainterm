@@ -195,7 +195,7 @@ export function StakingCalculator() {
 
         {/* Results */}
         {results ? (
-          <div className="space-y-3">
+          <div className="animate-fade-in space-y-3">
             {/* Main results */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
               <div className="flex items-center gap-1.5 mb-2">
@@ -235,7 +235,7 @@ export function StakingCalculator() {
               </div>
               <div className="flex h-5 rounded overflow-hidden border border-border">
                 <div
-                  className="bg-primary/40 flex items-center justify-center transition-all"
+                  className="bg-primary/40 flex items-center justify-center transition-all progress-fill"
                   style={{ width: `${100 - results.rewardsPct}%` }}
                 >
                   {100 - results.rewardsPct > 15 && (
@@ -245,7 +245,7 @@ export function StakingCalculator() {
                   )}
                 </div>
                 <div
-                  className="bg-green-500/40 flex items-center justify-center transition-all"
+                  className="bg-green-500/40 flex items-center justify-center transition-all progress-fill"
                   style={{ width: `${results.rewardsPct}%` }}
                 >
                   {results.rewardsPct > 10 && (
@@ -263,21 +263,21 @@ export function StakingCalculator() {
                 Breakdown
               </div>
               <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px]">
+                <div className="flex justify-between text-[10px] rounded px-1 -mx-1 hover:bg-secondary/30 transition-colors duration-100">
                   <span className="text-muted-foreground">Daily</span>
                   <span className="font-mono text-foreground">
                     {formatTokens(results.dailyTokens)} {coin.symbol}{" "}
                     <span className="text-muted-foreground">({formatPrice(results.dailyUsd)})</span>
                   </span>
                 </div>
-                <div className="flex justify-between text-[10px]">
+                <div className="flex justify-between text-[10px] rounded px-1 -mx-1 hover:bg-secondary/30 transition-colors duration-100">
                   <span className="text-muted-foreground">Monthly</span>
                   <span className="font-mono text-foreground">
                     {formatTokens(results.monthlyTokens)} {coin.symbol}{" "}
                     <span className="text-muted-foreground">({formatPrice(results.monthlyUsd)})</span>
                   </span>
                 </div>
-                <div className="flex justify-between text-[10px]">
+                <div className="flex justify-between text-[10px] rounded px-1 -mx-1 hover:bg-secondary/30 transition-colors duration-100">
                   <span className="text-muted-foreground">Yearly</span>
                   <span className="font-mono text-foreground">
                     {formatTokens(results.yearlyTokens)} {coin.symbol}{" "}

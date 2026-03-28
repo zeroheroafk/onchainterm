@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { Search, ExternalLink, ArrowRight, Loader2, Copy, Check } from "lucide-react"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface WalletTx {
   hash: string
@@ -115,9 +116,7 @@ export function WalletTracker() {
         )}
 
         {loading && !data && (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-            <Loader2 className="size-5 animate-spin" />
-          </div>
+          <FeedSkeleton rows={5} />
         )}
 
         {data && (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw } from "lucide-react"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface DefiProtocol {
   name: string
@@ -55,7 +56,7 @@ export function DefiDashboard() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading DeFi data...</div>
+  if (loading) return <TableSkeleton rows={6} />
   if (error && protocols.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
       <span className="text-red-400">{error}</span>

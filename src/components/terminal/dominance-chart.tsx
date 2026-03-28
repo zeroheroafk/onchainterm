@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { PieChart, RefreshCw } from "lucide-react"
+import { ChartSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface DominanceData {
   btc_dominance: number
@@ -46,11 +47,7 @@ export function DominanceChart() {
   }, [fetchData])
 
   if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
-        <RefreshCw className="size-4 animate-spin" />
-      </div>
-    )
+    return <ChartSkeleton />
   }
 
   if (error || !data) {
@@ -96,7 +93,7 @@ export function DominanceChart() {
           <svg width="100%" height="32" className="rounded overflow-hidden">
             {(() => {
               let offset = 0
-              return segments.map((seg) => {
+              return segments.map((seg, i) => {
                 const x = offset
                 offset += seg.value
                 return (
@@ -108,6 +105,7 @@ export function DominanceChart() {
                       height="32"
                       fill={seg.color}
                       opacity={0.85}
+                      className="transition-opacity duration-150 hover:opacity-80 cursor-pointer"
                     />
                     {seg.value > 8 && (
                       <text
@@ -119,6 +117,8 @@ export function DominanceChart() {
                         fontSize="10"
                         fontWeight="bold"
                         fontFamily="monospace"
+                        className="animate-fade-in"
+                        style={{ animationDelay: `${i * 0.1}s`, animationFillMode: 'backwards' }}
                       >
                         {seg.label} {seg.value.toFixed(1)}%
                       </text>
@@ -133,7 +133,7 @@ export function DominanceChart() {
         {/* Legend */}
         <div className="flex items-center gap-3">
           {segments.map((seg) => (
-            <div key={seg.label} className="flex items-center gap-1.5">
+            <div key={seg.label} className="flex items-center gap-1.5 hover-lift">
               <div
                 className="size-2 rounded-sm"
                 style={{ backgroundColor: seg.color, opacity: 0.85 }}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw } from "lucide-react"
+import { ChartSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface FearGreedEntry {
   value: number
@@ -48,7 +49,7 @@ export function FearGreedIndex() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading...</div>
+  if (loading) return <ChartSkeleton />
   if (error && entries.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
       <span className="text-red-400">{error}</span>
@@ -85,7 +86,7 @@ export function FearGreedIndex() {
             <path d="M 100 10 A 90 90 0 0 1 154 28" fill="none" stroke="#f5d100" strokeWidth="16" />
             <path d="M 154 28 A 90 90 0 0 1 190 100" fill="none" stroke="#16c784" strokeWidth="16" strokeLinecap="round" />
             {/* Needle */}
-            <g transform={`rotate(${rotation} 100 100)`}>
+            <g transform={`rotate(${rotation} 100 100)`} style={{ transition: 'transform 1s ease-out' }}>
               <line x1="100" y1="100" x2="100" y2="25" stroke={color} strokeWidth="3" strokeLinecap="round" />
               <circle cx="100" cy="100" r="5" fill={color} />
             </g>
@@ -94,8 +95,15 @@ export function FearGreedIndex() {
 
         {/* Value */}
         <div className="text-center">
-          <div className="text-3xl font-bold font-mono" style={{ color }}>{current.value}</div>
-          <div className="text-sm font-medium" style={{ color }}>{current.classification}</div>
+          <div className="text-3xl font-bold font-mono animate-fade-in" style={{ color }}>{current.value}</div>
+          <div className={`text-sm font-medium inline-block rounded-full px-2.5 py-0.5 ${
+            current.classification === "Extreme Fear" ? "bg-red-500/20 text-red-400" :
+            current.classification === "Fear" ? "bg-orange-500/20 text-orange-400" :
+            current.classification === "Neutral" ? "bg-yellow-500/20 text-yellow-400" :
+            current.classification === "Greed" ? "bg-green-500/20 text-green-400" :
+            current.classification === "Extreme Greed" ? "bg-emerald-500/20 text-emerald-400" :
+            ""
+          }`}>{current.classification}</div>
         </div>
       </div>
 

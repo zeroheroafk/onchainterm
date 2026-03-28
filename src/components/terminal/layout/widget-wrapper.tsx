@@ -1,7 +1,7 @@
 "use client"
 
-import { forwardRef } from "react"
-import { GripVertical, X } from "lucide-react"
+import { forwardRef, useState } from "react"
+import { ChevronDown, ChevronUp, GripVertical, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 interface WidgetWrapperProps {
@@ -15,6 +15,8 @@ interface WidgetWrapperProps {
 
 export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
   function WidgetWrapper({ title, icon: Icon, isLocked, onRemove, onDragStart, children }, ref) {
+    const [collapsed, setCollapsed] = useState(false)
+
     return (
       <div
         ref={ref}
@@ -37,18 +39,37 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
               {title}
             </span>
           </div>
-          {!isLocked && (
+          <div className="flex items-center gap-0.5">
             <button
-              onClick={(e) => { e.stopPropagation(); onRemove() }}
+              onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c) }}
               onMouseDown={(e) => e.stopPropagation()}
-              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-destructive/20 hover:text-destructive"
-              title="Remove widget"
+              className="rounded p-0.5 text-muted-foreground hover:text-primary transition-colors"
+              title={collapsed ? "Expand widget" : "Collapse widget"}
             >
-              <X className="size-3.5" />
+              {collapsed ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
             </button>
-          )}
+            {!isLocked && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove() }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-destructive/20 hover:text-destructive"
+                title="Remove widget"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex-1 overflow-hidden">{children}</div>
+        <div
+          className="flex-1 min-h-0 overflow-hidden"
+          style={{
+            transition: "max-height 0.2s ease-out, opacity 0.15s ease",
+            maxHeight: collapsed ? "0px" : "2000px",
+            opacity: collapsed ? 0 : 1,
+          }}
+        >
+          {children}
+        </div>
       </div>
     )
   }

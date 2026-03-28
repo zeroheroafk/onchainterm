@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw, ArrowDownToLine, ArrowUpFromLine } from "lucide-react"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface ExchangeFlow {
   name: string
@@ -51,7 +52,7 @@ export function ExchangeFlows() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading exchange flows...</div>
+  if (loading) return <CardsSkeleton count={4} />
   if (error && exchanges.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
       <span className="text-red-400">{error}</span>
@@ -70,7 +71,7 @@ export function ExchangeFlows() {
       </div>
 
       {/* Net flow summary */}
-      <div className="px-3 py-2 border-b border-border bg-secondary/10 shrink-0">
+      <div className={`px-3 py-2 border-b shrink-0 ${totalNet > 0 ? "bg-red-500/10 border-red-500/20" : "bg-green-500/10 border-green-500/20"}`}>
         <div className="text-[9px] uppercase text-muted-foreground font-medium">Total Net Flow (24h)</div>
         <div className={`text-lg font-bold font-mono ${totalNet > 0 ? "text-red-400" : "text-green-400"}`}>
           {totalNet > 0 ? "+" : ""}{formatEth(totalNet)} ETH
@@ -87,12 +88,12 @@ export function ExchangeFlows() {
       <div className="flex-1 overflow-auto min-h-0">
         <div className="divide-y divide-border/50">
           {exchanges.map((ex) => (
-            <div key={ex.name} className="px-3 py-2.5 hover:bg-secondary/30 transition-colors">
+            <div key={ex.name} className="px-3 py-2.5 hover:bg-secondary/30 transition-colors duration-100">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-bold text-foreground">{ex.name}</span>
                 <span className="text-[10px] font-mono text-muted-foreground">{formatBalance(ex.balanceEth)} ETH</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-[10px]">
+              <div className="grid grid-cols-3 gap-2 text-[10px] animate-fade-in">
                 <div className="flex items-center gap-1">
                   <ArrowDownToLine className="size-3 text-red-400" />
                   <div>
