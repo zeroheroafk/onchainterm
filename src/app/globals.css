@@ -159,23 +159,144 @@ button:focus-visible {
   border-color: color-mix(in srgb, var(--border) 100%, transparent);
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar {
+/* ── Zebra-striped tables ── */
+.widget-panel tbody tr:nth-child(even) {
+  background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
+}
+
+.widget-panel thead {
+  background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 97%, var(--secondary)) 100%);
+  backdrop-filter: blur(8px);
+}
+
+.widget-panel thead th {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* ── Refined input fields ── */
+.widget-panel input[type="text"],
+.widget-panel input[type="number"],
+.widget-panel input[type="search"],
+.widget-panel textarea,
+.widget-panel select {
+  background: color-mix(in srgb, var(--input) 80%, black);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.widget-panel input:focus,
+.widget-panel textarea:focus,
+.widget-panel select:focus {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 8%, transparent), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Tab styling ── */
+.widget-tab {
+  position: relative;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: color 0.15s ease;
+  letter-spacing: 0.02em;
+}
+
+.widget-tab:hover {
+  color: var(--foreground);
+}
+
+.widget-tab-active {
+  color: var(--primary) !important;
+}
+
+.widget-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+/* ── Ambient header glow ── */
+.header-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 30%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* ── Live status dot ── */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-positive) 60%, transparent); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-positive) 0%, transparent); }
+}
+
+.live-dot {
   width: 6px;
   height: 6px;
+  border-radius: 50%;
+  background: var(--color-positive);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* ── Financial numbers ── */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── Refined positive/negative colors ── */
+.text-positive {
+  color: #2dd4a0;
+  text-shadow: 0 0 12px rgba(45, 212, 160, 0.15);
+}
+
+.text-negative {
+  color: #f87171;
+  text-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
+}
+
+.bg-positive-subtle {
+  background-color: rgba(45, 212, 160, 0.08);
+}
+
+.bg-negative-subtle {
+  background-color: rgba(248, 113, 113, 0.08);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: 4px;
+  transition: background 0.15s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
+}
+
+*:not(:hover) > ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 30%, transparent);
 }
 
 /* ── Selection ── */

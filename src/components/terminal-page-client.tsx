@@ -201,11 +201,12 @@ function TerminalHeader() {
   const isNeon = theme.neonMode
 
   return (
-    <div className={`flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5"}`}>
+    <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5 header-glow"}`}>
       <div className="flex items-center gap-3">
         <h1 className={`font-bold uppercase text-primary ${isBloomberg ? "text-xs font-mono tracking-widest" : "text-sm tracking-[0.2em] font-heading"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
           {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
         </h1>
+        <span className="live-dot" title="Live data connected" />
         {isNeon && <span className="neon-cursor" />}
         {isBloomberg ? (
           <div className="hidden sm:flex items-center gap-2 text-[9px] font-mono">

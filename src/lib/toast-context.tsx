@@ -27,9 +27,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const icons = { success: CheckCircle2, error: XCircle, info: Info }
   const colors = {
-    success: "text-green-400 border-green-400/30",
-    error: "text-red-400 border-red-400/30",
-    info: "text-primary border-primary/30"
+    success: "text-green-400 border-l-green-400",
+    error: "text-red-400 border-l-red-400",
+    info: "text-primary border-l-primary"
   }
 
   return (
@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={t.id}
-              className={`animate-slide-in pointer-events-auto flex items-center gap-2 rounded border bg-card/95 backdrop-blur-sm px-3 py-2 text-xs font-mono shadow-lg ${colors[t.type]}`}
+              className={`animate-slide-in pointer-events-auto flex items-center gap-2.5 rounded-r border-l-2 border border-border/30 bg-card/95 backdrop-blur-sm px-3 py-2 text-[11px] font-mono shadow-xl shadow-black/20 ${colors[t.type]}`}
             >
               <Icon className="size-3.5 shrink-0" />
               <span className="text-foreground">{t.message}</span>

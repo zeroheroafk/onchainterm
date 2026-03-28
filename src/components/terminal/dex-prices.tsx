@@ -119,9 +119,9 @@ export function DexPrices() {
           <button
             key={tab}
             onClick={() => setActiveFilter(tab)}
-            className={`text-[10px] px-2 py-0.5 rounded transition-colors ${
+            className={`text-[10px] px-2 py-0.5 rounded transition-colors widget-tab ${
               activeFilter === tab
-                ? "bg-primary/20 text-primary font-bold"
+                ? "text-primary font-bold widget-tab-active"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
             }`}
           >

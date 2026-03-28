@@ -272,9 +272,9 @@ export function ChatWidget() {
           <button
             key={room.id}
             onClick={() => handleRoomChange(room.id)}
-            className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+            className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap widget-tab ${
               activeRoom === room.id
-                ? "text-primary border-b-2 border-primary bg-primary/5"
+                ? "text-primary widget-tab-active"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
             }`}
           >

@@ -80,7 +80,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
           </div>
         </div>
         <div
-          className="flex-1 min-h-0 overflow-hidden"
+          className="flex-1 min-h-0 overflow-hidden relative"
           style={{
             transition: "max-height 0.2s ease-out, opacity 0.15s ease",
             maxHeight: collapsed ? "0px" : "2000px",
