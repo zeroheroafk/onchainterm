@@ -22,7 +22,7 @@ export async function GET() {
     const data = await res.json()
 
     if (data.status !== "1" || !data.result) {
-      throw new Error(data.message || "Failed to fetch gas data")
+      throw new Error(data.message || data.result || "Failed to fetch gas data")
     }
 
     const result = data.result
