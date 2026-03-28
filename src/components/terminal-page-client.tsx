@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX, Camera } from "lucide-react"
+import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX, Camera, PanelTop, Eye, EyeOff } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
 import { AuthProvider, useAuth } from "@/lib/auth-context"
@@ -194,11 +194,12 @@ function UserMenu() {
   )
 }
 
-function TerminalHeader() {
+function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboardBar, showActionBar }: { onToggleDashboardBar: () => void; onToggleActionBar: () => void; showDashboardBar: boolean; showActionBar: boolean }) {
   const { theme, themeId, setTheme } = useTheme()
   const { muted, toggleMute } = useSound()
   const { captureScreenshot } = useScreenshot()
   const [showThemes, setShowThemes] = useState(false)
+  const [showViewMenu, setShowViewMenu] = useState(false)
   const isBloomberg = theme.bloombergMode
   const isNeon = theme.neonMode
 
@@ -265,6 +266,44 @@ function TerminalHeader() {
         >
           <Camera className="size-3" />
         </button>
+        {/* View toggle */}
+        <div className="relative hidden sm:block">
+          <button
+            onClick={() => setShowViewMenu(!showViewMenu)}
+            className={`flex items-center gap-1 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
+            title="Toggle bars"
+          >
+            <PanelTop className="size-3" />
+            <span className="hidden md:inline">View</span>
+          </button>
+          {showViewMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowViewMenu(false)} />
+              <div className={`absolute right-0 top-full mt-1.5 z-50 w-48 border bg-card/95 backdrop-blur-sm py-1 ${isBloomberg ? "border-border" : "rounded-lg shadow-2xl border-border/50 ring-1 ring-white/5"}`}>
+                <button
+                  onClick={() => { onToggleDashboardBar(); setShowViewMenu(false) }}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {showDashboardBar ? <Eye className="size-3 text-primary" /> : <EyeOff className="size-3 text-muted-foreground/50" />}
+                    Market Stats Bar
+                  </span>
+                  <span className={`text-[9px] ${showDashboardBar ? "text-positive" : "text-muted-foreground/40"}`}>{showDashboardBar ? "ON" : "OFF"}</span>
+                </button>
+                <button
+                  onClick={() => { onToggleActionBar(); setShowViewMenu(false) }}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {showActionBar ? <Eye className="size-3 text-primary" /> : <EyeOff className="size-3 text-muted-foreground/50" />}
+                    Shortcuts Bar
+                  </span>
+                  <span className={`text-[9px] ${showActionBar ? "text-positive" : "text-muted-foreground/40"}`}>{showActionBar ? "ON" : "OFF"}</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         {/* Theme picker */}
         <div className="relative">
           <button
@@ -381,6 +420,8 @@ function TerminalContent() {
   const [chartSymbol, setChartSymbol] = useState("bitcoin")
   const { theme } = useTheme()
   const { showHelp, setShowHelp, showPresets, setShowPresets } = useKeyboardShortcuts()
+  const [showDashboardBar, setShowDashboardBar] = useState(true)
+  const [showActionBar, setShowActionBar] = useState(true)
 
   const context: TerminalWidgetContext = {
     chartSymbol,
@@ -390,10 +431,10 @@ function TerminalContent() {
   return (
     <div id="terminal-content" className="flex h-screen flex-col">
       <div className="loading-bar" id="global-loading" style={{ display: 'none' }} />
-      <TerminalHeader />
+      <TerminalHeader onToggleDashboardBar={() => setShowDashboardBar(p => !p)} onToggleActionBar={() => setShowActionBar(p => !p)} showDashboardBar={showDashboardBar} showActionBar={showActionBar} />
       <CommandBar />
-      <DashboardBar />
-      <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />
+      {showDashboardBar && <DashboardBar />}
+      {showActionBar && <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />}
       <CoinContextMenuProvider onSelectSymbol={context.setChartSymbol}>
         <WidgetGrid context={context} />
         <div className="hide-mobile"><PresetBar /></div>
