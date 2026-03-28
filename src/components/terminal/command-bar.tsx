@@ -97,7 +97,19 @@ export function CommandBar() {
     { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]
 
-  const filtered = query.trim() === ""
+  // Sort priority: F-keys first (by number), then letters A-Z, then digits, then no shortcut
+  function shortcutSortKey(id: string): string {
+    const sc = WIDGET_SHORTCUT[id]
+    if (!sc) return "ZZZ" // no shortcut → end
+    if (sc.startsWith("F") && sc.length > 1) {
+      const num = parseInt(sc.slice(1), 10)
+      return `A${num.toString().padStart(2, "0")}` // F1→A01, F12→A12
+    }
+    if (/^\d$/.test(sc)) return `C${sc}` // digits after letters
+    return `B${sc}` // letters
+  }
+
+  const filtered = (query.trim() === ""
     ? commands
     : commands.filter(cmd => {
         const q = query.toLowerCase()
@@ -105,6 +117,7 @@ export function CommandBar() {
           cmd.description.toLowerCase().includes(q) ||
           (cmd.keywords?.some(kw => kw.toLowerCase().includes(q)) ?? false)
       })
+  ).sort((a, b) => shortcutSortKey(a.id).localeCompare(shortcutSortKey(b.id)))
 
   useEffect(() => {
     startTransition(() => setSelectedIndex(0))
