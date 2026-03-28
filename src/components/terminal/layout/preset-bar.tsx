@@ -59,10 +59,10 @@ export function PresetBar() {
   }
 
   return (
-    <div className={`hidden md:flex items-center gap-1.5 border-t border-border bg-secondary/20 px-3 shrink-0 ${isBloomberg ? "py-0.5" : "py-1.5"}`}>
-      <div className="flex items-center gap-1.5 text-muted-foreground/50 mr-1 shrink-0">
+    <div className={`hidden md:flex items-center gap-1.5 border-t border-border/30 bg-secondary/8 px-3 shrink-0 ${isBloomberg ? "py-0.5" : "py-1"}`}>
+      <div className="flex items-center gap-1.5 text-muted-foreground/30 mr-1 shrink-0">
         <Layout className="size-3" />
-        <span className="text-[9px] font-medium uppercase tracking-widest select-none">Presets</span>
+        <span className="text-[8px] font-medium uppercase tracking-[0.15em] select-none">Presets</span>
       </div>
 
       <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none">
@@ -92,8 +92,8 @@ export function PresetBar() {
                     onClick={() => applyPreset(preset.id)}
                     className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${isBloomberg ? "font-mono" : "rounded-md"} ${
                       isActive
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-foreground/60 border border-transparent hover:bg-secondary hover:text-foreground/80"
+                        ? "bg-primary/10 text-primary border border-primary/20 shadow-sm shadow-primary/5"
+                        : "text-foreground/50 border border-transparent hover:bg-secondary/40 hover:text-foreground/70"
                     }`}
                   >
                     {getPresetLabel(preset)}
@@ -141,7 +141,7 @@ export function PresetBar() {
       ) : (
         <button
           onClick={() => setSaveDialogOpen(true)}
-          className="flex items-center justify-center size-6 rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary hover:bg-primary/5 shrink-0"
+          className="flex items-center justify-center size-6 rounded-md border border-dashed border-border/30 text-muted-foreground/40 transition-all hover:border-primary/30 hover:text-primary hover:bg-primary/5 shrink-0"
           title="Save current layout as preset"
         >
           <Plus className="size-3.5" />

@@ -53,24 +53,24 @@ export function TrendingWidget() {
           const coin = item.item
           const pctChange = coin.data?.price_change_percentage_24h?.usd
           return (
-            <div key={coin.id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/30 transition-colors animate-fade-in" style={{ animationDelay: `${i * 0.03}s`, animationFillMode: 'both' }}>
-              <span className="text-primary font-bold text-[10px] w-4">{i + 1}</span>
-              <Flame className="size-3 text-amber-400 shrink-0" />
+            <div key={coin.id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/20 transition-colors animate-fade-in" style={{ animationDelay: `${i * 0.03}s`, animationFillMode: 'both' }}>
+              <span className="text-primary/60 font-semibold text-[10px] w-4 num">{i + 1}</span>
+              <Flame className="size-3 text-amber-400/60 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
-                  <span className="text-[10px] text-muted-foreground truncate">{coin.name}</span>
+                  <span className="text-xs font-semibold text-foreground/90">{coin.symbol.toUpperCase()}</span>
+                  <span className="text-[10px] text-muted-foreground/50 truncate">{coin.name}</span>
                 </div>
                 {coin.market_cap_rank && (
-                  <span className="text-[9px] text-muted-foreground">Rank #{coin.market_cap_rank}</span>
+                  <span className="text-[8px] text-muted-foreground/40">Rank #{coin.market_cap_rank}</span>
                 )}
               </div>
               <div className="text-right shrink-0">
                 {coin.data?.price && (
-                  <div className="text-[10px] font-mono text-foreground">{coin.data.price}</div>
+                  <div className="text-[10px] num text-foreground/80">{coin.data.price}</div>
                 )}
                 {pctChange !== undefined && (
-                  <div className={`text-[10px] font-mono ${pctChange >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  <div className={`text-[10px] num ${pctChange >= 0 ? "text-positive" : "text-negative"}`}>
                     {pctChange >= 0 ? "+" : ""}{pctChange.toFixed(2)}%
                   </div>
                 )}

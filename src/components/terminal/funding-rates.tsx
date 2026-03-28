@@ -90,11 +90,11 @@ export function FundingRates() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Percent className="size-4" />
           <span className="text-[10px] font-bold uppercase tracking-wider">Funding Rates</span>
-          <span className="flex items-center gap-1 rounded bg-green-500/20 px-1.5 py-0.5 text-[9px] font-bold text-green-400">
-            <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span className="badge badge-positive flex items-center gap-1">
+            <span className="size-1.5 rounded-full bg-current animate-pulse" />
             LIVE
           </span>
-          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground/40">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-1">
           <div className="relative">
@@ -113,10 +113,10 @@ export function FundingRates() {
                   Funding rates are periodic payments between long and short traders in perpetual futures.
                 </p>
                 <p className="mt-1">
-                  <span className="text-red-400 font-medium">Positive</span>: Longs pay shorts (bearish bias).
+                  <span className="text-negative font-medium">Positive</span>: Longs pay shorts (bearish bias).
                 </p>
                 <p>
-                  <span className="text-green-400 font-medium">Negative</span>: Shorts pay longs (bullish bias).
+                  <span className="text-positive font-medium">Negative</span>: Shorts pay longs (bullish bias).
                 </p>
               </div>
             )}
@@ -144,11 +144,11 @@ export function FundingRates() {
 
       {/* Summary */}
       <div className="flex items-center gap-3 text-[10px] px-1">
-        <span className="text-red-400 font-medium">
+        <span className="badge badge-negative">
           {positiveCount} Positive
         </span>
         <span className="text-muted-foreground">|</span>
-        <span className="text-green-400 font-medium">
+        <span className="badge badge-positive">
           {negativeCount} Negative
         </span>
       </div>
@@ -157,7 +157,7 @@ export function FundingRates() {
       {data && (
         <div className="flex-1 overflow-y-auto min-h-0">
           {/* Table header */}
-          <div className="grid grid-cols-4 gap-1 px-1 py-1 text-[9px] uppercase tracking-wider text-muted-foreground font-medium border-b border-border sticky top-0 bg-card">
+          <div className="grid grid-cols-4 gap-1 px-1 py-1 text-[9px] font-medium text-muted-foreground/70 uppercase tracking-wider border-b border-border sticky top-0 bg-card">
             <span>Symbol</span>
             <span className="text-right">Rate</span>
             <span className="text-right">Mark Price</span>
@@ -168,12 +168,12 @@ export function FundingRates() {
           {filtered.map((item) => {
             const rate = item.fundingRate
             const rateColor =
-              rate > 0.1 ? "text-red-400 font-bold" :
-              rate > 0.05 ? "text-red-400" :
-              rate > 0 ? "text-red-400/70" :
-              rate < -0.1 ? "text-green-400 font-bold" :
-              rate < -0.05 ? "text-green-400" :
-              rate < 0 ? "text-green-400/70" :
+              rate > 0.1 ? "text-negative font-bold" :
+              rate > 0.05 ? "text-negative" :
+              rate > 0 ? "text-negative/70" :
+              rate < -0.1 ? "text-positive font-bold" :
+              rate < -0.05 ? "text-positive" :
+              rate < 0 ? "text-positive/70" :
               "text-muted-foreground"
             const prefix = rate > 0 ? "+" : ""
             return (
@@ -182,13 +182,13 @@ export function FundingRates() {
                 className="grid grid-cols-4 gap-1 px-1 py-1.5 text-[10px] border-b border-border/30 hover:bg-secondary/30 transition-colors duration-100"
               >
                 <span className="font-mono font-medium text-foreground">{item.symbol}</span>
-                <span className={`text-right font-mono font-medium ${rateColor}`}>
+                <span className={`text-right num font-medium ${rateColor}`}>
                   {prefix}{item.fundingRate.toFixed(4)}%
                 </span>
-                <span className="text-right font-mono text-muted-foreground">
+                <span className="text-right num text-muted-foreground">
                   ${formatPrice(item.markPrice)}
                 </span>
-                <span className="text-right font-mono text-muted-foreground">
+                <span className="text-right num text-muted-foreground">
                   {formatCountdown(item.nextFundingTime)}
                 </span>
               </div>
@@ -199,7 +199,7 @@ export function FundingRates() {
 
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
-        <span className="text-[8px] text-muted-foreground">
+        <span className="text-[8px] text-muted-foreground/40">
           Binance Futures{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
