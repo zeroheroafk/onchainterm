@@ -16,17 +16,17 @@ export async function GET() {
     // to estimate liquidation activity from price volatility
     if (!res.ok) {
       // Fallback: use CoinGecko to get volatile coins and estimate liquidation activity
-      return await getFallbackLiquidations()
+      return getFallbackLiquidations()
     }
 
     const data = await res.json()
     if (data.code !== "0" || !data.data) {
-      return await getFallbackLiquidations()
+      return getFallbackLiquidations()
     }
 
     return NextResponse.json({ liquidations: data.data })
   } catch {
-    return await getFallbackLiquidations()
+    return getFallbackLiquidations()
   }
 }
 

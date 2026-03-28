@@ -31,7 +31,10 @@ function ChartPane({
   theme: "dark" | "light"
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const scriptRef = useRef<HTMLScriptElement | null>(null)
   const [inputValue, setInputValue] = useState(symbol)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Keep local input in sync when parent changes the symbol
   useEffect(() => {
@@ -42,13 +45,29 @@ function ChartPane({
     const container = containerRef.current
     if (!container) return
 
+    let cancelled = false
+
+    // Fully clean up previous widget: remove iframe and all children
+    if (scriptRef.current) {
+      scriptRef.current.remove()
+      scriptRef.current = null
+    }
+    // Remove any existing iframes the widget may have injected
+    const existingIframes = container.querySelectorAll("iframe")
+    existingIframes.forEach((iframe) => iframe.remove())
+    // Clear remaining content
     container.innerHTML = ""
+
+    setLoading(true)
+    setError(null)
 
     const widgetDiv = document.createElement("div")
     widgetDiv.className = "tradingview-widget-container__widget"
     widgetDiv.style.height = "100%"
     widgetDiv.style.width = "100%"
     container.appendChild(widgetDiv)
+
+    const tvSymbol = toTradingViewSymbol(symbol)
 
     const script = document.createElement("script")
     script.src =
@@ -57,7 +76,7 @@ function ChartPane({
     script.async = true
     script.textContent = JSON.stringify({
       autosize: true,
-      symbol: toTradingViewSymbol(symbol),
+      symbol: tvSymbol,
       interval: "60",
       timezone: "Etc/UTC",
       theme,
@@ -73,9 +92,36 @@ function ChartPane({
       hide_volume: true,
       support_host: "https://www.tradingview.com",
     })
+
+    script.onload = () => {
+      if (!cancelled) setLoading(false)
+    }
+    script.onerror = () => {
+      if (!cancelled) {
+        setLoading(false)
+        setError("Failed to load TradingView widget")
+      }
+    }
+
+    scriptRef.current = script
     container.appendChild(script)
 
     return () => {
+      cancelled = true
+      // Thorough cleanup to prevent memory leaks
+      if (scriptRef.current) {
+        scriptRef.current.remove()
+        scriptRef.current = null
+      }
+      const iframes = container.querySelectorAll("iframe")
+      iframes.forEach((iframe) => {
+        try {
+          iframe.src = "about:blank"
+        } catch {
+          // cross-origin iframe, just remove it
+        }
+        iframe.remove()
+      })
       container.innerHTML = ""
     }
   }, [symbol, theme])
@@ -110,11 +156,27 @@ function ChartPane({
         </span>
       </div>
       {/* chart */}
-      <div
-        ref={containerRef}
-        className="tradingview-widget-container flex-1 min-h-0"
-        style={{ height: "100%", width: "100%" }}
-      />
+      <div className="relative flex-1 min-h-0">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-xs text-muted-foreground">
+                Loading {symbol} chart...
+              </span>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+            <span className="text-xs text-red-500">{error}</span>
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className="tradingview-widget-container h-full w-full"
+        />
+      </div>
     </div>
   )
 }
