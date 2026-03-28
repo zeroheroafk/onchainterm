@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { Lock, Unlock, LayoutGrid, Palette } from "lucide-react"
+import { Palette } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
 import { LayoutProvider, useLayout } from "@/components/terminal/layout/layout-context"
@@ -95,42 +95,19 @@ function TerminalHeader() {
 }
 
 function ActionBar() {
-  const { isLocked, toggleLock, setCatalogOpen } = useLayout()
   const { theme } = useTheme()
   const isBloomberg = theme.bloombergMode
 
+  if (!isBloomberg) return null
+
   return (
-    <div className={`hidden md:flex items-center gap-1.5 border-b border-border bg-secondary/20 px-3 shrink-0 ${isBloomberg ? "py-0.5" : "py-1"}`}>
-      <button
-        onClick={toggleLock}
-        className={`flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium transition-colors ${
-          !isLocked
-            ? "bg-primary/15 text-primary border border-primary/30"
-            : "text-muted-foreground border border-transparent hover:bg-secondary hover:text-foreground"
-        } ${isBloomberg ? "" : "rounded-md"}`}
-      >
-        {isLocked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
-        {isLocked ? "Locked" : "Editing"}
-      </button>
-
-      {!isLocked && (
-        <button
-          onClick={() => setCatalogOpen(true)}
-          className={`flex items-center gap-1.5 border border-dashed border-border px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary hover:bg-primary/5 ${isBloomberg ? "" : "rounded-md"}`}
-        >
-          <LayoutGrid className="size-3" />
-          + Widgets
-        </button>
-      )}
-
-      {isBloomberg && (
-        <div className="ml-auto hidden lg:flex items-center gap-0 font-mono">
-          <span className="bloomberg-fn-key">F1</span><span className="bloomberg-fn-label">HELP</span>
-          <span className="bloomberg-fn-key">F5</span><span className="bloomberg-fn-label">CHART</span>
-          <span className="bloomberg-fn-key">F8</span><span className="bloomberg-fn-label">NEWS</span>
-          <span className="bloomberg-fn-key">F10</span><span className="bloomberg-fn-label">LAYOUT</span>
-        </div>
-      )}
+    <div className="hidden md:flex items-center gap-1.5 border-b border-border bg-secondary/20 px-3 shrink-0 py-0.5">
+      <div className="ml-auto hidden lg:flex items-center gap-0 font-mono">
+        <span className="bloomberg-fn-key">F1</span><span className="bloomberg-fn-label">HELP</span>
+        <span className="bloomberg-fn-key">F5</span><span className="bloomberg-fn-label">CHART</span>
+        <span className="bloomberg-fn-key">F8</span><span className="bloomberg-fn-label">NEWS</span>
+        <span className="bloomberg-fn-key">F10</span><span className="bloomberg-fn-label">LAYOUT</span>
+      </div>
     </div>
   )
 }

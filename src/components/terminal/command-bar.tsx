@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, startTransition } from "react"
 import {
-  Search, ArrowRight, Terminal,
+  Search, Terminal, Eye, EyeOff,
   LineChart, MessagesSquare, Newspaper, BarChart3, TrendingUp, Flame, Fuel, Wallet, Star,
   ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown,
 } from "lucide-react"
@@ -24,7 +24,7 @@ export function CommandBar() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { isWidgetActive, focusWidget, addWidget, bringToFront, isLocked, setCatalogOpen } = useLayout()
+  const { isWidgetActive, focusWidget, addWidget, bringToFront, removeWidget, setCatalogOpen } = useLayout()
 
   const handleWidgetAction = useCallback((widgetId: string) => {
     if (isWidgetActive(widgetId)) {
@@ -34,6 +34,15 @@ export function CommandBar() {
       addWidget(widgetId)
     }
   }, [isWidgetActive, focusWidget, addWidget, bringToFront])
+
+  const handleWidgetToggle = useCallback((e: React.MouseEvent, widgetId: string) => {
+    e.stopPropagation()
+    if (isWidgetActive(widgetId)) {
+      removeWidget(widgetId)
+    } else {
+      addWidget(widgetId)
+    }
+  }, [isWidgetActive, removeWidget, addWidget])
 
   const commands: CommandItem[] = [
     { id: "price-table", label: "Crypto Prices", description: "Live price table with market data", keywords: ["btc", "eth", "bitcoin", "ethereum", "price", "market", "token", "coin", "spot", "rank", "cap"], icon: BarChart3, category: "widget", action: () => handleWidgetAction("price-table") },
@@ -63,7 +72,7 @@ export function CommandBar() {
   ]
 
   const filtered = query.trim() === ""
-    ? []
+    ? commands
     : commands.filter(cmd => {
         const q = query.toLowerCase()
         return cmd.label.toLowerCase().includes(q) ||
@@ -142,7 +151,7 @@ export function CommandBar() {
             setQuery(e.target.value)
             setIsOpen(true)
           }}
-          onFocus={() => { if (query.trim()) setIsOpen(true) }}
+          onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search commands, widgets, actions..."
           className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none font-mono"
@@ -158,30 +167,30 @@ export function CommandBar() {
 
       {/* Dropdown results */}
       {isOpen && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 max-h-72 overflow-y-auto border-b border-x border-border bg-card shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card shadow-lg">
           {filtered.map((cmd, i) => {
             const Icon = cmd.icon
             const isActive = cmd.category === "widget" && isWidgetActive(cmd.id)
             const q = query.toLowerCase()
-            const matchedKeyword = cmd.keywords?.find(kw => kw.toLowerCase().includes(q))
+            const matchedKeyword = query.trim() && cmd.keywords?.find(kw => kw.toLowerCase().includes(q))
             const isKeywordMatch = matchedKeyword && !cmd.label.toLowerCase().includes(q) && !cmd.description.toLowerCase().includes(q)
             return (
               <button
                 key={cmd.id}
                 onClick={() => handleSelect(cmd)}
                 onMouseEnter={() => setSelectedIndex(i)}
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${
                   i === selectedIndex
                     ? "bg-primary/10 text-primary"
                     : "text-foreground/80 hover:bg-secondary/50"
                 }`}
               >
-                <Icon className="size-4 shrink-0 opacity-60" />
+                <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : "opacity-60"}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium font-mono">{cmd.label}</span>
                     {isActive && (
-                      <span className="size-1.5 rounded-full bg-primary shrink-0" />
+                      <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">OPEN</span>
                     )}
                     {isKeywordMatch && (
                       <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-mono text-primary/70">{matchedKeyword}</span>
@@ -189,7 +198,19 @@ export function CommandBar() {
                   </div>
                   <span className="text-[10px] text-muted-foreground">{cmd.description}</span>
                 </div>
-                <ArrowRight className="size-3 shrink-0 opacity-30" />
+                {cmd.category === "widget" && (
+                  <button
+                    onClick={(e) => handleWidgetToggle(e, cmd.id)}
+                    className={`shrink-0 p-1 rounded transition-colors ${
+                      isActive
+                        ? "text-primary hover:text-red-400 hover:bg-red-400/10"
+                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
+                    }`}
+                    title={isActive ? "Hide widget" : "Show widget"}
+                  >
+                    {isActive ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                  </button>
+                )}
               </button>
             )
           })}
