@@ -236,7 +236,7 @@ export function AlertsWidget() {
                 : 0
 
               return (
-                <div key={alert.id} className="px-3 py-2 group">
+                <div key={alert.id} className="px-3 py-2 group rounded-lg border border-border/30 bg-secondary/5 hover:bg-secondary/15 hover:border-primary/30 transition-all duration-150">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-foreground">{alert.symbol}</span>
@@ -260,7 +260,7 @@ export function AlertsWidget() {
                   {currentPrice && (
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
-                        <div className="h-full bg-primary/50 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                        <div className="h-full bg-gradient-to-r from-primary/40 to-primary/70 rounded-full transition-all" style={{ width: `${progress}%` }} />
                       </div>
                       <span className="text-[9px] text-muted-foreground num">{formatPrice(currentPrice)}</span>
                     </div>
@@ -272,12 +272,12 @@ export function AlertsWidget() {
             {/* Triggered alerts */}
             {triggeredAlerts.length > 0 && (
               <>
-                <div className="px-3 py-1.5 flex items-center justify-between bg-secondary/10">
+                <div className="px-3 py-1.5 flex items-center justify-between bg-negative-subtle">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Triggered</span>
                   <button onClick={clearTriggered} className="text-[9px] text-muted-foreground hover:text-primary">Clear all</button>
                 </div>
                 {triggeredAlerts.map(alert => (
-                  <div key={alert.id} className="px-3 py-2 opacity-60 group">
+                  <div key={alert.id} className="px-3 py-2 opacity-60 group rounded-lg border border-border/30 bg-negative-subtle hover:border-primary/30 transition-all duration-150">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold">{alert.symbol}</span>

@@ -71,7 +71,7 @@ export function ExchangeFlows() {
       </div>
 
       {/* Net flow summary */}
-      <div className={`px-3 py-2 border-b shrink-0 ${totalNet > 0 ? "bg-negative-subtle border-red-500/10" : "bg-positive-subtle border-green-500/10"}`}>
+      <div className={`px-3 py-2 border-b shrink-0 ${totalNet > 0 ? "bg-negative-subtle border-red-500/10 border-l-2 border-l-negative" : "bg-positive-subtle border-green-500/10 border-l-2 border-l-positive"}`}>
         <div className="text-[8px] uppercase text-muted-foreground/50 font-medium tracking-wider">Total Net Flow (24h)</div>
         <div className={`text-lg font-bold num ${totalNet > 0 ? "text-negative" : "text-positive"}`}>
           {totalNet > 0 ? "+" : ""}{formatEth(totalNet)} ETH
@@ -88,21 +88,21 @@ export function ExchangeFlows() {
       <div className="flex-1 overflow-auto min-h-0">
         <div className="divide-y divide-border/50">
           {exchanges.map((ex) => (
-            <div key={ex.name} className="px-3 py-2.5 hover:bg-secondary/30 transition-colors duration-100">
+            <div key={ex.name} className="rounded-lg border border-border/20 bg-secondary/8 px-3 py-2 hover:bg-secondary/15 transition-colors">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-semibold text-foreground">{ex.name}</span>
                 <span className="text-[10px] num text-muted-foreground">{formatBalance(ex.balanceEth)} ETH</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-[10px] animate-fade-in">
                 <div className="flex items-center gap-1">
-                  <ArrowDownToLine className="size-3 text-negative" />
+                  <span className="rounded-full bg-negative/10 p-1"><ArrowDownToLine className="size-3 text-negative" /></span>
                   <div>
                     <div className="text-muted-foreground">Inflow</div>
                     <div className="num text-negative">{formatEth(ex.inflow24h)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <ArrowUpFromLine className="size-3 text-positive" />
+                  <span className="rounded-full bg-positive/10 p-1"><ArrowUpFromLine className="size-3 text-positive" /></span>
                   <div>
                     <div className="text-muted-foreground">Outflow</div>
                     <div className="num text-positive">{formatEth(ex.outflow24h)}</div>

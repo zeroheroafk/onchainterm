@@ -113,10 +113,10 @@ export function StakingCalculator() {
             <button
               key={c.symbol}
               onClick={() => handleCoinChange(i)}
-              className={`widget-tab rounded px-2 py-1 text-[10px] font-medium transition-colors ${
+              className={`widget-tab rounded px-2 py-1 text-[10px] font-medium transition-all ${
                 selectedCoin === i
                   ? "widget-tab-active bg-primary/15 text-primary border border-primary/30"
-                  : "text-muted-foreground border border-border hover:bg-secondary"
+                  : "text-muted-foreground border border-border hover:bg-secondary hover:shadow-sm hover:border-primary/30"
               }`}
             >
               {c.symbol}
@@ -128,7 +128,7 @@ export function StakingCalculator() {
         {/* Input fields */}
         <div className="grid grid-cols-2 gap-2">
           {/* Amount */}
-          <div className="rounded-lg border border-border bg-secondary/20 p-2">
+          <div className="rounded-lg border border-border bg-secondary/20 p-2 focus-within:border-primary/50 focus-within:bg-secondary/30 transition-all">
             <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
               Amount ({coin.symbol})
             </label>
@@ -138,12 +138,12 @@ export function StakingCalculator() {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
               min="0"
-              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1"
+              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1 focus:border-primary/50 focus:bg-secondary/30 transition-all"
             />
           </div>
 
           {/* Price */}
-          <div className="rounded-lg border border-border bg-secondary/20 p-2">
+          <div className="rounded-lg border border-border bg-secondary/20 p-2 focus-within:border-primary/50 focus-within:bg-secondary/30 transition-all">
             <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
               Price (USD)
             </label>
@@ -153,19 +153,19 @@ export function StakingCalculator() {
               onChange={(e) => setPriceOverride(e.target.value)}
               placeholder={marketPrice ? marketPrice.toString() : "Enter price"}
               min="0"
-              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1"
+              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1 focus:border-primary/50 focus:bg-secondary/30 transition-all"
             />
           </div>
 
           {/* Duration */}
-          <div className="rounded-lg border border-border bg-secondary/20 p-2">
+          <div className="rounded-lg border border-border bg-secondary/20 p-2 focus-within:border-primary/50 focus-within:bg-secondary/30 transition-all">
             <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
               Duration
             </label>
             <select
               value={durationIndex}
               onChange={(e) => setDurationIndex(Number(e.target.value))}
-              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1 cursor-pointer"
+              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1 cursor-pointer focus:border-primary/50 focus:bg-secondary/30 transition-all"
             >
               {DURATIONS.map((d, i) => (
                 <option key={i} value={i} className="bg-background text-foreground">
@@ -176,7 +176,7 @@ export function StakingCalculator() {
           </div>
 
           {/* Custom APY */}
-          <div className="rounded-lg border border-border bg-secondary/20 p-2">
+          <div className="rounded-lg border border-border bg-secondary/20 p-2 focus-within:border-primary/50 focus-within:bg-secondary/30 transition-all">
             <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
               Custom APY %
             </label>
@@ -188,7 +188,7 @@ export function StakingCalculator() {
               min="0"
               max="999"
               step="0.1"
-              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1"
+              className="w-full bg-transparent text-sm num text-foreground outline-none mt-1 focus:border-primary/50 focus:bg-secondary/30 transition-all"
             />
           </div>
         </div>
@@ -197,7 +197,7 @@ export function StakingCalculator() {
         {results ? (
           <div className="animate-fade-in space-y-3">
             {/* Main results */}
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="rounded-lg shadow-sm border-primary/30 bg-primary/8 p-3 space-y-2">
               <div className="flex items-center gap-1.5 mb-2">
                 <Calculator className="size-3 text-primary" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">

@@ -122,7 +122,7 @@ export function WalletTracker() {
         {data && (
           <div className="space-y-0">
             {/* Balance section */}
-            <div className="px-3 py-3 border-b border-border bg-secondary/10">
+            <div className="px-3 py-3 border-b border-border rounded-lg border border-primary/15 bg-gradient-to-br from-primary/5 to-secondary/10">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono text-[10px] text-muted-foreground">
@@ -137,7 +137,7 @@ export function WalletTracker() {
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    <ExternalLink className="size-3" />
+                    <ExternalLink className="size-3.5" />
                   </a>
                 </div>
               </div>
@@ -166,10 +166,10 @@ export function WalletTracker() {
                 {data.transactions.map((tx) => {
                   const isIncoming = tx.to.toLowerCase() === data.address.toLowerCase()
                   return (
-                    <div key={tx.hash} className="px-3 py-1.5 hover:bg-secondary/30 transition-colors">
+                    <div key={tx.hash} className="rounded-lg border border-border/20 bg-secondary/5 hover:bg-secondary/15 transition-colors mb-1 px-2 py-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className={`text-[10px] font-medium px-1 rounded ${
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
                             tx.isError
                               ? "bg-negative-subtle text-negative"
                               : isIncoming
