@@ -54,16 +54,16 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
       <div className="flex items-center border-b border-border shrink-0">
         <button
           onClick={() => setTab("gainers")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-            tab === "gainers" ? "text-green-400 border-b-2 border-green-400" : "text-muted-foreground hover:text-foreground"
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
+            tab === "gainers" ? "text-green-400 widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <TrendingUp className="size-3" /> Gainers
         </button>
         <button
           onClick={() => setTab("losers")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-            tab === "losers" ? "text-red-400 border-b-2 border-red-400" : "text-muted-foreground hover:text-foreground"
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
+            tab === "losers" ? "text-red-400 widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <TrendingDown className="size-3" /> Losers

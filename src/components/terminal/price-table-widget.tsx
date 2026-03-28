@@ -21,8 +21,8 @@ function PercentCell({ value }: { value: number | null }) {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">N/A</span>
   }
-  const color = value >= 0 ? "text-green-400" : "text-red-400"
-  return <span className={color}>{formatPercentage(value)}</span>
+  const color = value >= 0 ? "text-positive" : "text-negative"
+  return <span className={`${color} num`}>{formatPercentage(value)}</span>
 }
 
 function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
@@ -175,8 +175,8 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
 
   const SortHeader = ({ label, sortKeyVal, className = "" }: { label: string; sortKeyVal: SortKey; className?: string }) => (
     <th
-      className={`py-1.5 px-2 text-right text-[10px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors ${
-        sortKey === sortKeyVal ? "text-primary" : "text-muted-foreground"
+      className={`py-1.5 px-2 text-right text-[9px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors font-medium ${
+        sortKey === sortKeyVal ? "text-primary" : "text-muted-foreground/70"
       } ${className}`}
       onClick={() => handleSort(sortKeyVal)}
     >
@@ -220,7 +220,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
     <div ref={tableRef} tabIndex={0} onKeyDown={handleKeyDown} className="h-full overflow-auto focus:outline-none">
       {formatLastUpdated() && (
         <div className="flex items-center justify-end gap-2 px-2 pt-1">
-          <span className="text-[8px] text-muted-foreground">Updated {formatLastUpdated()}</span>
+          <span className="text-[8px] text-muted-foreground/40">Updated {formatLastUpdated()}</span>
           {sorted.length > 0 && (
             <button onClick={exportCSV} className="text-muted-foreground hover:text-primary transition-colors" title="Export CSV">
               <Download className="size-3" />
@@ -229,15 +229,15 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
         </div>
       )}
       <table className="w-full text-xs">
-        <thead className="sticky top-0 bg-card z-[1]">
-          <tr className="border-b border-border">
+        <thead className="sticky top-0 z-[1]">
+          <tr className="border-b border-border/50">
             <SortHeader label="#" sortKeyVal="rank" className="!text-left w-8" />
-            <th className="py-1.5 px-2 text-left text-[10px] uppercase tracking-wider text-muted-foreground">Asset</th>
+            <th className="py-1.5 px-2 text-left text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium">Asset</th>
             <SortHeader label="Price" sortKeyVal="price" />
             <SortHeader label="1H" sortKeyVal="1h" />
             <SortHeader label="24H" sortKeyVal="24h" />
             <SortHeader label="7D" sortKeyVal="7d" className="hidden xl:table-cell" />
-            <th className="py-1.5 px-2 text-right text-[10px] uppercase tracking-wider text-muted-foreground hidden 2xl:table-cell">7D Chart</th>
+            <th className="py-1.5 px-2 text-right text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium hidden 2xl:table-cell">7D Chart</th>
             <SortHeader label="MCap" sortKeyVal="mcap" className="hidden lg:table-cell" />
             <SortHeader label="Vol 24H" sortKeyVal="vol" className="hidden xl:table-cell" />
           </tr>
@@ -249,7 +249,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               data-row-index={i}
               onClick={() => { setSelectedIndex(i); handleClick(coin) }}
               onContextMenu={(e) => showMenu(e, coin.id, coin.symbol)}
-              className={`border-b border-border/50 cursor-pointer transition-colors duration-150 ${
+              className={`border-b border-border/20 cursor-pointer transition-colors duration-100 ${
                 selectedIndex === i
                   ? "bg-primary/15 ring-1 ring-primary/30"
                   : selectedId === coin.id
@@ -257,7 +257,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                     : "hover:bg-secondary/40"
               } ${flashMap[coin.id] === "up" ? "flash-up" : flashMap[coin.id] === "down" ? "flash-down" : ""}`}
             >
-              <td className="py-1.5 px-2 text-muted-foreground">
+              <td className="py-1.5 px-2 text-muted-foreground/60 num text-[10px]">
                 <span className="inline-flex items-center gap-1">
                   {selectedIndex === i && <span className="text-primary font-bold">&gt;</span>}
                   {coin.market_cap_rank}
@@ -267,11 +267,11 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                 <div className="flex items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={coin.image} alt="" className="size-4 shrink-0 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                  <span className="font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
+                  <span className="font-semibold text-foreground/95">{coin.symbol.toUpperCase()}</span>
                   <span className="text-muted-foreground text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
                 </div>
               </td>
-              <td className="py-1.5 px-2 text-right font-mono text-amber-400">
+              <td className="py-1.5 px-2 text-right num text-foreground">
                 {formatPrice(coin.current_price)}
               </td>
               <td className="py-1.5 px-2 text-right font-mono">
