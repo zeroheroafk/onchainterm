@@ -47,7 +47,7 @@ export function FundingRates() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markUpdated])
 
   useEffect(() => {
     fetchFunding()

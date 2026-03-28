@@ -102,7 +102,7 @@ export function WhaleAlerts() {
     } finally {
       setLoading(false)
     }
-  }, [playSound, playSoundGlobal])
+  }, [playSound, playSoundGlobal, markHookUpdated])
 
   useEffect(() => {
     fetchWhales()

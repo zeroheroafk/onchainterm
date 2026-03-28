@@ -47,7 +47,7 @@ export function GasTracker() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markUpdated])
 
   useEffect(() => {
     fetchGas()
