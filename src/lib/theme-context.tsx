@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useLayoutEffect, useCallback, type ReactNode } from "react"
 
-export type ThemeId = "bloomberg" | "neon" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
+export type ThemeId = "bloomberg" | "neon" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "aurora" | "light"
 
 export interface ThemeConfig {
   id: ThemeId
@@ -243,6 +243,35 @@ export const THEMES: ThemeConfig[] = [
     sidebarAccentForeground: "#d4dce8",
     sidebarBorder: "#1e3a5f",
     swatch: ["#0a1628", "#60a5fa"],
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    primary: "#00e5a0",
+    primaryForeground: "#0a0f1e",
+    accent: "#7c5dfa",
+    accentForeground: "#f0f0ff",
+    ring: "#00e5a0",
+    chart1: "#00e5a0",
+    chart2: "#7c5dfa",
+    background: "#0a0f1e",
+    foreground: "#e2e8f0",
+    card: "#111833",
+    cardForeground: "#e2e8f0",
+    popover: "#111833",
+    popoverForeground: "#e2e8f0",
+    secondary: "#182046",
+    secondaryForeground: "#94a3c0",
+    muted: "#182046",
+    mutedForeground: "#5e6e8a",
+    border: "#1f2b52",
+    input: "#182046",
+    sidebar: "#080d1a",
+    sidebarForeground: "#e2e8f0",
+    sidebarAccent: "#182046",
+    sidebarAccentForeground: "#e2e8f0",
+    sidebarBorder: "#1f2b52",
+    swatch: ["#0a0f1e", "#00e5a0"],
   },
   {
     id: "light",
