@@ -23,6 +23,9 @@ import {
   Zap,
   Grid3x3,
   ArrowUpDown,
+  Filter,
+  PieChart,
+  Percent,
   type LucideIcon,
 } from "lucide-react"
 
@@ -41,6 +44,8 @@ export type WidgetId =
   | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard" | "liquidations" | "heatmap" | "exchange-flows"
   | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
+  | "token-screener" | "dominance-chart"
+  | "funding-rates"
 
 export type WidgetCategory = "market" | "trade" | "tools" | "comms"
 
@@ -169,6 +174,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     singleton: true,
   },
   {
+    id: "dominance-chart",
+    titleKey: "widget.dominanceChart",
+    fallbackTitle: "BTC Dominance",
+    icon: PieChart,
+    category: "market",
+    defaultSize: { w: 30, h: 45 },
+    minSize: { w: 250, h: 280 },
+    singleton: true,
+  },
+  {
     id: "heatmap",
     titleKey: "widget.heatmap",
     fallbackTitle: "Market Heatmap",
@@ -185,6 +200,26 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     icon: ArrowUpDown,
     category: "trade",
     defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "token-screener",
+    titleKey: "widget.tokenScreener",
+    fallbackTitle: "Token Screener",
+    icon: Filter,
+    category: "market",
+    defaultSize: { w: 40, h: 50 },
+    minSize: { w: 350, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "funding-rates",
+    titleKey: "widget.fundingRates",
+    fallbackTitle: "Funding Rates",
+    icon: Percent,
+    category: "market",
+    defaultSize: { w: 30, h: 55 },
     minSize: { w: 250, h: 280 },
     singleton: true,
   },

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, startTransition } from "react"
 import {
-  Search, Terminal, Eye, EyeOff,
+  Search, Terminal, Eye, EyeOff, Filter, PieChart,
   LineChart, MessagesSquare, Newspaper, BarChart3, TrendingUp, Flame, Fuel, Wallet, Star,
-  ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown,
+  ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown, Percent,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
 
@@ -58,6 +58,8 @@ export function CommandBar() {
     { id: "liquidations", label: "Liquidations", description: "Futures liquidation feed", keywords: ["liquidation", "rekt", "long", "short", "leverage", "futures", "margin", "cascade"], icon: Activity, category: "widget", action: () => handleWidgetAction("liquidations") },
     { id: "heatmap", label: "Market Heatmap", description: "Visual price performance map", keywords: ["heatmap", "heat", "map", "visual", "green", "red", "performance", "overview"], icon: Activity, category: "widget", action: () => handleWidgetAction("heatmap") },
     { id: "exchange-flows", label: "Exchange Flows", description: "ETH exchange inflow and outflow", keywords: ["exchange", "flow", "inflow", "outflow", "binance", "coinbase", "accumulation", "selling"], icon: Activity, category: "widget", action: () => handleWidgetAction("exchange-flows") },
+    { id: "dominance-chart", label: "BTC Dominance", description: "Bitcoin dominance and market share chart", keywords: ["dominance", "btc.d", "bitcoin dominance", "market share"], icon: PieChart, category: "widget", action: () => handleWidgetAction("dominance-chart") },
+    { id: "funding-rates", label: "Funding Rates", description: "Perpetual futures funding rates from Binance", keywords: ["funding", "rate", "perpetual", "futures", "perp"], icon: Percent, category: "widget", action: () => handleWidgetAction("funding-rates") },
     { id: "portfolio", label: "Portfolio", description: "Track your crypto holdings", keywords: ["portfolio", "holdings", "balance", "wallet", "pnl", "profit", "loss", "track"], icon: Wallet, category: "widget", action: () => handleWidgetAction("portfolio") },
     { id: "watchlist", label: "Watchlist", description: "Your saved coins to watch", keywords: ["watchlist", "watch", "favorite", "save", "star", "follow"], icon: Star, category: "widget", action: () => handleWidgetAction("watchlist") },
     { id: "converter", label: "Converter", description: "Convert between crypto and fiat", keywords: ["convert", "swap", "exchange", "calculator", "usd", "eur", "fiat"], icon: ArrowLeftRight, category: "widget", action: () => handleWidgetAction("converter") },
@@ -67,6 +69,7 @@ export function CommandBar() {
     { id: "chat", label: "Market Chat", description: "Community chat room", keywords: ["chat", "message", "talk", "discuss", "community", "room"], icon: MessagesSquare, category: "widget", action: () => handleWidgetAction("chat") },
     { id: "news", label: "Crypto News", description: "Latest crypto headlines", keywords: ["news", "headline", "article", "blog", "media", "press", "update"], icon: Newspaper, category: "widget", action: () => handleWidgetAction("news") },
     { id: "wallet-tracker", label: "Wallet Tracker", description: "Look up any Ethereum wallet", keywords: ["wallet", "address", "etherscan", "balance", "lookup", "track", "0x"], icon: Search, category: "widget", action: () => handleWidgetAction("wallet-tracker") },
+    { id: "token-screener", label: "Token Screener", description: "Filter and scan tokens by market cap, volume, and price change", keywords: ["screener", "filter", "scan", "screen", "find"], icon: Filter, category: "widget", action: () => handleWidgetAction("token-screener") },
     { id: "private-messages", label: "Messages", description: "Private messages", keywords: ["dm", "pm", "private", "inbox", "direct"], icon: MessageSquare, category: "widget", action: () => handleWidgetAction("private-messages") },
     { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]

@@ -12,6 +12,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signInWithGoogle: () => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  refreshUser: () => Promise<void>
   username: string | null
 }
 
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextValue>({
   signIn: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
   signOut: async () => {},
+  refreshUser: async () => {},
   username: null,
 })
 
@@ -79,8 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    const { data } = await supabase.auth.refreshSession()
+    if (data.session) {
+      setSession(data.session)
+      setUser(data.session.user)
+      setUsername(data.session.user?.user_metadata?.username ?? data.session.user?.email?.split("@")[0] ?? null)
+    }
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signOut, username }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signOut, refreshUser, username }}>
       {children}
     </AuthContext.Provider>
   )

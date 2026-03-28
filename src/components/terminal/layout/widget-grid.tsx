@@ -30,6 +30,9 @@ const WatchlistWidget = lazy(() => import("@/components/terminal/watchlist").the
 const PnlCalculator = lazy(() => import("@/components/terminal/pnl-calculator").then(m => ({ default: m.PnlCalculator })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 const AlertsWidget = lazy(() => import("@/components/terminal/alerts").then(m => ({ default: m.AlertsWidget })))
+const TokenScreenerWidget = lazy(() => import("@/components/terminal/token-screener").then(m => ({ default: m.TokenScreenerWidget })))
+const DominanceChart = lazy(() => import("@/components/terminal/dominance-chart").then(m => ({ default: m.DominanceChart })))
+const FundingRates = lazy(() => import("@/components/terminal/funding-rates").then(m => ({ default: m.FundingRates })))
 
 function WidgetLoadingFallback() {
   return (
@@ -89,6 +92,12 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <ChatWidget />
     case "news":
       return <NewsWidget />
+    case "token-screener":
+      return <TokenScreenerWidget onSelectSymbol={ctx.setChartSymbol} />
+    case "dominance-chart":
+      return <DominanceChart />
+    case "funding-rates":
+      return <FundingRates />
     case "private-messages":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
     default: {
@@ -100,6 +109,13 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       )
     }
   }
+}
+
+// ─── Snap-to-grid helper ────────────────────────────────────────────────
+
+/** Rounds a percentage value to the nearest grid increment (default 2%). */
+function snapToGrid(value: number, gridSize: number = 2): number {
+  return Math.round(value / gridSize) * gridSize
 }
 
 // ─── Draggable/Resizable Widget Item ─────────────────────────────────────
@@ -164,7 +180,7 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
         isDraggingRef.current = false
         el.style.transform = ""
         el.classList.remove("widget-dragging")
-        updateWidgetPosition(pos.id, { x: finalX, y: finalY })
+        updateWidgetPosition(pos.id, { x: snapToGrid(finalX), y: snapToGrid(finalY) })
       }
 
       document.body.style.userSelect = "none"
@@ -255,7 +271,12 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
         el.style.transform = ""
         el.classList.remove("widget-dragging")
         if (Object.keys(finalUpdate).length > 0) {
-          updateWidgetPosition(pos.id, finalUpdate)
+          const snapped = { ...finalUpdate }
+          if (snapped.x !== undefined) snapped.x = snapToGrid(snapped.x)
+          if (snapped.y !== undefined) snapped.y = snapToGrid(snapped.y)
+          if (snapped.w !== undefined) snapped.w = snapToGrid(snapped.w)
+          if (snapped.h !== undefined) snapped.h = snapToGrid(snapped.h)
+          updateWidgetPosition(pos.id, snapped)
         }
       }
 
