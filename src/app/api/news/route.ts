@@ -46,7 +46,7 @@ async function fetchFromGNews(): Promise<NewsItem[]> {
   if (!GNEWS_API_KEY) throw new Error("No GNews API key")
 
   const params = new URLSearchParams({
-    q: "crypto OR bitcoin OR ethereum OR blockchain",
+    q: "crypto OR bitcoin OR ethereum OR blockchain OR solana OR defi OR altcoin OR web3 OR NFT OR memecoin",
     lang: "en",
     max: "30",
     apikey: GNEWS_API_KEY,
