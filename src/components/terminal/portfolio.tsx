@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Plus, Trash2, Wallet, Download } from "lucide-react"
-import { useCryptoPrices } from "@/hooks/useCryptoPrices"
+import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
 
 interface PortfolioEntry {
@@ -77,8 +77,8 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
   )
 }
 
-export function PortfolioWidget() {
-  const { data: marketData } = useCryptoPrices()
+export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
+  const { data: marketData } = useMarketData()
   const [entries, setEntries] = useState<PortfolioEntry[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [symbol, setSymbol] = useState("")
@@ -224,7 +224,11 @@ export function PortfolioWidget() {
               const pnl = value - cost
               const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0
               return (
-                <div key={entry.id} className="flex items-center justify-between px-3 py-2 group">
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between px-3 py-2 group cursor-pointer hover:bg-secondary/30 transition-colors"
+                  onClick={() => onSelectSymbol?.(entry.coinId)}
+                >
                   <div className="flex items-center gap-2">
                     <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <div>

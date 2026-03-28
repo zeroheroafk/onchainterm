@@ -52,7 +52,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "market-overview":
       return <MarketOverview />
     case "top-movers":
-      return <TopMovers />
+      return <TopMovers onSelectSymbol={ctx.setChartSymbol} />
     case "trending":
       return <TrendingWidget />
     case "coin-detail":
@@ -68,13 +68,13 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "liquidations":
       return <LiquidationsFeed />
     case "heatmap":
-      return <Heatmap />
+      return <Heatmap onSelectSymbol={ctx.setChartSymbol} />
     case "exchange-flows":
       return <ExchangeFlows />
     case "portfolio":
-      return <PortfolioWidget />
+      return <PortfolioWidget onSelectSymbol={ctx.setChartSymbol} />
     case "watchlist":
-      return <WatchlistWidget />
+      return <WatchlistWidget onSelectSymbol={ctx.setChartSymbol} />
     case "converter":
       return <ConverterWidget />
     case "pnl-calculator":

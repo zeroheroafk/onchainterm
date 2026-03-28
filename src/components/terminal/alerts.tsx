@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { BellRing, Plus, Trash2, Volume2, VolumeX, ArrowUp, ArrowDown } from "lucide-react"
-import { useCryptoPrices } from "@/hooks/useCryptoPrices"
+import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice } from "@/lib/constants"
 
 interface PriceAlert {
@@ -30,7 +30,7 @@ function saveAlerts(alerts: PriceAlert[]) {
 }
 
 export function AlertsWidget() {
-  const { data: marketData } = useCryptoPrices()
+  const { data: marketData } = useMarketData()
   const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [symbol, setSymbol] = useState("")

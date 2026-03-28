@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useCryptoPrices } from "@/hooks/useCryptoPrices"
+import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
 import type { CoinMarketData } from "@/types/market"
 
@@ -56,7 +56,7 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
 }
 
 export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
-  const { data, isLoading, error } = useCryptoPrices()
+  const { data, isLoading, error } = useMarketData()
   const [sortKey, setSortKey] = useState<SortKey>("rank")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [selectedId, setSelectedId] = useState<string | null>(null)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Star, Plus, X } from "lucide-react"
-import { useCryptoPrices } from "@/hooks/useCryptoPrices"
+import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 
 const STORAGE_KEY = "onchainterm_watchlist"
@@ -18,8 +18,8 @@ function saveWatchlist(ids: string[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)) } catch {}
 }
 
-export function WatchlistWidget() {
-  const { data: marketData } = useCryptoPrices()
+export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
+  const { data: marketData } = useMarketData()
   const [watchlist, setWatchlist] = useState<string[]>([])
   const [addMode, setAddMode] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -105,7 +105,11 @@ export function WatchlistWidget() {
         ) : (
           <div className="divide-y divide-border/50">
             {watchedCoins.map(coin => (
-              <div key={coin.id} className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors">
+              <div
+                key={coin.id}
+                className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors cursor-pointer"
+                onClick={() => onSelectSymbol?.(coin.id)}
+              >
                 <div className="flex items-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={coin.image} alt="" className="size-5 rounded-full" />

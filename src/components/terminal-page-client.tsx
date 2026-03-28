@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { Lock, Unlock, LayoutGrid, Palette } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
+import { MarketDataProvider } from "@/lib/market-data-context"
 import { LayoutProvider, useLayout } from "@/components/terminal/layout/layout-context"
 import { WidgetGrid } from "@/components/terminal/layout/widget-grid"
 import { WidgetCatalogDrawer } from "@/components/terminal/layout/widget-catalog-drawer"
@@ -165,9 +166,11 @@ function TerminalContent() {
 export function TerminalPageClient() {
   return (
     <ThemeProvider>
-      <LayoutProvider>
-        <TerminalContent />
-      </LayoutProvider>
+      <MarketDataProvider>
+        <LayoutProvider>
+          <TerminalContent />
+        </LayoutProvider>
+      </MarketDataProvider>
     </ThemeProvider>
   )
 }
