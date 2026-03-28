@@ -362,6 +362,7 @@ function TerminalContent() {
 
   return (
     <div className="flex h-screen flex-col">
+      <div className="loading-bar" id="global-loading" style={{ display: 'none' }} />
       <TerminalHeader />
       <CommandBar />
       <DashboardBar />

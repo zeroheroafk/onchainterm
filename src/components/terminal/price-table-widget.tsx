@@ -266,21 +266,21 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coin.image} alt="" className="size-4 shrink-0 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <img src={coin.image} alt="" className="size-4 shrink-0 coin-avatar" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   <span className="font-semibold text-foreground/95">{coin.symbol.toUpperCase()}</span>
-                  <span className="text-muted-foreground text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
+                  <span className="text-muted-foreground/50 text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
                 </div>
               </td>
               <td className="py-1.5 px-2 text-right num text-foreground">
                 {formatPrice(coin.current_price)}
               </td>
-              <td className="py-1.5 px-2 text-right font-mono">
+              <td className="py-1.5 px-2 text-right">
                 <PercentCell value={coin.price_change_percentage_1h_in_currency} />
               </td>
-              <td className="py-1.5 px-2 text-right font-mono">
+              <td className="py-1.5 px-2 text-right">
                 <PercentCell value={coin.price_change_percentage_24h} />
               </td>
-              <td className="py-1.5 px-2 text-right font-mono hidden xl:table-cell">
+              <td className="py-1.5 px-2 text-right hidden xl:table-cell">
                 <PercentCell value={coin.price_change_percentage_7d_in_currency} />
               </td>
               <td className="py-1.5 px-2 text-right hidden 2xl:table-cell">
@@ -289,10 +289,10 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                   change={coin.price_change_percentage_7d_in_currency ?? 0}
                 />
               </td>
-              <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden lg:table-cell">
+              <td className="py-1.5 px-2 text-right num text-muted-foreground hidden lg:table-cell">
                 {formatLargeNumber(coin.market_cap)}
               </td>
-              <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden xl:table-cell">
+              <td className="py-1.5 px-2 text-right num text-muted-foreground hidden xl:table-cell">
                 {formatLargeNumber(coin.total_volume)}
               </td>
             </tr>

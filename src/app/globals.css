@@ -29,7 +29,7 @@
   --chart-3: #6b8cae;
   --chart-4: #ef4444;
   --chart-5: #8b6bbf;
-  --radius: 0px;
+  --radius: 6px;
   --sidebar: #060a11;
   --sidebar-foreground: #c8cdd6;
   --sidebar-primary: #ff8c00;
@@ -488,6 +488,103 @@ button:focus-visible {
 .resize-handle-indicator {
   opacity: 0;
   transition: opacity 0.15s ease;
+}
+
+/* ── Internal widget separators ── */
+.widget-separator {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--border) 50%, transparent) 30%, color-mix(in srgb, var(--border) 50%, transparent) 70%, transparent);
+}
+
+/* ── 3D perspective hover on cards ── */
+.hover-3d {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.hover-3d:hover {
+  transform: translateY(-2px) perspective(800px) rotateX(1deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Gradient text for key numbers ── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Refined badge/pill ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-positive {
+  background: rgba(45, 212, 160, 0.12);
+  color: #2dd4a0;
+  border: 1px solid rgba(45, 212, 160, 0.2);
+}
+
+.badge-negative {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.badge-neutral {
+  background: color-mix(in srgb, var(--secondary) 60%, transparent);
+  color: var(--muted-foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.badge-primary {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+/* ── Global loading bar ── */
+@keyframes loading-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9999;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: loading-slide 1.2s ease-in-out infinite;
+}
+
+/* ── Coin avatar ring ── */
+.coin-avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--border) 60%, transparent), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */
