@@ -95,17 +95,15 @@ function isInputFocused(): boolean {
 export function useKeyboardShortcuts() {
   const [showHelp, setShowHelp] = useState(false)
   const [showPresets, setShowPresets] = useState(false)
-  const { addWidget, removeWidget, isWidgetActive, bringToFront, focusWidget } = useLayout()
+  const { addWidget, removeWidget, isWidgetActive } = useLayout()
 
   const toggleWidget = useCallback((widgetId: string) => {
     if (isWidgetActive(widgetId)) {
       removeWidget(widgetId)
     } else {
       addWidget(widgetId)
-      bringToFront(widgetId)
-      focusWidget(widgetId)
     }
-  }, [addWidget, removeWidget, isWidgetActive, bringToFront, focusWidget])
+  }, [addWidget, removeWidget, isWidgetActive])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

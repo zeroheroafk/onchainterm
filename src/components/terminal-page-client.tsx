@@ -260,7 +260,7 @@ function TerminalHeader() {
 
 function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onShowPresets: () => void }) {
   const { theme } = useTheme()
-  const { addWidget, removeWidget, isWidgetActive, bringToFront, focusWidget } = useLayout()
+  const { addWidget, removeWidget, isWidgetActive } = useLayout()
   const isBloomberg = theme.bloombergMode
 
   const toggleWidget = (widgetId: string) => {
@@ -268,8 +268,6 @@ function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onSh
       removeWidget(widgetId)
     } else {
       addWidget(widgetId)
-      bringToFront(widgetId)
-      focusWidget(widgetId)
     }
   }
 
