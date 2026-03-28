@@ -110,7 +110,16 @@ export function ThemeCreator() {
 
   // Save current colors as a new theme
   const handleSave = useCallback(() => {
-    const name = themeName.trim() || "Untitled Theme"
+    let name = themeName.trim() || "Untitled Theme"
+    // Prevent duplicate theme names
+    const existingNames = new Set(savedThemes.map(t => t.name))
+    if (existingNames.has(name)) {
+      let suffix = 2
+      while (existingNames.has(`${name} (${suffix})`)) {
+        suffix++
+      }
+      name = `${name} (${suffix})`
+    }
     const newTheme: CustomTheme = {
       id: `custom_${Date.now()}`,
       name,
@@ -169,11 +178,28 @@ export function ThemeCreator() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (!file) return
+      if (file.size > 1_000_000) {
+        alert("File too large (max 1MB)")
+        return
+      }
       const reader = new FileReader()
       reader.onload = () => {
         try {
           const imported = JSON.parse(reader.result as string) as CustomTheme[]
           if (!Array.isArray(imported)) return
+          const isValid = imported.every(
+            (t) =>
+              t &&
+              typeof t === "object" &&
+              typeof t.id === "string" &&
+              typeof t.name === "string" &&
+              t.colors &&
+              typeof t.colors === "object",
+          )
+          if (!isValid) {
+            alert("Invalid theme file: each theme must have id, name, and colors properties")
+            return
+          }
           const merged = [...savedThemes, ...imported]
           saveThemes(merged)
           setSavedThemes(merged)

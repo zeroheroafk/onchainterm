@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Activity, Cpu, Users, Clock, BarChart3, Layers, RefreshCw } from "lucide-react"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface OnchainData {
   hashRate: number
@@ -112,11 +113,7 @@ export function OnchainMetrics() {
   }, [fetchData])
 
   if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-        Loading on-chain metrics...
-      </div>
-    )
+    return <CardsSkeleton count={6} />
   }
 
   if (error && !data) {
@@ -145,17 +142,18 @@ export function OnchainMetrics() {
           className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
           title="Refresh"
         >
-          <RefreshCw className="size-3" />
+          <RefreshCw className={`size-3 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
       {/* Metrics Grid */}
       {data && (
         <div className="grid grid-cols-2 gap-2">
-          {METRICS_CONFIG.map(({ key, label, icon: Icon, color, borderColor, format }) => (
+          {METRICS_CONFIG.map(({ key, label, icon: Icon, color, borderColor, format }, i) => (
             <div
               key={key}
-              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5`}
+              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5 hover-lift animate-fade-in`}
+              style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Icon className={`size-3 ${color}`} />

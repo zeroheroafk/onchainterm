@@ -5,24 +5,24 @@
 
 :root {
   /* Default theme: Bloomberg (dark navy + orange) */
-  --background: #0a0e17;
-  --foreground: #d4d8e0;
-  --card: #101829;
-  --card-foreground: #d4d8e0;
-  --popover: #101829;
-  --popover-foreground: #d4d8e0;
+  --background: #080c14;
+  --foreground: #c8cdd6;
+  --card: #0d1520;
+  --card-foreground: #c8cdd6;
+  --popover: #0d1520;
+  --popover-foreground: #c8cdd6;
   --primary: #ff8c00;
   --primary-foreground: #0a0e17;
-  --secondary: #182238;
-  --secondary-foreground: #8a9ab5;
-  --muted: #182238;
-  --muted-foreground: #5a6a85;
+  --secondary: #131d2e;
+  --secondary-foreground: #7a8ba8;
+  --muted: #131d2e;
+  --muted-foreground: #4d5f7a;
   --accent: #ffb800;
   --accent-foreground: #0a0e17;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #1e2d4a;
-  --input: #182238;
+  --border: #1a2640;
+  --input: #131d2e;
   --ring: #ff8c00;
   --chart-1: #ff8c00;
   --chart-2: #ffb800;
@@ -30,13 +30,13 @@
   --chart-4: #ef4444;
   --chart-5: #8b6bbf;
   --radius: 0px;
-  --sidebar: #080d16;
-  --sidebar-foreground: #d4d8e0;
+  --sidebar: #060a11;
+  --sidebar-foreground: #c8cdd6;
   --sidebar-primary: #ff8c00;
   --sidebar-primary-foreground: #0a0e17;
-  --sidebar-accent: #182238;
-  --sidebar-accent-foreground: #d4d8e0;
-  --sidebar-border: #1e2d4a;
+  --sidebar-accent: #131d2e;
+  --sidebar-accent-foreground: #c8cdd6;
+  --sidebar-border: #1a2640;
   --sidebar-ring: #ff8c00;
 
   /* Terminal-specific colors (used by crypto widgets) */
@@ -48,6 +48,7 @@
 @theme inline {
   --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
+  --font-heading: var(--font-heading), 'Space Grotesk', system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -100,6 +101,62 @@
     @apply bg-background text-foreground;
     overflow-x: hidden;
   }
+}
+
+/* ── Refined typography ── */
+.font-heading {
+  font-family: var(--font-heading), 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Tabular numerals everywhere for data-dense UIs */
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Subtle background texture ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Enhanced widget panel depth ── */
+.widget-panel {
+  background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 95%, black) 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.widget-panel > div:first-child {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--secondary) 80%, var(--card)) 0%,
+    color-mix(in srgb, var(--secondary) 40%, var(--card)) 100%
+  ) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent) !important;
+}
+
+/* ── Better focus states ── */
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--primary) 50%, transparent);
+  outline-offset: -1px;
+}
+
+/* ── Refined borders ── */
+.widget-panel {
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.widget-panel:hover {
+  border-color: color-mix(in srgb, var(--border) 100%, transparent);
 }
 
 /* ── Scrollbar ── */
@@ -185,12 +242,14 @@
 }
 
 .widget-positioned {
-  transition: left 150ms ease-out, top 150ms ease-out, width 150ms ease-out, height 150ms ease-out;
+  transition: left 120ms ease-out, top 120ms ease-out, width 120ms ease-out, height 120ms ease-out;
 }
 
 .widget-dragging {
   transition: none !important;
   will-change: transform;
+  opacity: 0.92;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .widget-grid-editing .widget-panel {
@@ -199,6 +258,115 @@
 
 .widget-grid-editing .widget-panel:hover {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ── Micro-interaction Animations ── */
+
+/* Price flash: green pulse when price goes up */
+@keyframes price-flash-up {
+  0% { background-color: rgba(34, 197, 94, 0.3); }
+  100% { background-color: transparent; }
+}
+
+/* Price flash: red pulse when price goes down */
+@keyframes price-flash-down {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: price-flash-up 0.6s ease-out;
+}
+
+.flash-down {
+  animation: price-flash-down 0.6s ease-out;
+}
+
+/* Slide in from left for new feed items */
+@keyframes slide-in-left {
+  0% { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+/* Slide down for expanding sections/forms */
+@keyframes slide-down {
+  0% { opacity: 0; max-height: 0; overflow: hidden; }
+  100% { opacity: 1; max-height: 500px; overflow: hidden; }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease-out forwards;
+}
+
+/* New item glow pulse border */
+@keyframes item-glow {
+  0% { box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.6), 0 0 8px rgba(255, 140, 0, 0.3); }
+  100% { box-shadow: 0 0 0 0px transparent, 0 0 0px transparent; }
+}
+
+.animate-item-glow {
+  animation: item-glow 1.5s ease-out;
+}
+
+/* Smooth number counter transition */
+.number-transition {
+  transition: color 0.3s ease;
+}
+
+/* Skeleton shimmer (better than plain pulse) */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--secondary) 25%, color-mix(in srgb, var(--secondary) 50%, var(--muted-foreground)) 50%, var(--secondary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Dropdown slide animation */
+@keyframes dropdown-slide {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-dropdown {
+  animation: dropdown-slide 0.15s ease-out;
+}
+
+/* Scale up on hover for interactive cards */
+.hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab crossfade transition */
+.tab-content {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Progress bar smooth fill */
+.progress-fill {
+  transition: width 0.5s ease-out;
+}
+
+/* Resize handle hover feedback */
+.widget-positioned:hover .resize-handle-indicator {
+  opacity: 1;
+}
+
+.resize-handle-indicator {
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */
@@ -352,7 +520,7 @@
 
 .bloomberg-active .bloomberg-fn-label {
   font-size: 9px;
-  color: #d4d8e0;
+  color: #c8cdd6;
   margin-right: 10px;
   letter-spacing: 0.03em;
 }

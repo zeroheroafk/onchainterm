@@ -68,8 +68,15 @@ export async function GET() {
     // 1. Get latest block number
     const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
     const latestBlock = parseInt(blockNumData.result as string, 16)
+    if (isNaN(latestBlock)) {
+      throw new Error("Invalid block number from Etherscan")
+    }
 
-    // 2. Fetch last 5 blocks sequentially to avoid rate limits
+    // 2. Fetch last 15 blocks (~3 min) in batches of 3 to respect rate limits
+    const BLOCKS_TO_SCAN = 15
+    const BATCH_SIZE = 3
+    const blockNumbers = Array.from({ length: BLOCKS_TO_SCAN }, (_, i) => latestBlock - i)
+
     const allTxs: {
       hash: string
       from: string
@@ -81,25 +88,36 @@ export async function GET() {
       block: number
     }[] = []
 
-    for (let i = 0; i < 5; i++) {
-      const blockNum = latestBlock - i
-      const hexBlock = "0x" + blockNum.toString(16)
-      try {
-        const data = await etherscanCall(
-          `module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`
-        )
-        const block = data.result as {
-          transactions: BlockTx[]
-          timestamp: string
-          number: string
-        } | null
-        if (!block) continue
+    for (let i = 0; i < blockNumbers.length; i += BATCH_SIZE) {
+      const batch = blockNumbers.slice(i, i + BATCH_SIZE)
+      const results = await Promise.allSettled(
+        batch.map(async (blockNum) => {
+          const hexBlock = "0x" + blockNum.toString(16)
+          const data = await etherscanCall(
+            `module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`
+          )
+          return data.result as {
+            transactions: BlockTx[]
+            timestamp: string
+            number: string
+          } | null
+        })
+      )
 
+      for (const result of results) {
+        if (result.status !== "fulfilled" || !result.value) continue
+        const block = result.value
         const blockTimestamp = parseInt(block.timestamp, 16) * 1000
         const blkNum = parseInt(block.number, 16)
 
         for (const tx of block.transactions) {
-          const valueWei = parseInt(tx.value, 16)
+          let valueWei: number
+          try {
+            valueWei = parseInt(tx.value, 16)
+            if (isNaN(valueWei)) continue
+          } catch {
+            continue
+          }
           const valueEth = valueWei / 1e18
           if (valueEth < 50) continue
 
@@ -114,17 +132,15 @@ export async function GET() {
             block: blkNum,
           })
         }
-      } catch (e) {
-        console.error(`[whales] block ${blockNum} failed:`, e)
       }
     }
 
     allTxs.sort((a, b) => b.value - a.value)
 
     return NextResponse.json({
-      transactions: allTxs.slice(0, 25),
+      transactions: allTxs.slice(0, 30),
       latestBlock,
-      blocksScanned: 5,
+      blocksScanned: BLOCKS_TO_SCAN,
     })
   } catch (err) {
     console.error("[whales] fatal:", err)

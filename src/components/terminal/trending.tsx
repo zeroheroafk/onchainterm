@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Flame } from "lucide-react"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
 
 interface TrendingCoin {
   item: {
@@ -42,7 +43,7 @@ export function TrendingWidget() {
   }, [])
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading trending...</div>
+    return <FeedSkeleton rows={6} />
   }
 
   return (
@@ -52,8 +53,8 @@ export function TrendingWidget() {
           const coin = item.item
           const pctChange = coin.data?.price_change_percentage_24h?.usd
           return (
-            <div key={coin.id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/30 transition-colors">
-              <span className="text-[10px] text-muted-foreground w-4">{i + 1}</span>
+            <div key={coin.id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/30 transition-colors animate-fade-in" style={{ animationDelay: `${i * 0.03}s`, animationFillMode: 'both' }}>
+              <span className="text-primary font-bold text-[10px] w-4">{i + 1}</span>
               <Flame className="size-3 text-amber-400 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">

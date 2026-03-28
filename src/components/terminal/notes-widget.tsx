@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 
 const STORAGE_KEY = "onchainterm_notes"
 
 export function NotesWidget() {
   const [content, setContent] = useState("")
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     try {
@@ -14,9 +17,27 @@ export function NotesWidget() {
     } catch {}
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    }
+  }, [])
+
   const handleChange = useCallback((value: string) => {
     setContent(value)
+    setSaveStatus('saving')
     try { localStorage.setItem(STORAGE_KEY, value) } catch {}
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+
+    saveTimerRef.current = setTimeout(() => {
+      setSaveStatus('saved')
+      idleTimerRef.current = setTimeout(() => {
+        setSaveStatus('idle')
+      }, 2000)
+    }, 500)
   }, [])
 
   return (
@@ -28,8 +49,10 @@ export function NotesWidget() {
         className="flex-1 w-full resize-none bg-transparent p-3 text-xs text-foreground outline-none placeholder:text-muted-foreground/50 font-mono"
         spellCheck={false}
       />
-      <div className="border-t border-border px-3 py-1 text-[9px] text-muted-foreground shrink-0">
-        {content.length} chars &middot; Auto-saved locally
+      <div className="border-t border-border px-3 py-1 text-[9px] text-muted-foreground shrink-0 flex items-center justify-between">
+        <span className="text-[8px] text-muted-foreground">{content.length} chars</span>
+        {saveStatus === 'saving' && <span className="text-[9px] text-muted-foreground animate-pulse">Saving...</span>}
+        {saveStatus === 'saved' && <span className="text-[9px] text-green-400">✓ Saved</span>}
       </div>
     </div>
   )

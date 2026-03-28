@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { BookOpen, Plus, Trash2, Download, TrendingUp, TrendingDown } from "lucide-react"
 import { formatPrice } from "@/lib/constants"
+import { useToast } from "@/lib/toast-context"
 
 interface Trade {
   id: string
@@ -40,9 +41,11 @@ function calcPnl(trade: Trade) {
 }
 
 export function TradeJournal() {
+  const { toast } = useToast()
   const [trades, setTrades] = useState<Trade[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const seenTradeIds = useRef<Set<string>>(new Set())
 
   // Form state
   const [coin, setCoin] = useState("")
@@ -54,17 +57,36 @@ export function TradeJournal() {
   const [notes, setNotes] = useState("")
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 16))
 
-  useEffect(() => { setTrades(loadTrades()) }, [])
+  useEffect(() => {
+    const loaded = loadTrades()
+    loaded.forEach(t => seenTradeIds.current.add(t.id))
+    setTrades(loaded)
+  }, [])
+
+  const resetForm = useCallback(() => {
+    setCoin("")
+    setSide("Long")
+    setEntryPrice("")
+    setExitPrice("")
+    setAmount("")
+    setTag("Scalp")
+    setNotes("")
+    setDate(new Date().toISOString().slice(0, 16))
+  }, [])
 
   const addTrade = useCallback(() => {
     if (!coin.trim() || !entryPrice || !exitPrice || !amount) return
+    const ep = parseFloat(entryPrice)
+    const xp = parseFloat(exitPrice)
+    const am = parseFloat(amount)
+    if (isNaN(ep) || ep <= 0 || isNaN(xp) || xp <= 0 || isNaN(am) || am <= 0) return
     const trade: Trade = {
       id: `${Date.now()}`,
       coin: coin.trim().toUpperCase(),
       side,
-      entryPrice: parseFloat(entryPrice),
-      exitPrice: parseFloat(exitPrice),
-      amount: parseFloat(amount),
+      entryPrice: ep,
+      exitPrice: xp,
+      amount: am,
       tag,
       notes: notes.trim(),
       date: new Date(date).toISOString(),
@@ -81,13 +103,15 @@ export function TradeJournal() {
     setNotes("")
     setDate(new Date().toISOString().slice(0, 16))
     setShowForm(false)
-  }, [coin, side, entryPrice, exitPrice, amount, tag, notes, date, trades])
+    toast("Trade logged", "success")
+  }, [coin, side, entryPrice, exitPrice, amount, tag, notes, date, trades, toast])
 
   const removeTrade = useCallback((id: string) => {
     const updated = trades.filter(t => t.id !== id)
     setTrades(updated)
     saveTrades(updated)
-  }, [trades])
+    toast("Trade deleted")
+  }, [trades, toast])
 
   const stats = useMemo(() => {
     if (trades.length === 0) return null
@@ -163,33 +187,33 @@ export function TradeJournal() {
       {stats && (
         <div className="border-b border-border px-3 py-2 shrink-0">
           <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Trades</div>
               <div className="text-xs font-bold">{stats.total}</div>
             </div>
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Win Rate</div>
               <div className={`text-xs font-bold ${stats.winRate >= 50 ? "text-green-400" : "text-red-400"}`}>
                 {stats.winRate.toFixed(1)}%
               </div>
             </div>
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Total P&L</div>
               <div className={`text-xs font-bold ${stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {formatPrice(stats.totalPnl)}
               </div>
             </div>
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Avg P&L</div>
               <div className={`text-xs font-bold ${stats.avgPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {formatPrice(stats.avgPnl)}
               </div>
             </div>
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Best</div>
               <div className="text-xs font-bold text-green-400">{formatPrice(stats.best)}</div>
             </div>
-            <div>
+            <div className="hover-lift">
               <div className="text-[9px] text-muted-foreground">Worst</div>
               <div className="text-xs font-bold text-red-400">{formatPrice(stats.worst)}</div>
             </div>
@@ -200,8 +224,10 @@ export function TradeJournal() {
       {/* Trade list */}
       <div className="flex-1 overflow-auto">
         {trades.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            No trades logged yet. Click + to add.
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <BookOpen className="size-8 opacity-20" />
+            <span className="text-[10px]">No trades logged yet</span>
+            <span className="text-[8px]">Click + above to log your first trade</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
@@ -209,8 +235,10 @@ export function TradeJournal() {
               const { pnl, pnlPct } = calcPnl(trade)
               const isExpanded = expandedId === trade.id
               const isWin = pnl >= 0
+              const isNew = !seenTradeIds.current.has(trade.id)
+              if (isNew) seenTradeIds.current.add(trade.id)
               return (
-                <div key={trade.id} className="group">
+                <div key={trade.id} className={`group${isNew ? " animate-slide-in" : ""}`}>
                   <div
                     className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-secondary/30 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : trade.id)}
@@ -255,7 +283,7 @@ export function TradeJournal() {
                     </div>
                   </div>
                   {isExpanded && (
-                    <div className="px-3 pb-2 text-[10px] text-muted-foreground border-t border-border/30 pt-1.5 mx-2">
+                    <div className="animate-slide-down px-3 pb-2 text-[10px] text-muted-foreground border-t border-border/30 pt-1.5 mx-2">
                       <div className="flex items-center gap-3 mb-1">
                         <span>Amount: {trade.amount}</span>
                         <span>{new Date(trade.date).toLocaleDateString()} {new Date(trade.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
@@ -273,7 +301,7 @@ export function TradeJournal() {
       {/* Add trade form */}
       <div className="border-t border-border px-3 py-2 shrink-0">
         {showForm ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="animate-slide-down flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5">
               <input
                 value={coin}
@@ -306,6 +334,7 @@ export function TradeJournal() {
                 onChange={e => setEntryPrice(e.target.value)}
                 placeholder="Entry $"
                 type="number"
+                min="0"
                 className="w-20 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
               <input
@@ -313,6 +342,7 @@ export function TradeJournal() {
                 onChange={e => setExitPrice(e.target.value)}
                 placeholder="Exit $"
                 type="number"
+                min="0"
                 className="w-20 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
               <input
@@ -320,6 +350,7 @@ export function TradeJournal() {
                 onChange={e => setAmount(e.target.value)}
                 placeholder="Amount"
                 type="number"
+                min="0"
                 className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
             </div>
@@ -347,7 +378,7 @@ export function TradeJournal() {
                 Add Trade
               </button>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => { resetForm(); setShowForm(false) }}
                 className="text-muted-foreground hover:text-foreground text-[10px] transition-colors"
               >
                 Cancel

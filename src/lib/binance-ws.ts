@@ -39,6 +39,11 @@ const ID_TO_BINANCE: Record<string, string> = {
   "injective-protocol": "injusdt",
   "immutable-x": "imxusdt",
   "the-graph": "grtusdt",
+  hyperliquid: "hypeusdt",
+  "leo-token": "leousdt",
+  mantle: "mntusdt",
+  "ondo-finance": "ondousdt",
+  "artificial-superintelligence-alliance": "fetusdt",
 }
 
 // Reverse lookup: binance symbol → coingecko id
@@ -78,9 +83,12 @@ export function createBinanceWS(
 ): { close: () => void; updateSubscriptions: (newIds: string[]) => void } {
   let ws: WebSocket | null = null
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+  let flushInterval: ReturnType<typeof setInterval> | null = null
   let currentSymbols: string[] = []
   let closed = false
   const latestPrices: Record<string, RealtimePrice> = {}
+  let buffer: Record<string, RealtimePrice> = {}
+  let bufferDirty = false
 
   function getSymbols(ids: string[]): string[] {
     const symbols: string[] = []
@@ -116,21 +124,29 @@ export function createBinanceWS(
         const data = msg.data
         if (!data || !data.s) return
 
-        const binanceSymbol = data.s.toLowerCase() + (data.s.toLowerCase().endsWith("usdt") ? "" : "")
         const sym = data.s.toLowerCase().endsWith("usdt") ? data.s.toLowerCase() : `${data.s.toLowerCase()}usdt`
         const coinId = BINANCE_TO_ID[sym]
         if (!coinId) return
 
         const close = parseFloat(data.c)
-        const open = parseFloat(data.o)
-        const change24h = open > 0 ? ((close - open) / open) * 100 : 0
+        const rawChange = parseFloat(data.P)
+        const change24h = isNaN(rawChange) ? 0 : rawChange
 
         latestPrices[coinId] = { price: close, priceChange24h: change24h }
-
-        // Batch updates — dispatch on every message (mini tickers come every ~1s per symbol)
-        onPrices({ ...latestPrices })
+        buffer[coinId] = { price: close, priceChange24h: change24h }
+        bufferDirty = true
       } catch { /* ignore parse errors */ }
     }
+
+    // Start flush interval for batching updates (every 500ms instead of per-message)
+    if (flushInterval) clearInterval(flushInterval)
+    flushInterval = setInterval(() => {
+      if (bufferDirty) {
+        onPrices({ ...latestPrices })
+        buffer = {}
+        bufferDirty = false
+      }
+    }, 500)
 
     ws.onerror = () => {
       ws?.close()
@@ -151,6 +167,7 @@ export function createBinanceWS(
   function close() {
     closed = true
     if (reconnectTimeout) clearTimeout(reconnectTimeout)
+    if (flushInterval) clearInterval(flushInterval)
     ws?.close()
   }
 

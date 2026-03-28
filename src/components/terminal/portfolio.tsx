@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { Plus, Trash2, Wallet, Download, Search, Loader2, X } from "lucide-react"
+import { Plus, Trash2, Wallet, Download, Search, Loader2, X, PieChart } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
+import { useToast } from "@/lib/toast-context"
 
 interface PortfolioEntry {
   id: string
@@ -29,6 +31,7 @@ interface SearchCoin {
 }
 
 const STORAGE_KEY = "onchainterm_portfolio"
+const HISTORY_KEY = "onchainterm-portfolio-history"
 
 const PIE_COLORS = [
   "#f7931a", "#627eea", "#00d4aa", "#e84142", "#2775ca",
@@ -45,6 +48,27 @@ function loadPortfolio(): PortfolioEntry[] {
 
 function savePortfolio(entries: PortfolioEntry[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)) } catch {}
+}
+
+function PortfolioSparkline({ history }: { history: { t: number; v: number }[] }) {
+  if (history.length < 2) return null
+  const values = history.map(h => h.v)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const w = 120, h = 24
+  const points = values.map((v, i) =>
+    `${(i / (values.length - 1)) * w},${h - ((v - min) / range) * h}`
+  ).join(" ")
+  const isUp = values[values.length - 1] >= values[0]
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50">
+      <span className="text-[8px] text-muted-foreground uppercase">Value History</span>
+      <svg width={w} height={h} className="flex-1">
+        <polyline points={points} fill="none" stroke={isUp ? "#22c55e" : "#ef4444"} strokeWidth="1.5" />
+      </svg>
+    </div>
+  )
 }
 
 function MiniPieChart({ slices }: { slices: { pct: number; color: string; label: string }[] }) {
@@ -72,7 +96,7 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
     const largeArc = angle > 180 ? 1 : 0
 
     if (slices.length === 1) {
-      return <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} />
+      return <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }} />
     }
 
     return (
@@ -80,6 +104,7 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
         key={i}
         d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
         fill={slice.color}
+        style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
       />
     )
   })
@@ -93,8 +118,11 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
 }
 
 export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
-  const { data: marketData } = useMarketData()
+  const { data: marketData, isLoading: pricesLoading } = useMarketData()
+  const { toast } = useToast()
   const [entries, setEntries] = useState<PortfolioEntry[]>([])
+  const [valueHistory, setValueHistory] = useState<{t: number, v: number}[]>([])
+  const lastHistoryTime = useRef<number>(0)
   const [showAdd, setShowAdd] = useState(false)
   const [amount, setAmount] = useState("")
   const [buyPrice, setBuyPrice] = useState("")
@@ -107,7 +135,17 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [selectedCoin, setSelectedCoin] = useState<SearchCoin | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => { setEntries(loadPortfolio()) }, [])
+  useEffect(() => {
+    setEntries(loadPortfolio())
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setValueHistory(parsed)
+        if (parsed.length > 0) lastHistoryTime.current = parsed[parsed.length - 1].t
+      }
+    } catch {}
+  }, [])
 
   // Fetch prices for coins not in marketData
   useEffect(() => {
@@ -178,12 +216,14 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     setAmount("")
     setBuyPrice("")
     setShowAdd(false)
-  }, [selectedCoin, amount, buyPrice, entries])
+    toast("Added to portfolio", "success")
+  }, [selectedCoin, amount, buyPrice, entries, toast])
 
   const removeEntry = (id: string) => {
     const updated = entries.filter(e => e.id !== id)
     setEntries(updated)
     savePortfolio(updated)
+    toast("Removed from portfolio")
   }
 
   const getCurrentPrice = (entry: PortfolioEntry) => {
@@ -223,6 +263,19 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   })
   const totalPnl = totalValue - totalCost
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0
+
+  // Track portfolio value history (throttled to 1 per minute, max 100 points)
+  useEffect(() => {
+    if (totalValue <= 0) return
+    const now = Date.now()
+    if (now - lastHistoryTime.current < 60_000) return
+    lastHistoryTime.current = now
+    setValueHistory(prev => {
+      const next = [...prev, { t: now, v: totalValue }].slice(-100)
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [totalValue])
 
   const pieSlices = useMemo(() => {
     if (entries.length === 0 || totalValue === 0) return []
@@ -270,6 +323,9 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
         )}
       </div>
 
+      {/* Value sparkline */}
+      <PortfolioSparkline history={valueHistory} />
+
       {/* Pie chart */}
       {pieSlices.length > 0 && (
         <div className="border-b border-border px-3 py-2 shrink-0 flex items-center gap-3">
@@ -287,9 +343,15 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
       {/* Entries list */}
       <div className="flex-1 overflow-auto">
-        {entries.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            No holdings yet. Click + to add.
+        {pricesLoading && entries.length === 0 ? (
+          <div className="p-3">
+            <CardsSkeleton count={4} />
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <PieChart className="size-8 opacity-20" />
+            <span className="text-[10px]">No holdings yet</span>
+            <span className="text-[8px]">Click + below to add your first holding</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
@@ -338,7 +400,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
       {/* Add form */}
       <div className="border-t border-border px-3 py-2 shrink-0">
         {showAdd ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="animate-slide-down flex flex-col gap-1.5">
             {/* Coin search */}
             {!selectedCoin ? (
               <div className="relative">
@@ -362,7 +424,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-left hover:bg-secondary/50 transition-colors"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {coin.thumb && <img src={coin.thumb} alt="" className="size-4 rounded-full" />}
+                        {coin.thumb && <img src={coin.thumb} alt="" className="size-4 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />}
                         <span className="text-[10px] font-bold">{coin.symbol?.toUpperCase()}</span>
                         <span className="text-[9px] text-muted-foreground truncate">{coin.name}</span>
                         {coin.market_cap_rank && (
@@ -377,14 +439,14 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
               <div className="flex items-center gap-1.5">
                 <div className="flex items-center gap-1 rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {selectedCoin.thumb && <img src={selectedCoin.thumb} alt="" className="size-3 rounded-full" />}
+                  {selectedCoin.thumb && <img src={selectedCoin.thumb} alt="" className="size-3 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />}
                   <span className="text-[10px] font-bold text-primary">{selectedCoin.symbol.toUpperCase()}</span>
                   <button onClick={() => setSelectedCoin(null)} className="text-primary/60 hover:text-primary ml-0.5">
                     <X className="size-2.5" />
                   </button>
                 </div>
-                <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
-                <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" min="0" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" min="0" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
                 <button onClick={addEntry} disabled={!amount || !buyPrice} className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">Add</button>
               </div>
             )}

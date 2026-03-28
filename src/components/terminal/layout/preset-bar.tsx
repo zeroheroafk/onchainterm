@@ -29,8 +29,17 @@ export function PresetBar() {
     if (editingId && editInputRef.current) editInputRef.current.focus()
   }, [editingId])
 
+  const sanitizeName = (raw: string): string => {
+    return raw
+      .replace(/["\n\r]/g, "")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1f\x7f]/g, "")
+      .trim()
+      .slice(0, 20)
+  }
+
   const handleSave = () => {
-    const name = saveName.trim()
+    const name = sanitizeName(saveName)
     if (!name) return
     saveCurrentAsPreset(name)
     setSaveName("")
@@ -38,7 +47,7 @@ export function PresetBar() {
   }
 
   const handleRename = (presetId: string) => {
-    const name = editName.trim()
+    const name = sanitizeName(editName)
     if (!name) return
     renamePreset(presetId, name)
     setEditingId(null)

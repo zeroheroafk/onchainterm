@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useLayoutEffect, useCallback, type ReactNode } from "react"
 
 export type ThemeId = "bloomberg" | "neon" | "matrix" | "retro" | "amber" | "cyan" | "rose" | "violet" | "blue" | "midnight" | "light"
 
@@ -358,7 +358,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeId, setThemeId] = useState<ThemeId>("bloomberg")
   const theme = getTheme(themeId)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       const local = localStorage.getItem(STORAGE_KEY) as ThemeId | null
       if (local && THEMES.some(t => t.id === local)) {

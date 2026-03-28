@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, type FormEvent } from "react"
-import { TrendingUp, TrendingDown, ThumbsUp, ThumbsDown, Send, Radio } from "lucide-react"
+import { TrendingUp, TrendingDown, ThumbsUp, ThumbsDown, Send, Radio, Plus } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useToast } from "@/lib/toast-context"
 import { supabase } from "@/lib/supabase"
 
 // --- Types ---
@@ -73,11 +74,15 @@ function timeAgo(dateStr: string): string {
 
 export function TradingSignals() {
   const { user, username } = useAuth()
+  const { toast } = useToast()
   const [signals, setSignals] = useState<Signal[]>([])
   const [votes, setVotes] = useState<Record<string, "up" | "down">>({})
   const [sortMode, setSortMode] = useState<SortMode>("latest")
   const [connected, setConnected] = useState(false)
+  const [showForm, setShowForm] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const seenIdsRef = useRef<Set<string>>(new Set())
+  const animatedIdsRef = useRef<Set<string>>(new Set())
 
   // Form state
   const [coin, setCoin] = useState("")
@@ -87,7 +92,9 @@ export function TradingSignals() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    setSignals(loadSignals())
+    const loaded = loadSignals()
+    loaded.forEach((s) => seenIdsRef.current.add(s.id))
+    setSignals(loaded)
     setVotes(loadVotes())
   }, [])
 
@@ -97,6 +104,10 @@ export function TradingSignals() {
       .channel(CHANNEL_NAME)
       .on("broadcast", { event: "new_signal" }, (payload) => {
         const incoming = payload.payload as Signal
+        if (!seenIdsRef.current.has(incoming.id)) {
+          animatedIdsRef.current.add(incoming.id)
+          seenIdsRef.current.add(incoming.id)
+        }
         setSignals((prev) => {
           if (prev.some((s) => s.id === incoming.id)) return prev
           const next = [incoming, ...prev]
@@ -148,6 +159,8 @@ export function TradingSignals() {
       }
 
       // Add locally
+      animatedIdsRef.current.add(newSignal.id)
+      seenIdsRef.current.add(newSignal.id)
       setSignals((prev) => {
         const next = [newSignal, ...prev]
         saveSignals(next)
@@ -172,38 +185,37 @@ export function TradingSignals() {
   // Vote on a signal
   const handleVote = useCallback(
     async (signalId: string, voteType: "up" | "down") => {
-      setVotes((prev) => {
-        const existing = prev[signalId]
-        let next: Record<string, "up" | "down">
+      // Compute the vote transition upfront to avoid reading stale state
+      const currentVote = votes[signalId] || null
+      const newVote = currentVote === voteType ? null : voteType
 
-        if (existing === voteType) {
-          // Remove vote
-          const { [signalId]: _, ...rest } = prev
-          next = rest
+      // Update votes state
+      setVotes((prev) => {
+        const next = { ...prev }
+        if (newVote) {
+          next[signalId] = newVote
         } else {
-          next = { ...prev, [signalId]: voteType }
+          delete next[signalId]
         }
         saveVotes(next)
         return next
       })
 
+      // Update signal counts using the pre-computed vote transition (not stale state)
       setSignals((prev) => {
-        const currentVote = votes[signalId]
         const next = prev.map((s) => {
           if (s.id !== signalId) return s
           let { upvotes, downvotes } = s
 
           // Remove previous vote
-          if (currentVote === "up") upvotes--
-          if (currentVote === "down") downvotes--
+          if (currentVote === "up") upvotes = Math.max(0, upvotes - 1)
+          if (currentVote === "down") downvotes = Math.max(0, downvotes - 1)
 
-          // Apply new vote (unless toggling off)
-          if (currentVote !== voteType) {
-            if (voteType === "up") upvotes++
-            if (voteType === "down") downvotes++
-          }
+          // Add new vote
+          if (newVote === "up") upvotes++
+          if (newVote === "down") downvotes++
 
-          return { ...s, upvotes: Math.max(0, upvotes), downvotes: Math.max(0, downvotes) }
+          return { ...s, upvotes, downvotes }
         })
         saveSignals(next)
 
@@ -220,8 +232,10 @@ export function TradingSignals() {
 
         return next
       })
+
+      toast("Vote recorded", "success")
     },
-    [votes]
+    [votes, toast]
   )
 
   // Sorted signals
@@ -283,7 +297,7 @@ export function TradingSignals() {
             return (
               <div
                 key={signal.id}
-                className="rounded border border-border bg-secondary/20 px-2.5 py-2 space-y-1"
+                className={`rounded border border-border bg-secondary/20 px-2.5 py-2 space-y-1${animatedIdsRef.current.has(signal.id) ? " animate-slide-in animate-item-glow" : ""}`}
               >
                 {/* Top row: coin + direction + timeframe + time */}
                 <div className="flex items-center gap-2">
@@ -361,78 +375,89 @@ export function TradingSignals() {
       </div>
 
       {/* Post form */}
-      <form
-        onSubmit={handlePost}
-        className="shrink-0 border-t border-border bg-card px-3 py-2 space-y-2"
-      >
+      <div className="shrink-0 border-t border-border bg-card px-3 py-2 space-y-2">
         {!user ? (
           <div className="text-center text-[11px] text-muted-foreground py-1">
             Sign in to post signals
           </div>
         ) : (
           <>
-            {/* Row 1: coin + direction + timeframe */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={coin}
-                onChange={(e) => setCoin(e.target.value)}
-                placeholder="COIN"
-                maxLength={10}
-                className="w-16 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] font-mono font-bold text-foreground uppercase placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setDirection((d) => (d === "bullish" ? "bearish" : "bullish"))
-                }
-                className={`flex items-center gap-1 rounded px-2 py-1 text-[10px] font-bold uppercase transition-colors ${
-                  direction === "bullish"
-                    ? "bg-green-500/15 text-green-500 border border-green-500/30"
-                    : "bg-red-500/15 text-red-500 border border-red-500/30"
-                }`}
-              >
-                {direction === "bullish" ? (
-                  <TrendingUp className="size-3" />
-                ) : (
-                  <TrendingDown className="size-3" />
-                )}
-                {direction}
-              </button>
-              <select
-                value={timeframe}
-                onChange={(e) => setTimeframe(e.target.value)}
-                className="rounded border border-border bg-secondary/30 px-1.5 py-1 text-[10px] font-mono font-bold text-foreground focus:outline-none focus:border-primary"
-              >
-                {TIMEFRAMES.map((tf) => (
-                  <option key={tf} value={tf}>
-                    {tf}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowForm((v) => !v)}
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+            >
+              <Plus className="size-3" />
+              {showForm ? "Cancel" : "New Signal"}
+            </button>
+            {showForm && (
+              <div className="animate-slide-down">
+                <form onSubmit={handlePost} className="space-y-2">
+                  {/* Row 1: coin + direction + timeframe */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={coin}
+                      onChange={(e) => setCoin(e.target.value)}
+                      placeholder="COIN"
+                      maxLength={10}
+                      className="w-16 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] font-mono font-bold text-foreground uppercase placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDirection((d) => (d === "bullish" ? "bearish" : "bullish"))
+                      }
+                      className={`flex items-center gap-1 rounded px-2 py-1 text-[10px] font-bold uppercase transition-colors duration-150 ${
+                        direction === "bullish"
+                          ? "bg-green-500/15 text-green-500 border border-green-500/30"
+                          : "bg-red-500/15 text-red-500 border border-red-500/30"
+                      }`}
+                    >
+                      {direction === "bullish" ? (
+                        <TrendingUp className="size-3" />
+                      ) : (
+                        <TrendingDown className="size-3" />
+                      )}
+                      {direction}
+                    </button>
+                    <select
+                      value={timeframe}
+                      onChange={(e) => setTimeframe(e.target.value)}
+                      className="rounded border border-border bg-secondary/30 px-1.5 py-1 text-[10px] font-mono font-bold text-foreground focus:outline-none focus:border-primary"
+                    >
+                      {TIMEFRAMES.map((tf) => (
+                        <option key={tf} value={tf}>
+                          {tf}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            {/* Row 2: note + send */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Brief note (max 140 chars)..."
-                maxLength={140}
-                className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary font-mono"
-              />
-              <button
-                type="submit"
-                disabled={!coin.trim() || !note.trim()}
-                className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Send className="size-3.5" />
-              </button>
-            </div>
+                  {/* Row 2: note + send */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Brief note (max 140 chars)..."
+                      maxLength={140}
+                      className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary font-mono"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!coin.trim() || !note.trim()}
+                      className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Send className="size-3.5" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </>
         )}
-      </form>
+      </div>
     </div>
   )
 }

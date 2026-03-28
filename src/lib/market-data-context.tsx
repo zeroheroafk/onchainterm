@@ -30,6 +30,7 @@ export function MarketDataProvider({ children }: { children: ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const wsRef = useRef<ReturnType<typeof createBinanceWS> | null>(null)
+  const prevCoinIdsRef = useRef<string>("")
 
   // Fetch full market data from CoinGecko (every 60s for market cap, volume, etc.)
   const loadData = useCallback(async () => {
@@ -59,6 +60,11 @@ export function MarketDataProvider({ children }: { children: ReactNode }) {
     if (baseData.length === 0) return
 
     const coinIds = baseData.map(c => c.id)
+    const coinIdsKey = coinIds.slice().sort().join(",")
+
+    // Skip if coin IDs haven't actually changed
+    if (coinIdsKey === prevCoinIdsRef.current && wsRef.current) return
+    prevCoinIdsRef.current = coinIdsKey
 
     if (!wsRef.current) {
       wsRef.current = createBinanceWS(coinIds, (prices) => {

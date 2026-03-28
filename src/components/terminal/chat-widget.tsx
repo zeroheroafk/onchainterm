@@ -4,12 +4,14 @@ import { useState, useRef, useEffect, useCallback, type FormEvent } from "react"
 import { Send, MessagesSquare } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
 import { useAuth } from "@/lib/auth-context"
+import { useToast } from "@/lib/toast-context"
 import { supabase } from "@/lib/supabase"
 
 interface ChatMessage {
   id: string
   username: string
-  text: string
+  content: string
+  user_id?: string
   created_at: string
 }
 
@@ -76,6 +78,7 @@ function getOrCreateUsername(): string {
 export function ChatWidget() {
   const { themeId } = useTheme()
   const { user, username: authUsername } = useAuth()
+  const { toast } = useToast()
   const isLight = themeId === "light"
   const [fallbackUsername] = useState(() => getOrCreateUsername())
   const myUsername = authUsername || fallbackUsername
@@ -88,6 +91,8 @@ export function ChatWidget() {
   const [userCount, setUserCount] = useState(1)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const initialLoadDoneRef = useRef(false)
+  const animatedIdsRef = useRef<Set<string>>(new Set())
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -103,6 +108,9 @@ export function ChatWidget() {
     let broadcastChannel: ReturnType<typeof supabase.channel> | null = null
 
     async function init() {
+      initialLoadDoneRef.current = false
+      animatedIdsRef.current.clear()
+
       if (activeRoom === "general") {
         // General room: persisted via postgres_changes (backward compatible)
         const { data } = await supabase
@@ -113,6 +121,7 @@ export function ChatWidget() {
 
         if (data) {
           setMessages(data)
+          initialLoadDoneRef.current = true
         }
 
         pgChannel = supabase
@@ -122,6 +131,9 @@ export function ChatWidget() {
             { event: "INSERT", schema: "public", table: "chat_messages" },
             (payload) => {
               const newMsg = payload.new as ChatMessage
+              if (initialLoadDoneRef.current) {
+                animatedIdsRef.current.add(newMsg.id)
+              }
               setMessages((prev) => {
                 if (prev.some((m) => m.id === newMsg.id)) return prev
                 return [...prev, newMsg]
@@ -134,11 +146,13 @@ export function ChatWidget() {
       } else {
         // Other rooms: ephemeral broadcast channels (live-only, no persistence)
         setMessages([])
+        initialLoadDoneRef.current = true
 
         broadcastChannel = supabase
           .channel(channelName)
           .on("broadcast", { event: "message" }, (payload) => {
             const msg = payload.payload as ChatMessage
+            animatedIdsRef.current.add(msg.id)
             setMessages((prev) => {
               if (prev.some((m) => m.id === msg.id)) return prev
               return [...prev, msg]
@@ -188,13 +202,17 @@ export function ChatWidget() {
     setInput("")
 
     if (activeRoom === "general") {
-      // Persist to database for General room
+      // Persist to database for General room (requires authentication)
+      if (!user) return
+
       const { error } = await supabase
         .from("chat_messages")
-        .insert({ username: myUsername, text })
+        .insert({ username: myUsername, content: text, user_id: user.id })
 
       if (error) {
         setInput(text) // Restore input on error
+      } else {
+        toast("Message sent", "success")
       }
     } else {
       // Broadcast for topic rooms (ephemeral)
@@ -202,11 +220,12 @@ export function ChatWidget() {
       const msg: ChatMessage = {
         id: crypto.randomUUID(),
         username: myUsername,
-        text,
+        content: text,
         created_at: new Date().toISOString(),
       }
 
       // Add to local state immediately
+      animatedIdsRef.current.add(msg.id)
       setMessages((prev) => [...prev, msg])
 
       // Broadcast to others
@@ -216,12 +235,13 @@ export function ChatWidget() {
         event: "message",
         payload: msg,
       })
+      toast("Message sent", "success")
     }
 
     setLastSentAt(Date.now())
     setIsSending(false)
     inputRef.current?.focus()
-  }, [input, isSending, lastSentAt, myUsername, activeRoom])
+  }, [input, isSending, lastSentAt, myUsername, activeRoom, user, toast])
 
   const handleRoomChange = useCallback((room: RoomId) => {
     setActiveRoom(room)
@@ -265,7 +285,7 @@ export function ChatWidget() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-auto">
-        <div className="flex flex-col gap-0.5 p-2">
+        <div key={activeRoom} className="tab-content flex flex-col gap-0.5 p-2">
           {activeRoom !== "general" && messages.length === 0 && (
             <div className="text-center text-xs text-muted-foreground py-8 space-y-1">
               <div>No messages in #{activeRoom} yet.</div>
@@ -280,7 +300,7 @@ export function ChatWidget() {
             </div>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className="flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30">
+            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
               <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums font-mono">
                 {formatTime(msg.created_at)}
               </span>
@@ -293,7 +313,7 @@ export function ChatWidget() {
                   {msg.username}
                 </span>
                 <span className="text-[10px] text-muted-foreground/40">{" : "}</span>
-                <span className="text-xs leading-relaxed text-foreground/90">{msg.text}</span>
+                <span className="text-xs leading-relaxed text-foreground/90">{msg.content}</span>
               </div>
             </div>
           ))}
@@ -301,33 +321,41 @@ export function ChatWidget() {
       </div>
 
       {/* Input */}
-      <form
-        onSubmit={handleSubmit}
-        className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
-      >
-        <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
-          <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
-            {myUsername}{">"}
+      {activeRoom === "general" && !user ? (
+        <div className="shrink-0 flex items-center justify-center border-t border-border bg-card px-3 py-2">
+          <span className="text-xs text-muted-foreground font-mono">
+            Sign in to chat in General
           </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Message #${activeRoom}...`}
-            disabled={isSending}
-            maxLength={300}
-            className="flex-1 bg-transparent py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 font-mono"
-          />
         </div>
-        <button
-          type="submit"
-          disabled={!input.trim() || isSending}
-          className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
         >
-          <Send className="size-3.5" />
-        </button>
-      </form>
+          <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
+            <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
+              {myUsername}{">"}
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Message #${activeRoom}...`}
+              disabled={isSending}
+              maxLength={300}
+              className="flex-1 bg-transparent py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 font-mono"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!input.trim() || isSending}
+            className="flex size-7 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Send className="size-3.5" />
+          </button>
+        </form>
+      )}
     </div>
   )
 }

@@ -61,7 +61,7 @@ export function PnlCalculator() {
         <div className="flex rounded overflow-hidden border border-border">
           <button
             onClick={() => setPositionType("long")}
-            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors ${
+            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors hover-lift ${
               positionType === "long" ? "bg-green-500/20 text-green-400" : "text-muted-foreground hover:bg-secondary"
             }`}
           >
@@ -69,7 +69,7 @@ export function PnlCalculator() {
           </button>
           <button
             onClick={() => setPositionType("short")}
-            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors ${
+            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors hover-lift ${
               positionType === "short" ? "bg-red-500/20 text-red-400" : "text-muted-foreground hover:bg-secondary"
             }`}
           >
@@ -136,7 +136,7 @@ export function PnlCalculator() {
 
         {/* Results */}
         {result && (
-          <div className="space-y-2 border-t border-border pt-3">
+          <div className="animate-fade-in space-y-2 border-t border-border pt-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Gross P&L</span>
               <span className={`text-xs font-mono font-bold ${result.grossPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
@@ -150,7 +150,7 @@ export function PnlCalculator() {
             <div className="h-px bg-border" />
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-foreground font-medium">Net P&L</span>
-              <span className={`text-sm font-mono font-bold ${result.netPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-sm font-mono font-bold number-transition ${result.netPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {result.netPnl >= 0 ? "+" : ""}${result.netPnl.toFixed(2)}
               </span>
             </div>
@@ -167,9 +167,12 @@ export function PnlCalculator() {
               </span>
             </div>
             {result.liquidationPrice !== null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-red-400 font-medium">Liquidation Price</span>
-                <span className="text-xs font-mono text-red-400">${result.liquidationPrice.toFixed(2)}</span>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-red-400 font-medium">Liquidation Price</span>
+                  <span className="text-xs font-mono text-red-400">${result.liquidationPrice.toFixed(2)}</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground">* Approximate — varies by exchange</span>
               </div>
             )}
           </div>

@@ -1,9 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Star, Plus, X, Search, Loader2, Share2, Check, Download, ChevronDown, Pencil, Trash2, FolderPlus } from "lucide-react"
+import { Star, Plus, X, Search, Loader2, Share2, Check, Download, ChevronDown, Pencil, Trash2, FolderPlus, GripVertical } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
+import { useToast } from "@/lib/toast-context"
+import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
 
 const STORAGE_KEY = "onchainterm_watchlists"
 const WATCHLIST_META_KEY = "onchainterm_watchlist_meta"
@@ -61,7 +64,9 @@ function saveMeta(meta: Record<string, WatchlistCoinMeta>) {
 }
 
 export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
-  const { data: marketData } = useMarketData()
+  const { data: marketData, isLoading: marketLoading } = useMarketData()
+  const { toast } = useToast()
+  const { showMenu } = useCoinContextMenu()
   const [watchlists, setWatchlists] = useState<Watchlist[]>([])
   const [activeListId, setActiveListId] = useState("default")
   const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>({})
@@ -75,7 +80,10 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [showListMenu, setShowListMenu] = useState(false)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const listMenuRef = useRef<HTMLDivElement>(null)
 
   const activeList = watchlists.find(l => l.id === activeListId) || watchlists[0]
@@ -86,6 +94,13 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     setWatchlists(lists)
     setActiveListId(lists[0]?.id || "default")
     setMeta(loadMeta())
+  }, [])
+
+  // Cleanup share timer on unmount
+  useEffect(() => {
+    return () => {
+      if (shareTimer.current) clearTimeout(shareTimer.current)
+    }
   }, [])
 
   // Close list menu on outside click
@@ -167,6 +182,10 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   }, [activeListId])
 
   const createList = useCallback(() => {
+    if (watchlists.length >= 20) {
+      alert("Maximum of 20 watchlists reached. Please delete one before creating a new one.")
+      return
+    }
     const id = `wl_${Date.now()}`
     const name = `Watchlist ${watchlists.length + 1}`
     const newList: Watchlist = { id, name, coins: [] }
@@ -175,7 +194,8 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     saveWatchlists(updated)
     setActiveListId(id)
     setShowListMenu(false)
-  }, [watchlists])
+    toast("List created", "success")
+  }, [watchlists, toast])
 
   const deleteList = useCallback((listId: string) => {
     if (watchlists.length <= 1) return
@@ -219,16 +239,19 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
   const removeCoin = useCallback((coinId: string) => {
     updateActiveList(l => ({ ...l, coins: l.coins.filter(id => id !== coinId) }))
-  }, [updateActiveList])
+    toast("Coin removed", "success")
+  }, [updateActiveList, toast])
 
   const shareWatchlist = useCallback(() => {
     const encoded = btoa(JSON.stringify(watchlist))
     const url = `${window.location.origin}?watchlist=${encoded}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      toast("Watchlist shared!", "success")
+      if (shareTimer.current) clearTimeout(shareTimer.current)
+      shareTimer.current = setTimeout(() => setCopied(false), 2000)
     }).catch(() => {})
-  }, [watchlist])
+  }, [watchlist, toast])
 
   const importSharedWatchlist = useCallback(() => {
     if (!importBanner) return
@@ -435,21 +458,50 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
       {/* Coin list */}
       <div className="flex-1 overflow-auto min-h-0">
-        {watchlist.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            {watchlists.length > 1 ? "This watchlist is empty. Click + to add coins." : "Your watchlist is empty. Click + to add coins."}
+        {marketLoading && watchlist.length > 0 && marketData.length === 0 ? (
+          <div className="p-3">
+            <TableSkeleton rows={5} />
+          </div>
+        ) : watchlist.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <Star className="size-8 opacity-20" />
+            <span className="text-[10px]">No coins in watchlist</span>
+            <span className="text-[8px]">Use the search above to add coins</span>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
-            {watchlist.map(coinId => {
+            {watchlist.map((coinId, i) => {
               const coin = getCoinDisplay(coinId)
               return (
                 <div
                   key={coinId}
-                  className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors cursor-pointer"
+                  draggable
+                  onDragStart={(e) => {
+                    setDragIndex(i)
+                    e.dataTransfer.effectAllowed = "move"
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOverIndex(i)
+                  }}
+                  onDragEnd={() => {
+                    if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
+                      updateActiveList(l => {
+                        const newCoins = [...l.coins]
+                        const [moved] = newCoins.splice(dragIndex, 1)
+                        newCoins.splice(dragOverIndex, 0, moved)
+                        return { ...l, coins: newCoins }
+                      })
+                    }
+                    setDragIndex(null)
+                    setDragOverIndex(null)
+                  }}
+                  className={`flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors duration-150 cursor-pointer ${dragOverIndex === i ? "border-t-2 border-primary" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
                   onClick={() => onSelectSymbol?.(coinId)}
+                  onContextMenu={(e) => showMenu(e, coinId, coin.symbol)}
                 >
                   <div className="flex items-center gap-2">
+                    <GripVertical className={`size-3 text-muted-foreground shrink-0 ${dragIndex !== null ? "cursor-grabbing" : "cursor-grab"}`} />
                     {coin.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={coin.image} alt="" className="size-5 rounded-full" />

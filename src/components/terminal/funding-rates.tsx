@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Percent, RefreshCw, Info } from "lucide-react"
+import { TableSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 
 interface FundingItem {
   symbol: string
@@ -28,9 +30,9 @@ export function FundingRates() {
   const [data, setData] = useState<FundingItem[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [showTooltip, setShowTooltip] = useState(false)
-  const [, setTick] = useState(0)
+  const [search, setSearch] = useState("")
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchFunding = useCallback(async () => {
     try {
@@ -39,14 +41,14 @@ export function FundingRates() {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       setData(json)
-      setLastUpdated(new Date())
+      markUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markUpdated])
 
   useEffect(() => {
     fetchFunding()
@@ -54,18 +56,15 @@ export function FundingRates() {
     return () => clearInterval(interval)
   }, [fetchFunding])
 
-  // Tick every minute to update countdowns
+  // Tick every 30s to keep countdowns visually up-to-date between data refreshes
+  const [, setTick] = useState(0)
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
+    const interval = setInterval(() => setTick((t) => t + 1), 30_000)
     return () => clearInterval(interval)
   }, [])
 
   if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-        Loading funding rates...
-      </div>
-    )
+    return <TableSkeleton rows={8} />
   }
 
   if (error && !data) {
@@ -79,8 +78,10 @@ export function FundingRates() {
     )
   }
 
-  const positiveCount = data?.filter((d) => d.fundingRate > 0).length ?? 0
-  const negativeCount = data?.filter((d) => d.fundingRate < 0).length ?? 0
+  const filtered = data?.filter(d => d.symbol.toLowerCase().includes(search.toLowerCase())) || []
+
+  const positiveCount = filtered.filter((d) => d.fundingRate > 0).length
+  const negativeCount = filtered.filter((d) => d.fundingRate < 0).length
 
   return (
     <div className="h-full flex flex-col p-3 gap-2">
@@ -93,6 +94,7 @@ export function FundingRates() {
             <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
             LIVE
           </span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-1">
           <div className="relative">
@@ -129,6 +131,17 @@ export function FundingRates() {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="shrink-0 px-1">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter..."
+          className="bg-secondary/50 border border-border px-1.5 py-0.5 text-[9px] text-foreground w-20 outline-none focus:border-primary/40 font-mono"
+        />
+      </div>
+
       {/* Summary */}
       <div className="flex items-center gap-3 text-[10px] px-1">
         <span className="text-red-400 font-medium">
@@ -152,14 +165,21 @@ export function FundingRates() {
           </div>
 
           {/* Table rows */}
-          {data.map((item) => {
-            const isPositive = item.fundingRate > 0
-            const rateColor = isPositive ? "text-red-400" : "text-green-400"
-            const prefix = isPositive ? "+" : ""
+          {filtered.map((item) => {
+            const rate = item.fundingRate
+            const rateColor =
+              rate > 0.1 ? "text-red-400 font-bold" :
+              rate > 0.05 ? "text-red-400" :
+              rate > 0 ? "text-red-400/70" :
+              rate < -0.1 ? "text-green-400 font-bold" :
+              rate < -0.05 ? "text-green-400" :
+              rate < 0 ? "text-green-400/70" :
+              "text-muted-foreground"
+            const prefix = rate > 0 ? "+" : ""
             return (
               <div
                 key={item.symbol}
-                className="grid grid-cols-4 gap-1 px-1 py-1.5 text-[10px] border-b border-border/30 hover:bg-secondary/30 transition-colors"
+                className="grid grid-cols-4 gap-1 px-1 py-1.5 text-[10px] border-b border-border/30 hover:bg-secondary/30 transition-colors duration-100"
               >
                 <span className="font-mono font-medium text-foreground">{item.symbol}</span>
                 <span className={`text-right font-mono font-medium ${rateColor}`}>
@@ -180,7 +200,7 @@ export function FundingRates() {
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          Binance Futures · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+          Binance Futures{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

@@ -24,12 +24,18 @@ export async function GET() {
     // Filter to USDT pairs only, sort by absolute funding rate, take top 20
     const usdtPairs = data
       .filter((item) => item.symbol.endsWith("USDT"))
-      .map((item) => ({
-        symbol: item.symbol.replace(/USDT$/, ""),
-        fundingRate: parseFloat(item.lastFundingRate) * 100,
-        markPrice: parseFloat(item.markPrice),
-        nextFundingTime: item.nextFundingTime,
-      }))
+      .map((item) => {
+        const fundingRate = parseFloat(item.lastFundingRate) * 100
+        const markPrice = parseFloat(item.markPrice)
+        if (isNaN(fundingRate) || isNaN(markPrice)) return null
+        return {
+          symbol: item.symbol.replace(/USDT$/, ""),
+          fundingRate,
+          markPrice,
+          nextFundingTime: item.nextFundingTime,
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => Math.abs(b.fundingRate) - Math.abs(a.fundingRate))
       .slice(0, 20)
 

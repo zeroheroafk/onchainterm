@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Fuel, RefreshCw } from "lucide-react"
+import { Fuel, RefreshCw, Clock, Zap, Rocket } from "lucide-react"
+import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 
 interface GasData {
   low: number
@@ -29,7 +31,7 @@ export function GasTracker() {
   const [gasData, setGasData] = useState<GasData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchGas = useCallback(async () => {
     try {
@@ -38,14 +40,14 @@ export function GasTracker() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setGasData(data)
-      setLastUpdated(new Date())
+      markUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markUpdated])
 
   useEffect(() => {
     fetchGas()
@@ -54,7 +56,7 @@ export function GasTracker() {
   }, [fetchGas])
 
   if (loading && !gasData) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Loading gas prices...</div>
+    return <CardsSkeleton count={3} />
   }
 
   if (error && !gasData) {
@@ -73,6 +75,7 @@ export function GasTracker() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Fuel className="size-4" />
           <span className="text-[10px] font-bold uppercase tracking-wider">ETH Gas · Live</span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <button
           onClick={fetchGas}
@@ -87,18 +90,18 @@ export function GasTracker() {
         <>
           {/* Gas tiers */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-green-400 font-medium mb-1">🐢 Slow</div>
+            <div className="hover-lift rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-green-400 font-medium mb-1 flex items-center justify-center gap-1"><Clock className="size-3" /> Slow</div>
               <div className="text-lg font-bold text-foreground">{gasData.low}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-amber-400 font-medium mb-1">⚡ Standard</div>
+            <div className="hover-lift rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-amber-400 font-medium mb-1 flex items-center justify-center gap-1"><Zap className="size-3" /> Standard</div>
               <div className="text-lg font-bold text-foreground">{gasData.average}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
-            <div className="rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
-              <div className="text-[9px] uppercase text-red-400 font-medium mb-1">🚀 Fast</div>
+            <div className="hover-lift rounded-lg border border-border bg-secondary/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase text-red-400 font-medium mb-1 flex items-center justify-center gap-1"><Rocket className="size-3" /> Fast</div>
               <div className="text-lg font-bold text-foreground">{gasData.high}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
@@ -145,7 +148,7 @@ export function GasTracker() {
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          Etherscan Gas Oracle · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+          Etherscan Gas Oracle{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Activity, RefreshCw, ExternalLink, ArrowRight, Volume2, VolumeX } from "lucide-react"
+import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
+import { useSound } from "@/lib/sound-context"
+import { useNotifications } from "@/lib/notification-context"
 
 const WHALE_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipGJdWBYX3uRmpWAfXd8jZiXj4B3dn6OmZmUhXx5gI6YlpKEe3l/jZeVkoR7eX+Nl5WShHt5f42XlZKEe3l/jZeVkoR7eYA="
 
@@ -53,6 +57,11 @@ export function WhaleAlerts() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const seenHashesRef = useRef<Set<string>>(new Set())
+  const animatedTxRef = useRef<Set<string>>(new Set())
+  const isInitialLoadRef = useRef(true)
+  const { playSound: playSoundGlobal } = useSound()
+  const { addNotification } = useNotifications()
+  const { markUpdated: markHookUpdated, formatLastUpdated } = useLastUpdated()
 
   const playSound = useCallback(() => {
     if (!soundEnabled) return
@@ -71,21 +80,34 @@ export function WhaleAlerts() {
 
       // Check for new transactions (sound alert)
       if (seenHashesRef.current.size > 0) {
-        const hasNew = data.transactions.some((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
-        if (hasNew) playSound()
+        const newTxs = data.transactions.filter((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
+        if (newTxs.length > 0) {
+          playSound()
+          playSoundGlobal("whale")
+          newTxs.forEach((tx: WhaleTx) => {
+            addNotification("whale", "Whale Alert", `${formatEth(tx.value)} ETH transfer detected`)
+          })
+        }
       }
       data.transactions.forEach((tx: WhaleTx) => seenHashesRef.current.add(tx.hash))
+
+      // On initial load, mark all items as already animated
+      if (isInitialLoadRef.current) {
+        data.transactions.forEach((tx: WhaleTx) => animatedTxRef.current.add(tx.hash))
+        isInitialLoadRef.current = false
+      }
 
       setTransactions(data.transactions)
       setLatestBlock(data.latestBlock)
       setLastUpdated(new Date())
+      markHookUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
     }
-  }, [playSound])
+  }, [playSound, playSoundGlobal, addNotification, markHookUpdated])
 
   useEffect(() => {
     fetchWhales()
@@ -94,7 +116,7 @@ export function WhaleAlerts() {
   }, [fetchWhales])
 
   if (loading && transactions.length === 0) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground text-xs">Scanning recent blocks...</div>
+    return <FeedSkeleton rows={5} />
   }
 
   if (error && transactions.length === 0) {
@@ -114,6 +136,7 @@ export function WhaleAlerts() {
           <Activity className="size-3.5 text-muted-foreground" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ETH Whale Alerts</span>
           <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-2">
           {latestBlock && (
@@ -138,7 +161,7 @@ export function WhaleAlerts() {
 
       {/* Threshold info */}
       <div className="px-3 py-1 border-b border-border/50 bg-secondary/10 text-[9px] text-muted-foreground/60 shrink-0">
-        Scanning last 5 blocks · Showing transfers ≥ 50 ETH · Sorted by value
+        Scanning last 15 blocks · Showing transfers ≥ 50 ETH · Sorted by value
       </div>
 
       {/* Transaction list */}
@@ -149,11 +172,13 @@ export function WhaleAlerts() {
           </div>
         ) : (
           <div className="divide-y divide-border/50">
-            {transactions.map((tx) => (
-              <div key={tx.hash} className="px-3 py-2 hover:bg-secondary/30 transition-colors">
+            {transactions.map((tx) => {
+              const isNew = !animatedTxRef.current.has(tx.hash)
+              return (
+              <div key={tx.hash} className={`px-3 py-2 hover:bg-secondary/30 transition-colors ${isNew ? "animate-slide-in animate-item-glow" : ""}`} onAnimationEnd={() => animatedTxRef.current.add(tx.hash)}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-sm font-bold font-mono ${getValueColor(tx.value)}`}>
+                    <span className={`text-sm text-primary font-bold font-mono ${getValueColor(tx.value)}`}>
                       {formatEth(tx.value)} ETH
                     </span>
                   </div>
@@ -186,7 +211,8 @@ export function WhaleAlerts() {
                   </span>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

@@ -39,8 +39,14 @@ export function useLayoutPersistence(userId?: string) {
   useEffect(() => {
     const persisted = loadFromStorage()
     if (persisted) {
+      // Clean up orphaned activeWidgets that have no layout position
+      const layoutIds = new Set(persisted.layout.map((p) => p.id))
+      const cleanedActive = persisted.activeWidgets.filter((id) => layoutIds.has(id))
       setLayout(persisted.layout)
-      setActiveWidgets(persisted.activeWidgets)
+      setActiveWidgets(cleanedActive)
+      if (cleanedActive.length !== persisted.activeWidgets.length) {
+        saveToStorage({ layout: persisted.layout, activeWidgets: cleanedActive })
+      }
     }
     setLoaded(true)
   }, [])
