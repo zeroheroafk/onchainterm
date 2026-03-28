@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { Palette } from "lucide-react"
+import { Palette, LogIn, LogOut, User } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
+import { AuthProvider, useAuth } from "@/lib/auth-context"
+import { AuthModal } from "@/components/terminal/auth-modal"
 import { LayoutProvider, useLayout } from "@/components/terminal/layout/layout-context"
 import { WidgetGrid } from "@/components/terminal/layout/widget-grid"
 import { WidgetCatalogDrawer } from "@/components/terminal/layout/widget-catalog-drawer"
@@ -24,6 +26,59 @@ function BloombergClock() {
     return () => clearInterval(id)
   }, [])
   return <span className="font-mono text-[10px] text-foreground tabular-nums">{time}</span>
+}
+
+function UserMenu() {
+  const { user, username, signOut } = useAuth()
+  const [showMenu, setShowMenu] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { theme } = useTheme()
+  const isBloomberg = theme.bloombergMode
+
+  if (!user) {
+    return (
+      <>
+        <button
+          onClick={() => setShowAuthModal(true)}
+          className={`flex items-center gap-1.5 border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${isBloomberg ? "" : "rounded-md"}`}
+        >
+          <LogIn className="size-3" />
+          <span className="hidden sm:inline">Sign In</span>
+        </button>
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      </>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className={`flex items-center gap-1.5 border border-primary/30 bg-primary/10 px-2 py-1 text-[10px] text-primary transition-colors hover:bg-primary/20 ${isBloomberg ? "" : "rounded-md"}`}
+      >
+        <User className="size-3" />
+        <span className="hidden sm:inline max-w-[80px] truncate">{username || user.email?.split("@")[0]}</span>
+      </button>
+      {showMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+          <div className={`absolute right-0 top-full mt-1 z-50 w-44 border border-border bg-card py-1 ${isBloomberg ? "" : "rounded-md shadow-xl"}`}>
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-[11px] font-bold text-foreground truncate">{username}</p>
+              <p className="text-[9px] text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <button
+              onClick={() => { signOut(); setShowMenu(false) }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-secondary transition-colors"
+            >
+              <LogOut className="size-3" />
+              Sign Out
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 function TerminalHeader() {
@@ -57,6 +112,8 @@ function TerminalHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
+        {/* User auth */}
+        <UserMenu />
         {/* Theme picker */}
         <div className="relative">
           <button
@@ -143,11 +200,13 @@ function TerminalContent() {
 export function TerminalPageClient() {
   return (
     <ThemeProvider>
-      <MarketDataProvider>
-        <LayoutProvider>
-          <TerminalContent />
-        </LayoutProvider>
-      </MarketDataProvider>
+      <AuthProvider>
+        <MarketDataProvider>
+          <LayoutProvider>
+            <TerminalContent />
+          </LayoutProvider>
+        </MarketDataProvider>
+      </AuthProvider>
     </ThemeProvider>
   )
 }

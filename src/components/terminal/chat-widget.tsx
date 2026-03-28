@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, type FormEvent } from "react"
 import { Send, MessagesSquare } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
+import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 
 interface ChatMessage {
@@ -64,8 +65,10 @@ function getOrCreateUsername(): string {
 
 export function ChatWidget() {
   const { themeId } = useTheme()
+  const { user, username: authUsername } = useAuth()
   const isLight = themeId === "light"
-  const [myUsername] = useState(() => getOrCreateUsername())
+  const [fallbackUsername] = useState(() => getOrCreateUsername())
+  const myUsername = authUsername || fallbackUsername
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
@@ -217,7 +220,7 @@ export function ChatWidget() {
         className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
       >
         <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
-          <span className="text-xs font-bold text-primary font-mono shrink-0">
+          <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
             {myUsername}{">"}
           </span>
           <input
