@@ -102,7 +102,7 @@ export function NewsWidget() {
           <div className="divide-y divide-border/50">
             {news.map((item, i) => (
               <a
-                key={i}
+                key={item.url || item.title || i}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"

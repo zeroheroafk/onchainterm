@@ -76,6 +76,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const listMenuRef = useRef<HTMLDivElement>(null)
 
   const activeList = watchlists.find(l => l.id === activeListId) || watchlists[0]
@@ -86,6 +87,13 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     setWatchlists(lists)
     setActiveListId(lists[0]?.id || "default")
     setMeta(loadMeta())
+  }, [])
+
+  // Cleanup share timer on unmount
+  useEffect(() => {
+    return () => {
+      if (shareTimer.current) clearTimeout(shareTimer.current)
+    }
   }, [])
 
   // Close list menu on outside click
@@ -167,6 +175,10 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   }, [activeListId])
 
   const createList = useCallback(() => {
+    if (watchlists.length >= 20) {
+      alert("Maximum of 20 watchlists reached. Please delete one before creating a new one.")
+      return
+    }
     const id = `wl_${Date.now()}`
     const name = `Watchlist ${watchlists.length + 1}`
     const newList: Watchlist = { id, name, coins: [] }
@@ -226,7 +238,8 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     const url = `${window.location.origin}?watchlist=${encoded}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (shareTimer.current) clearTimeout(shareTimer.current)
+      shareTimer.current = setTimeout(() => setCopied(false), 2000)
     }).catch(() => {})
   }, [watchlist])
 

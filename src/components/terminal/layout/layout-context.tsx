@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useCallback, useRef, useState, type ReactNode } from "react"
+import { createContext, useContext, useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { DEFAULT_LAYOUT, DEFAULT_ACTIVE_WIDGETS, type WidgetPosition, type AnyPreset } from "./default-layouts"
 import { getWidgetDef } from "./widget-registry"
 import { useLayoutPersistence } from "./use-layout-persistence"
@@ -57,6 +57,16 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     renameCustomPreset,
     loaded: presetsLoaded,
   } = usePresetPersistence(userId)
+
+  const [forceLoaded, setForceLoaded] = useState(false)
+
+  useEffect(() => {
+    if (loaded && presetsLoaded) return
+    const timeout = setTimeout(() => {
+      setForceLoaded(true)
+    }, 5000)
+    return () => clearTimeout(timeout)
+  }, [loaded, presetsLoaded])
 
   const [isLocked] = useState(false)
   const [isCatalogOpen, setIsCatalogOpen] = useState(false)
@@ -203,7 +213,7 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     [renameCustomPreset]
   )
 
-  if (!loaded || !presetsLoaded) return (
+  if ((!loaded || !presetsLoaded) && !forceLoaded) return (
     <div className="flex h-screen items-center justify-center bg-background">
       <div className="text-muted-foreground text-sm">Loading layout...</div>
     </div>

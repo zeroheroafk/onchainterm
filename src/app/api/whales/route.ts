@@ -68,6 +68,9 @@ export async function GET() {
     // 1. Get latest block number
     const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
     const latestBlock = parseInt(blockNumData.result as string, 16)
+    if (isNaN(latestBlock)) {
+      throw new Error("Invalid block number from Etherscan")
+    }
 
     // 2. Fetch last 15 blocks (~3 min) in batches of 3 to respect rate limits
     const BLOCKS_TO_SCAN = 15
@@ -108,7 +111,13 @@ export async function GET() {
         const blkNum = parseInt(block.number, 16)
 
         for (const tx of block.transactions) {
-          const valueWei = parseInt(tx.value, 16)
+          let valueWei: number
+          try {
+            valueWei = parseInt(tx.value, 16)
+            if (isNaN(valueWei)) continue
+          } catch {
+            continue
+          }
           const valueEth = valueWei / 1e18
           if (valueEth < 50) continue
 

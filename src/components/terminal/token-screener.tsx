@@ -46,6 +46,7 @@ function matchMarketCap(coin: CoinMarketData, filter: MarketCapFilter): boolean 
     case "1B-10B": return mc >= 1_000_000_000 && mc <= 10_000_000_000
     case "100M-1B": return mc >= 100_000_000 && mc < 1_000_000_000
     case "<100M": return mc < 100_000_000
+    default: return false
   }
 }
 
@@ -59,6 +60,7 @@ function matchChange(coin: CoinMarketData, filter: ChangeFilter): boolean {
     case "<0%": return pct < 0
     case "<-5%": return pct < -5
     case "<-10%": return pct < -10
+    default: return false
   }
 }
 
@@ -69,6 +71,7 @@ function matchVolume(coin: CoinMarketData, filter: VolumeFilter): boolean {
     case ">1B": return vol > 1_000_000_000
     case ">100M": return vol > 100_000_000
     case ">10M": return vol > 10_000_000
+    default: return false
   }
 }
 
@@ -254,7 +257,7 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
                     <td className="px-2 py-1.5">
                       <div className="flex items-center gap-1.5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={coin.image} alt="" className="size-4 rounded-full" />
+                        <img src={coin.image} alt="" className="size-4 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                         <span className="font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                         <span className="text-muted-foreground hidden sm:inline">{coin.name}</span>
                       </div>

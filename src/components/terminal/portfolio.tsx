@@ -362,7 +362,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-left hover:bg-secondary/50 transition-colors"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {coin.thumb && <img src={coin.thumb} alt="" className="size-4 rounded-full" />}
+                        {coin.thumb && <img src={coin.thumb} alt="" className="size-4 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />}
                         <span className="text-[10px] font-bold">{coin.symbol?.toUpperCase()}</span>
                         <span className="text-[9px] text-muted-foreground truncate">{coin.name}</span>
                         {coin.market_cap_rank && (
@@ -377,14 +377,14 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
               <div className="flex items-center gap-1.5">
                 <div className="flex items-center gap-1 rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {selectedCoin.thumb && <img src={selectedCoin.thumb} alt="" className="size-3 rounded-full" />}
+                  {selectedCoin.thumb && <img src={selectedCoin.thumb} alt="" className="size-3 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />}
                   <span className="text-[10px] font-bold text-primary">{selectedCoin.symbol.toUpperCase()}</span>
                   <button onClick={() => setSelectedCoin(null)} className="text-primary/60 hover:text-primary ml-0.5">
                     <X className="size-2.5" />
                   </button>
                 </div>
-                <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
-                <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" min="0" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" min="0" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
                 <button onClick={addEntry} disabled={!amount || !buyPrice} className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">Add</button>
               </div>
             )}

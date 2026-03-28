@@ -56,15 +56,30 @@ export function TradeJournal() {
 
   useEffect(() => { setTrades(loadTrades()) }, [])
 
+  const resetForm = useCallback(() => {
+    setCoin("")
+    setSide("Long")
+    setEntryPrice("")
+    setExitPrice("")
+    setAmount("")
+    setTag("Scalp")
+    setNotes("")
+    setDate(new Date().toISOString().slice(0, 16))
+  }, [])
+
   const addTrade = useCallback(() => {
     if (!coin.trim() || !entryPrice || !exitPrice || !amount) return
+    const ep = parseFloat(entryPrice)
+    const xp = parseFloat(exitPrice)
+    const am = parseFloat(amount)
+    if (isNaN(ep) || ep <= 0 || isNaN(xp) || xp <= 0 || isNaN(am) || am <= 0) return
     const trade: Trade = {
       id: `${Date.now()}`,
       coin: coin.trim().toUpperCase(),
       side,
-      entryPrice: parseFloat(entryPrice),
-      exitPrice: parseFloat(exitPrice),
-      amount: parseFloat(amount),
+      entryPrice: ep,
+      exitPrice: xp,
+      amount: am,
       tag,
       notes: notes.trim(),
       date: new Date(date).toISOString(),
@@ -306,6 +321,7 @@ export function TradeJournal() {
                 onChange={e => setEntryPrice(e.target.value)}
                 placeholder="Entry $"
                 type="number"
+                min="0"
                 className="w-20 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
               <input
@@ -313,6 +329,7 @@ export function TradeJournal() {
                 onChange={e => setExitPrice(e.target.value)}
                 placeholder="Exit $"
                 type="number"
+                min="0"
                 className="w-20 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
               <input
@@ -320,6 +337,7 @@ export function TradeJournal() {
                 onChange={e => setAmount(e.target.value)}
                 placeholder="Amount"
                 type="number"
+                min="0"
                 className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40"
               />
             </div>
@@ -347,7 +365,7 @@ export function TradeJournal() {
                 Add Trade
               </button>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => { resetForm(); setShowForm(false) }}
                 className="text-muted-foreground hover:text-foreground text-[10px] transition-colors"
               >
                 Cancel

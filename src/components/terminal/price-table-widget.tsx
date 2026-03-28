@@ -21,7 +21,7 @@ function PercentCell({ value }: { value: number | null }) {
 }
 
 function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
-  if (!prices || prices.length < 2) return null
+  if (!prices || prices.length < 2) return <span className="text-muted-foreground text-[10px]">—</span>
 
   // Downsample to ~30 points for performance
   const step = Math.max(1, Math.floor(prices.length / 30))
@@ -154,7 +154,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coin.image} alt="" className="size-4 shrink-0 rounded-full" />
+                  <img src={coin.image} alt="" className="size-4 shrink-0 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   <span className="font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                   <span className="text-muted-foreground text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
                 </div>

@@ -12,8 +12,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ prices: {} })
   }
 
-  // Limit to 50 IDs per request
-  const idList = ids.split(",").slice(0, 50).map(s => s.trim()).filter(Boolean)
+  const validIdPattern = /^[a-z0-9-]+$/
+  const idList = ids.split(",").map(s => s.trim()).filter(s => s && validIdPattern.test(s)).slice(0, 50)
+
+  if (idList.length === 0) {
+    return NextResponse.json({ error: "No valid coin IDs provided" }, { status: 400 })
+  }
   const cacheKey = idList.sort().join(",")
   const cached = cache.get(cacheKey)
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
