@@ -165,12 +165,12 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
       : <ChevronDown className="size-3 inline-block ml-0.5" />
   }
 
-  const selectClass = "rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40 text-foreground"
+  const selectClass = "rounded border border-border/40 bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40 text-foreground"
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 shrink-0">
         <div className="flex items-center gap-2">
           <Filter className="size-3.5 text-primary" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Token Screener</span>
@@ -187,7 +187,7 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border shrink-0">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border/40 shrink-0">
         <label className="flex items-center gap-1">
           <span className="text-[9px] text-muted-foreground uppercase">MCap</span>
           <select value={mcFilter} onChange={e => setMcFilter(e.target.value as MarketCapFilter)} className={selectClass}>
@@ -212,7 +212,7 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
       <div className="flex-1 overflow-auto min-h-0">
         <table className="w-full text-[10px]">
           <thead className="sticky top-0 bg-card z-10">
-            <tr className="border-b border-border text-muted-foreground">
+            <tr className="border-b border-border/40 text-muted-foreground">
               <th className="px-2 py-1.5 text-left font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("market_cap_rank")}>
                 #<SortIcon column="market_cap_rank" />
               </th>
@@ -262,15 +262,15 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
                         <span className="text-muted-foreground hidden sm:inline">{coin.name}</span>
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-right font-mono text-amber-400">{formatPrice(coin.current_price)}</td>
-                    <td className={`px-2 py-1.5 text-right font-mono ${pct24 >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    <td className="px-2 py-1.5 text-right num text-foreground">{formatPrice(coin.current_price)}</td>
+                    <td className={`px-2 py-1.5 text-right num ${pct24 >= 0 ? "text-positive" : "text-negative"}`}>
                       {formatPercentage(coin.price_change_percentage_24h)}
                     </td>
-                    <td className={`px-2 py-1.5 text-right font-mono ${pct7d >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    <td className={`px-2 py-1.5 text-right num ${pct7d >= 0 ? "text-positive" : "text-negative"}`}>
                       {formatPercentage(coin.price_change_percentage_7d_in_currency)}
                     </td>
-                    <td className="px-2 py-1.5 text-right font-mono text-foreground">{formatCompact(coin.market_cap)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono text-foreground">{formatCompact(coin.total_volume)}</td>
+                    <td className="px-2 py-1.5 text-right num text-foreground">{formatCompact(coin.market_cap)}</td>
+                    <td className="px-2 py-1.5 text-right num text-foreground">{formatCompact(coin.total_volume)}</td>
                   </tr>
                 )
               })

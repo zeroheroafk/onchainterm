@@ -87,7 +87,7 @@ export function NewsWidget() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Crypto News</span>
-          <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          <span className="text-[9px] text-positive font-medium">● LIVE</span>
           {newCount > 0 && (
             <span className="text-[9px] bg-primary text-primary-foreground px-1.5 rounded-full font-bold animate-pulse">
               {newCount} NEW
@@ -108,7 +108,7 @@ export function NewsWidget() {
           <FeedSkeleton rows={4} />
         ) : error && news.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-            <span className="text-red-400">{error}</span>
+            <span className="text-negative">{error}</span>
             <button onClick={fetchNews} className="text-primary hover:underline">Retry</button>
           </div>
         ) : (
@@ -131,7 +131,7 @@ export function NewsWidget() {
               >
                 <div className="flex items-start gap-2">
                   {(Date.now() - new Date(item.published_at).getTime()) < 5 * 60_000 && (
-                    <span className="shrink-0 mt-0.5 size-1.5 rounded-full bg-green-400 animate-pulse" title="Just published" />
+                    <span className="shrink-0 mt-0.5 size-1.5 rounded-full bg-positive animate-pulse" title="Just published" />
                   )}
                   <p className="text-xs text-foreground leading-tight flex-1 group-hover:text-primary transition-colors">
                     {item.title}
@@ -147,7 +147,7 @@ export function NewsWidget() {
                       <span>&middot;</span>
                       <div className="flex items-center gap-1">
                         {item.currencies.slice(0, 3).map((c) => (
-                          <span key={c} className="rounded bg-primary/10 px-1 py-0 text-primary font-mono">
+                          <span key={c} className="rounded bg-primary/10 px-1 py-0 text-primary num">
                             {c}
                           </span>
                         ))}

@@ -353,7 +353,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                   {watchlists.length > 1 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteList(list.id) }}
-                      className="p-0.5 text-muted-foreground hover:text-red-400 transition-colors shrink-0"
+                      className="p-0.5 text-muted-foreground hover:text-negative transition-colors shrink-0"
                       title="Delete"
                     >
                       <Trash2 className="size-2.5" />
@@ -377,9 +377,9 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
             className="relative rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
             title="Share watchlist"
           >
-            {copied ? <Check className="size-3 text-green-400" /> : <Share2 className="size-3" />}
+            {copied ? <Check className="size-3 text-positive" /> : <Share2 className="size-3" />}
             {copied && (
-              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-green-400 whitespace-nowrap font-medium">
+              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-positive whitespace-nowrap font-medium">
                 Copied!
               </span>
             )}
@@ -403,7 +403,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
             </span>
             <button
               onClick={importSharedWatchlist}
-              className="text-[10px] font-bold text-green-400 hover:text-green-300 transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
+              className="text-[10px] font-bold text-positive hover:text-positive transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
             >
               Import
             </button>
@@ -517,17 +517,17 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-xs font-mono text-amber-400">
+                      <div className="text-xs num text-amber-400">
                         {coin.price !== null ? formatPrice(coin.price) : "—"}
                       </div>
                       <div className="flex items-center gap-1.5 justify-end">
                         {coin.change1h !== null && (
-                          <span className={`text-[10px] font-mono ${coin.change1h >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          <span className={`text-[10px] num ${coin.change1h >= 0 ? "text-positive" : "text-negative"}`}>
                             {formatPercentage(coin.change1h)}
                           </span>
                         )}
                         {coin.change24h !== null && (
-                          <span className={`text-[10px] font-mono ${coin.change24h >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          <span className={`text-[10px] num ${coin.change24h >= 0 ? "text-positive" : "text-negative"}`}>
                             {formatPercentage(coin.change24h)}
                           </span>
                         )}
@@ -535,7 +535,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removeCoin(coinId) }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-negative transition-all"
                     >
                       <X className="size-3" />
                     </button>

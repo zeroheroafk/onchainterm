@@ -201,7 +201,7 @@ export function AlertsWidget() {
             <Bell className="size-3" />
             <span
               className={`absolute top-0.5 right-0.5 size-1.5 rounded-full transition-colors ${
-                notificationsEnabled ? "bg-green-400" : "bg-muted-foreground/40"
+                notificationsEnabled ? "bg-positive" : "bg-muted-foreground/40"
               }`}
             />
           </button>
@@ -241,17 +241,17 @@ export function AlertsWidget() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-foreground">{alert.symbol}</span>
                       <span className={`flex items-center gap-0.5 text-[9px] font-medium px-1 rounded ${
-                        alert.direction === "above" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                        alert.direction === "above" ? "bg-green-500/10 text-positive" : "bg-red-500/10 text-negative"
                       }`}>
                         {alert.direction === "above" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />}
                         {alert.direction}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono text-primary">{formatPrice(alert.targetPrice)}</span>
+                      <span className="text-xs num text-primary">{formatPrice(alert.targetPrice)}</span>
                       <button
                         onClick={() => removeAlert(alert.id)}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-negative transition-all"
                       >
                         <Trash2 className="size-3" />
                       </button>
@@ -262,7 +262,7 @@ export function AlertsWidget() {
                       <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
                         <div className="h-full bg-primary/50 rounded-full transition-all" style={{ width: `${progress}%` }} />
                       </div>
-                      <span className="text-[9px] text-muted-foreground font-mono">{formatPrice(currentPrice)}</span>
+                      <span className="text-[9px] text-muted-foreground num">{formatPrice(currentPrice)}</span>
                     </div>
                   )}
                 </div>
@@ -281,13 +281,13 @@ export function AlertsWidget() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold">{alert.symbol}</span>
-                        <span className="text-[9px] text-green-400">✓ Triggered</span>
+                        <span className="text-[9px] text-positive">✓ Triggered</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono line-through">{formatPrice(alert.targetPrice)}</span>
+                        <span className="text-xs num line-through">{formatPrice(alert.targetPrice)}</span>
                         <button
                           onClick={() => removeAlert(alert.id)}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-negative transition-all"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -310,11 +310,11 @@ export function AlertsWidget() {
               <div className="flex rounded overflow-hidden border border-border">
                 <button
                   onClick={() => setDirection("above")}
-                  className={`px-2 py-1 text-[9px] font-bold ${direction === "above" ? "bg-green-500/20 text-green-400" : "text-muted-foreground"}`}
+                  className={`px-2 py-1 text-[9px] font-bold ${direction === "above" ? "bg-green-500/20 text-positive" : "text-muted-foreground"}`}
                 >↑ Above</button>
                 <button
                   onClick={() => setDirection("below")}
-                  className={`px-2 py-1 text-[9px] font-bold ${direction === "below" ? "bg-red-500/20 text-red-400" : "text-muted-foreground"}`}
+                  className={`px-2 py-1 text-[9px] font-bold ${direction === "below" ? "bg-red-500/20 text-negative" : "text-muted-foreground"}`}
                 >↓ Below</button>
               </div>
               <input value={targetPrice} onChange={e => setTargetPrice(e.target.value)} placeholder="Price" type="number" className="w-20 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />

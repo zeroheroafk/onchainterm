@@ -14,9 +14,9 @@ interface GasData {
 }
 
 function getGasColor(gwei: number) {
-  if (gwei <= 15) return "text-green-400"
+  if (gwei <= 15) return "text-positive"
   if (gwei <= 40) return "text-amber-400"
-  return "text-red-400"
+  return "text-negative"
 }
 
 function getGasLabel(gwei: number) {
@@ -62,7 +62,7 @@ export function GasTracker() {
   if (error && !gasData) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-        <span className="text-red-400">{error}</span>
+        <span className="text-negative">{error}</span>
         <button onClick={fetchGas} className="text-primary hover:underline">Retry</button>
       </div>
     )
@@ -91,7 +91,7 @@ export function GasTracker() {
           {/* Gas tiers */}
           <div className="grid grid-cols-3 gap-2">
             <div className="hover-3d rounded-lg border border-border/30 bg-secondary/10 p-2.5 text-center">
-              <div className="text-[9px] uppercase tracking-wider font-medium text-green-400 mb-1 flex items-center justify-center gap-1"><Clock className="size-3" /> Slow</div>
+              <div className="text-[9px] uppercase tracking-wider font-medium text-positive mb-1 flex items-center justify-center gap-1"><Clock className="size-3" /> Slow</div>
               <div className="text-lg font-bold text-foreground num">{gasData.low}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
@@ -101,7 +101,7 @@ export function GasTracker() {
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
             <div className="hover-3d rounded-lg border border-border/30 bg-secondary/10 p-2.5 text-center">
-              <div className="text-[9px] uppercase tracking-wider font-medium text-red-400 mb-1 flex items-center justify-center gap-1"><Rocket className="size-3" /> Fast</div>
+              <div className="text-[9px] uppercase tracking-wider font-medium text-negative mb-1 flex items-center justify-center gap-1"><Rocket className="size-3" /> Fast</div>
               <div className="text-lg font-bold text-foreground num">{gasData.high}</div>
               <div className="text-[9px] text-muted-foreground">Gwei</div>
             </div>
@@ -111,7 +111,7 @@ export function GasTracker() {
           <div className="space-y-1.5 text-[10px]">
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground">Base Fee</span>
-              <span className="font-mono text-foreground">{gasData.baseFee.toFixed(2)} Gwei</span>
+              <span className="num text-foreground">{gasData.baseFee.toFixed(2)} Gwei</span>
             </div>
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground">Network</span>
@@ -121,7 +121,7 @@ export function GasTracker() {
             </div>
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground">Last Block</span>
-              <span className="font-mono text-foreground">#{gasData.lastBlock.toLocaleString()}</span>
+              <span className="num text-foreground">#{gasData.lastBlock.toLocaleString()}</span>
             </div>
           </div>
 
@@ -137,7 +137,7 @@ export function GasTracker() {
               return (
                 <div key={label} className="flex items-center justify-between px-1">
                   <span className="text-muted-foreground">{label}</span>
-                  <span className="font-mono text-foreground">{ethCost.toFixed(6)} ETH</span>
+                  <span className="num text-foreground">{ethCost.toFixed(6)} ETH</span>
                 </div>
               )
             })}

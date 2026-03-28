@@ -182,13 +182,13 @@ function getLevelTitle(level: number): string {
 }
 
 function getLevelColor(level: number): string {
-  if (level <= 5) return "text-gray-400"
-  if (level <= 10) return "text-green-400"
-  if (level <= 18) return "text-blue-400"
+  if (level <= 5) return "text-muted-foreground/70"
+  if (level <= 10) return "text-positive"
+  if (level <= 18) return "text-primary"
   if (level <= 25) return "text-purple-400"
   if (level <= 35) return "text-amber-400"
   if (level <= 45) return "text-orange-400"
-  return "text-red-400"
+  return "text-negative"
 }
 
 const ACTIVITY_LABELS: Record<keyof ActivityData, string> = {
@@ -236,13 +236,13 @@ export function UserBadges() {
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto p-3 text-sm">
       {/* Header */}
-      <div className="flex items-center gap-2 text-green-400">
+      <div className="flex items-center gap-2 text-positive">
         <Award className="w-4 h-4" />
         <span className="font-mono font-bold">Badges &amp; Levels</span>
       </div>
 
       {/* User level card */}
-      <div className="border border-gray-700 rounded-lg p-3 bg-gray-900/50">
+      <div className="border border-border/40 rounded-lg p-3 bg-card/50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Star className={`w-5 h-5 ${getLevelColor(level)}`} />
@@ -250,14 +250,14 @@ export function UserBadges() {
               {username ?? user?.email?.split("@")[0] ?? "Anon"}
             </span>
           </div>
-          <span className={`font-mono font-bold ${getLevelColor(level)}`}>
+          <span className={`num font-bold ${getLevelColor(level)}`}>
             Lv.{level} {title}
           </span>
         </div>
 
         {/* XP bar */}
         <div className="mb-1">
-          <div className="flex justify-between text-xs text-gray-500 font-mono mb-1">
+          <div className="flex justify-between text-xs text-gray-500 num mb-1">
             <span>{xp.toLocaleString()} XP</span>
             <span>{level < 50 ? `${nextLevelXP.toLocaleString()} XP` : "MAX"}</span>
           </div>
@@ -269,7 +269,7 @@ export function UserBadges() {
           </div>
         </div>
 
-        <div className="flex justify-between text-xs text-gray-500 font-mono">
+        <div className="flex justify-between text-xs text-gray-500 num">
           <span>
             {earnedCount}/{BADGES.length} badges
           </span>
@@ -290,10 +290,10 @@ export function UserBadges() {
           {(Object.keys(ACTIVITY_LABELS) as (keyof ActivityData)[]).map((key) => (
             <div
               key={key}
-              className="flex items-center justify-between px-2 py-1.5 bg-gray-800/50 rounded border border-gray-700/50"
+              className="flex items-center justify-between px-2 py-1.5 bg-secondary/30 rounded border border-border/40"
             >
-              <span className="text-xs text-gray-400 font-mono">{ACTIVITY_LABELS[key]}</span>
-              <span className="text-xs text-white font-mono font-bold">
+              <span className="text-xs text-muted-foreground/60 font-mono">{ACTIVITY_LABELS[key]}</span>
+              <span className="text-xs text-white num font-bold">
                 {activity[key].toLocaleString()}
               </span>
             </div>
@@ -319,14 +319,14 @@ export function UserBadges() {
                 className={`relative flex flex-col items-center p-3 rounded-lg border transition-all cursor-default ${
                   earned
                     ? "border-green-500/40 bg-green-950/20"
-                    : "border-gray-700/50 bg-gray-800/30"
+                    : "border-border/40 bg-secondary/30"
                 }`}
                 onMouseEnter={() => setHoveredBadge(badge.id)}
                 onMouseLeave={() => setHoveredBadge(null)}
               >
                 <div className="relative mb-1.5">
                   <Icon
-                    className={`w-6 h-6 ${earned ? "text-green-400" : "text-gray-600"}`}
+                    className={`w-6 h-6 ${earned ? "text-positive" : "text-muted-foreground/40"}`}
                   />
                   {!earned && (
                     <Lock className="w-3 h-3 text-gray-500 absolute -bottom-0.5 -right-1" />
@@ -342,14 +342,14 @@ export function UserBadges() {
 
                 {/* Tooltip on hover */}
                 {isHovered && (
-                  <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 border border-gray-600 rounded-lg shadow-xl pointer-events-none">
+                  <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-card/50 border border-border/40 rounded-lg shadow-xl pointer-events-none">
                     <div className="text-xs text-white font-mono font-bold mb-1">
                       {badge.name}
                     </div>
-                    <div className="text-xs text-gray-400 font-mono mb-1">
+                    <div className="text-xs text-muted-foreground/60 font-mono mb-1">
                       {badge.requirement}
                     </div>
-                    <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mb-1">
+                    <div className="w-full h-1.5 bg-border/40 rounded-full overflow-hidden mb-1">
                       <div
                         className={`h-full rounded-full ${
                           earned ? "bg-green-500" : "bg-amber-500"
@@ -359,7 +359,7 @@ export function UserBadges() {
                         }}
                       />
                     </div>
-                    <div className="text-xs text-gray-500 font-mono">
+                    <div className="text-xs text-gray-500 num">
                       {earned
                         ? "Earned!"
                         : `${prog.current} / ${prog.target}`}

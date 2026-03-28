@@ -168,9 +168,9 @@ export function CorrelationMatrix() {
 
       {/* Legend */}
       <div className="border-t border-border px-3 py-1 shrink-0 flex items-center justify-center gap-1.5">
-        <span className="text-[8px] text-red-400">-1</span>
+        <span className="text-[8px] text-negative">-1</span>
         <div className="h-2 flex-1 rounded" style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #eab308, #22c55e, #3b82f6)' }} />
-        <span className="text-[8px] text-green-400">+1</span>
+        <span className="text-[8px] text-positive">+1</span>
       </div>
     </div>
   )

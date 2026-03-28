@@ -25,7 +25,7 @@ const CHAIN_COLORS: Record<string, { bg: string; text: string; label: string }> 
   bsc: { bg: "bg-yellow-500/20", text: "text-yellow-400", label: "BSC" },
   arbitrum: { bg: "bg-sky-500/20", text: "text-sky-400", label: "ARB" },
   polygon: { bg: "bg-violet-500/20", text: "text-violet-400", label: "POLY" },
-  avalanche: { bg: "bg-red-500/20", text: "text-red-400", label: "AVAX" },
+  avalanche: { bg: "bg-red-500/20", text: "text-negative", label: "AVAX" },
   base: { bg: "bg-blue-600/20", text: "text-blue-300", label: "BASE" },
   optimism: { bg: "bg-rose-500/20", text: "text-rose-400", label: "OP" },
 }
@@ -45,7 +45,7 @@ function PriceChange({ value }: { value: number | null }) {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">--</span>
   }
-  const color = value >= 0 ? "text-green-400" : "text-red-400"
+  const color = value >= 0 ? "text-positive" : "text-negative"
   const sign = value >= 0 ? "+" : ""
   return <span className={color}>{sign}{value.toFixed(2)}%</span>
 }
@@ -90,7 +90,7 @@ export function DexPrices() {
 
   if (error && tokens.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-red-400 text-xs p-4">
+      <div className="flex items-center justify-center h-full text-negative text-xs p-4">
         {error}
       </div>
     )
@@ -103,8 +103,8 @@ export function DexPrices() {
         <div className="flex items-center gap-2">
           <Zap className="size-3.5 text-amber-400" />
           <span className="text-xs font-bold text-foreground">DEX Prices</span>
-          <span className="flex items-center gap-1 text-[10px] text-green-400">
-            <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span className="flex items-center gap-1 text-[10px] text-positive">
+            <span className="size-1.5 rounded-full bg-positive animate-pulse" />
             LIVE
           </span>
         </div>
@@ -166,18 +166,18 @@ export function DexPrices() {
                 <td className="py-1.5 px-2">
                   <ChainBadge chain={token.chain} />
                 </td>
-                <td className="py-1.5 px-2 text-right font-mono text-amber-400">
+                <td className="py-1.5 px-2 text-right num text-amber-400">
                   {token.priceUsd
                     ? formatPrice(parseFloat(token.priceUsd))
                     : "--"}
                 </td>
-                <td className="py-1.5 px-2 text-right font-mono">
+                <td className="py-1.5 px-2 text-right num">
                   <PriceChange value={token.priceChange24h} />
                 </td>
-                <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden lg:table-cell">
+                <td className="py-1.5 px-2 text-right num text-muted-foreground hidden lg:table-cell">
                   {token.volume24h ? formatLargeNumber(token.volume24h) : "--"}
                 </td>
-                <td className="py-1.5 px-2 text-right font-mono text-muted-foreground hidden xl:table-cell">
+                <td className="py-1.5 px-2 text-right num text-muted-foreground hidden xl:table-cell">
                   {token.liquidity ? formatLargeNumber(token.liquidity) : "--"}
                 </td>
                 <td className="py-1.5 px-2 text-right">

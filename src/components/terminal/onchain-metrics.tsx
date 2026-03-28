@@ -46,7 +46,7 @@ const METRICS_CONFIG = [
     key: "activeAddresses" as const,
     label: "Active Addresses",
     icon: Users,
-    color: "text-green-400",
+    color: "text-positive",
     borderColor: "border-green-400/20",
     format: (v: number) => formatCompact(v),
   },
@@ -119,7 +119,7 @@ export function OnchainMetrics() {
   if (error && !data) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-        <span className="text-red-400">{error}</span>
+        <span className="text-negative">{error}</span>
         <button onClick={fetchData} className="text-primary hover:underline">
           Retry
         </button>
@@ -152,7 +152,7 @@ export function OnchainMetrics() {
           {METRICS_CONFIG.map(({ key, label, icon: Icon, color, borderColor, format }, i) => (
             <div
               key={key}
-              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5 hover-lift animate-fade-in`}
+              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5 hover-3d animate-fade-in`}
               style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
             >
               <div className="flex items-center gap-1.5 mb-1">
@@ -161,7 +161,7 @@ export function OnchainMetrics() {
                   {label}
                 </span>
               </div>
-              <div className="text-sm font-bold text-foreground font-mono">
+              <div className="text-sm font-bold text-foreground num">
                 {format(data[key])}
               </div>
             </div>

@@ -14,8 +14,8 @@ const ICONS: Record<NotificationType, typeof Bell> = {
 const COLORS: Record<NotificationType, string> = {
   alert: "text-amber-400",
   whale: "text-blue-400",
-  liquidation: "text-red-400",
-  signal: "text-green-400",
+  liquidation: "text-negative",
+  signal: "text-positive",
   system: "text-muted-foreground",
 }
 

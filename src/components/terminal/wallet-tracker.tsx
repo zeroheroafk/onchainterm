@@ -105,7 +105,7 @@ export function WalletTracker() {
       {/* Content */}
       <div className="flex-1 overflow-auto min-h-0">
         {error && (
-          <div className="flex items-center justify-center p-4 text-red-400 text-xs">{error}</div>
+          <div className="flex items-center justify-center p-4 text-negative text-xs">{error}</div>
         )}
 
         {!data && !error && !loading && (
@@ -129,7 +129,7 @@ export function WalletTracker() {
                     {data.address.slice(0, 8)}...{data.address.slice(-6)}
                   </span>
                   <button onClick={handleCopy} className="text-muted-foreground hover:text-primary transition-colors">
-                    {copied ? <Check className="size-3 text-green-400" /> : <Copy className="size-3" />}
+                    {copied ? <Check className="size-3 text-positive" /> : <Copy className="size-3" />}
                   </button>
                   <a
                     href={`https://etherscan.io/address/${data.address}`}
@@ -171,9 +171,9 @@ export function WalletTracker() {
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[10px] font-medium px-1 rounded ${
                             tx.isError
-                              ? "bg-red-500/10 text-red-400"
+                              ? "bg-negative-subtle text-negative"
                               : isIncoming
-                              ? "bg-green-500/10 text-green-400"
+                              ? "bg-positive-subtle text-positive"
                               : "bg-amber-500/10 text-amber-400"
                           }`}>
                             {tx.isError ? "FAIL" : isIncoming ? "IN" : "OUT"}
@@ -181,7 +181,7 @@ export function WalletTracker() {
                           <span className="text-[10px] text-muted-foreground font-mono">{tx.method}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono font-medium text-foreground">
+                          <span className="text-[10px] num font-medium text-foreground">
                             {tx.value > 0 ? `${tx.value.toFixed(4)} ETH` : "0 ETH"}
                           </span>
                           <span className="text-[9px] text-muted-foreground">{timeAgo(tx.timestamp)}</span>

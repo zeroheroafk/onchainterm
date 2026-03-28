@@ -55,7 +55,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
         <button
           onClick={() => setTab("gainers")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
-            tab === "gainers" ? "text-green-400 widget-tab-active" : "text-muted-foreground hover:text-foreground"
+            tab === "gainers" ? "text-positive widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <TrendingUp className="size-3" /> Gainers
@@ -63,7 +63,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
         <button
           onClick={() => setTab("losers")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
-            tab === "losers" ? "text-red-400 widget-tab-active" : "text-muted-foreground hover:text-foreground"
+            tab === "losers" ? "text-negative widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <TrendingDown className="size-3" /> Losers
@@ -84,8 +84,8 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
                   <span className="text-[10px] text-muted-foreground ml-1.5">{coin.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-mono text-foreground">{formatPrice(coin.current_price)}</div>
-                  <div className={`text-[10px] font-mono ${coin.price_change_percentage_24h >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  <div className="text-xs num text-foreground">{formatPrice(coin.current_price)}</div>
+                  <div className={`text-[10px] num ${coin.price_change_percentage_24h >= 0 ? "text-positive" : "text-negative"}`}>
                     {formatPercentage(coin.price_change_percentage_24h)}
                   </div>
                 </div>

@@ -52,7 +52,7 @@ export function FearGreedIndex() {
   if (loading) return <ChartSkeleton />
   if (error && entries.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-      <span className="text-red-400">{error}</span>
+      <span className="text-negative">{error}</span>
       <button onClick={fetchData} className="text-primary hover:underline">Retry</button>
     </div>
   )
@@ -98,10 +98,10 @@ export function FearGreedIndex() {
         <div className="text-center">
           <div className="text-3xl font-bold num animate-fade-in" style={{ color, textShadow: `0 0 20px ${color}33` }}>{current.value}</div>
           <div className={`text-[11px] font-semibold inline-block rounded-full px-3 py-0.5 ${
-            current.classification === "Extreme Fear" ? "bg-red-500/12 text-red-400 ring-1 ring-red-500/20" :
+            current.classification === "Extreme Fear" ? "bg-red-500/12 text-negative ring-1 ring-red-500/20" :
             current.classification === "Fear" ? "bg-orange-500/12 text-orange-400 ring-1 ring-orange-500/20" :
             current.classification === "Neutral" ? "bg-yellow-500/12 text-yellow-400 ring-1 ring-yellow-500/20" :
-            current.classification === "Greed" ? "bg-green-500/12 text-green-400 ring-1 ring-green-500/20" :
+            current.classification === "Greed" ? "bg-green-500/12 text-positive ring-1 ring-green-500/20" :
             current.classification === "Extreme Greed" ? "bg-emerald-500/12 text-emerald-400 ring-1 ring-emerald-500/20" :
             ""
           }`}>{current.classification}</div>

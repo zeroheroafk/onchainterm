@@ -257,11 +257,11 @@ export function ChatWidget() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Chat
           </h2>
-          <span className={`text-[9px] font-medium ${connected ? "text-green-400" : "text-muted-foreground"}`}>
+          <span className={`text-[9px] font-medium ${connected ? "text-positive" : "text-muted-foreground"}`}>
             {connected ? "● LIVE" : "● Connecting..."}
           </span>
         </div>
-        <span className="text-[9px] text-muted-foreground font-mono">
+        <span className="text-[9px] text-muted-foreground num">
           {userCount} online
         </span>
       </div>
@@ -301,7 +301,7 @@ export function ChatWidget() {
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
-              <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums font-mono">
+              <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums num">
                 {formatTime(msg.created_at)}
               </span>
               <div className="flex-1 min-w-0">

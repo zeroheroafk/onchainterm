@@ -56,10 +56,10 @@ export function DashboardBar() {
   }
 
   const fgColor = (v: number) => {
-    if (v <= 25) return "text-red-400"
+    if (v <= 25) return "text-negative"
     if (v <= 45) return "text-orange-400"
     if (v <= 55) return "text-yellow-400"
-    if (v <= 75) return "text-green-400"
+    if (v <= 75) return "text-positive"
     return "text-emerald-400"
   }
 
@@ -71,7 +71,7 @@ export function DashboardBar() {
         <BarChart3 className="size-2.5 text-muted-foreground" />
         <span className="text-muted-foreground/60">MCap</span>
         <span className="text-foreground/90 font-semibold">{formatCompact(stats.totalMarketCap)}</span>
-        <span className={stats.marketCapChange24h >= 0 ? "text-green-400" : "text-red-400"}>
+        <span className={stats.marketCapChange24h >= 0 ? "text-positive" : "text-negative"}>
           {stats.marketCapChange24h >= 0 ? "+" : ""}{stats.marketCapChange24h.toFixed(1)}%
         </span>
       </div>
