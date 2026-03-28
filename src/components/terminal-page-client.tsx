@@ -16,6 +16,7 @@ import { OnboardingTour } from "@/components/terminal/onboarding-tour"
 import type { TerminalWidgetContext } from "@/components/terminal/layout/widget-registry"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { ShortcutsHelp } from "@/components/terminal/shortcuts-help"
+import { PresetManager } from "@/components/terminal/preset-manager"
 
 function BloombergClock() {
   const [time, setTime] = useState("")
@@ -293,6 +294,7 @@ function TerminalContent() {
       <WidgetGrid context={context} />
       <PresetBar />
       <WidgetCatalogDrawer />
+      <PresetManager />
       {theme.crtEffects && <CRTOverlay />}
       {theme.neonMode && (
         <>

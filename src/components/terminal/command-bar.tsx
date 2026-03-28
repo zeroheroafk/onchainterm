@@ -5,6 +5,7 @@ import {
   Search, Terminal, Eye, EyeOff, Filter, PieChart,
   LineChart, MessagesSquare, Newspaper, BarChart3, TrendingUp, Flame, Fuel, Wallet, Star,
   ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown, Percent,
+  LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
 
@@ -70,6 +71,16 @@ export function CommandBar() {
     { id: "news", label: "Crypto News", description: "Latest crypto headlines", keywords: ["news", "headline", "article", "blog", "media", "press", "update"], icon: Newspaper, category: "widget", action: () => handleWidgetAction("news") },
     { id: "wallet-tracker", label: "Wallet Tracker", description: "Look up any Ethereum wallet", keywords: ["wallet", "address", "etherscan", "balance", "lookup", "track", "0x"], icon: Search, category: "widget", action: () => handleWidgetAction("wallet-tracker") },
     { id: "token-screener", label: "Token Screener", description: "Filter and scan tokens by market cap, volume, and price change", keywords: ["screener", "filter", "scan", "screen", "find"], icon: Filter, category: "widget", action: () => handleWidgetAction("token-screener") },
+    { id: "multi-chart", label: "Multi Chart", description: "View 2-4 charts side by side", keywords: ["multi", "chart", "compare", "grid", "side"], icon: LayoutGrid, category: "widget", action: () => handleWidgetAction("multi-chart") },
+    { id: "trade-journal", label: "Trade Journal", description: "Log and review your trades with P&L tracking", keywords: ["journal", "trade", "log", "diary", "record", "history"], icon: BookOpen, category: "widget", action: () => handleWidgetAction("trade-journal") },
+    { id: "correlation-matrix", label: "Correlation Matrix", description: "Price correlation between crypto assets", keywords: ["correlation", "matrix", "compare", "relation", "pearson"], icon: Grid3x3, category: "widget", action: () => handleWidgetAction("correlation-matrix") },
+    { id: "dex-prices", label: "DEX Prices", description: "Trending DEX tokens from DexScreener", keywords: ["dex", "decentralized", "uniswap", "raydium", "memecoin", "new token", "dexscreener"], icon: Zap, category: "widget", action: () => handleWidgetAction("dex-prices") },
+    { id: "nft-tracker", label: "NFT Floor Prices", description: "Top NFT collection floor prices", keywords: ["nft", "floor", "collection", "opensea", "bored ape", "punk", "art"], icon: Image, category: "widget", action: () => handleWidgetAction("nft-tracker") },
+    { id: "onchain-metrics", label: "On-Chain Metrics", description: "Bitcoin blockchain analytics and metrics", keywords: ["onchain", "on-chain", "hash", "hashrate", "difficulty", "addresses", "blockchain"], icon: Cpu, category: "widget", action: () => handleWidgetAction("onchain-metrics") },
+    { id: "staking-calculator", label: "Staking Calculator", description: "Calculate staking rewards and yields", keywords: ["staking", "stake", "yield", "apy", "rewards", "validator"], icon: Coins, category: "widget", action: () => handleWidgetAction("staking-calculator") },
+    { id: "trading-signals", label: "Trading Signals", description: "Community trading signals with upvotes", keywords: ["signal", "signals", "call", "bullish", "bearish", "community"], icon: Radio, category: "widget", action: () => handleWidgetAction("trading-signals") },
+    { id: "user-badges", label: "Badges & Levels", description: "Your achievements, badges, and XP level", keywords: ["badge", "level", "xp", "achievement", "gamification", "rank"], icon: Award, category: "widget", action: () => handleWidgetAction("user-badges") },
+    { id: "theme-creator", label: "Theme Creator", description: "Create and manage custom color themes", keywords: ["theme", "color", "custom", "creator", "palette", "design", "skin"], icon: Palette, category: "widget", action: () => handleWidgetAction("theme-creator") },
     { id: "private-messages", label: "Messages", description: "Private messages", keywords: ["dm", "pm", "private", "inbox", "direct"], icon: MessageSquare, category: "widget", action: () => handleWidgetAction("private-messages") },
     { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]

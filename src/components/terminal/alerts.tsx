@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { BellRing, Plus, Trash2, Volume2, VolumeX, ArrowUp, ArrowDown } from "lucide-react"
+import { Bell, BellRing, Plus, Trash2, Volume2, VolumeX, ArrowUp, ArrowDown } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice } from "@/lib/constants"
 
@@ -16,6 +16,18 @@ interface PriceAlert {
 }
 
 const STORAGE_KEY = "onchainterm_alerts"
+const NOTIFICATIONS_STORAGE_KEY = "onchainterm_alerts_notifications"
+
+function loadNotificationPref(): boolean {
+  try {
+    const raw = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
+    return raw === "true"
+  } catch { return false }
+}
+
+function saveNotificationPref(enabled: boolean) {
+  try { localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, String(enabled)) } catch {}
+}
 const ALERT_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipGJdWBYX3uRmpWAfXd8jZiXj4B3dn6OmZmUhXx5gI6YlpKEe3l/jZeVkoR7eX+Nl5WShHt5f42XlZKEe3l/jZeVkoR7eYA="
 
 function loadAlerts(): PriceAlert[] {
@@ -37,17 +49,35 @@ export function AlertsWidget() {
   const [targetPrice, setTargetPrice] = useState("")
   const [direction, setDirection] = useState<"above" | "below">("above")
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const notifiedRef = useRef<Set<string>>(new Set())
 
-  useEffect(() => { setAlerts(loadAlerts()) }, [])
-
-  // Request notification permission on mount
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission()
-    }
+    setAlerts(loadAlerts())
+    setNotificationsEnabled(loadNotificationPref())
   }, [])
+
+  const toggleNotifications = useCallback(async () => {
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false)
+      saveNotificationPref(false)
+      return
+    }
+
+    if (typeof Notification === "undefined") return
+
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(true)
+      saveNotificationPref(true)
+    } else if (Notification.permission === "default") {
+      const result = await Notification.requestPermission()
+      if (result === "granted") {
+        setNotificationsEnabled(true)
+        saveNotificationPref(true)
+      }
+    }
+  }, [notificationsEnabled])
 
   // Check alerts against current prices
   useEffect(() => {
@@ -68,10 +98,10 @@ export function AlertsWidget() {
         notifiedRef.current.add(alert.id)
 
         // Browser notification
-        if ("Notification" in window && Notification.permission === "granted") {
+        if (notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification(`Price Alert: ${alert.symbol.toUpperCase()}`, {
-            body: `${alert.symbol.toUpperCase()} is now ${alert.direction} ${formatPrice(alert.targetPrice)} — Current: ${formatPrice(coin.current_price)}`,
-            icon: coin.image,
+            body: `${alert.symbol.toUpperCase()} crossed ${formatPrice(alert.targetPrice)} (${alert.direction} target)`,
+            icon: coin.image || undefined,
           })
         }
 
@@ -92,7 +122,7 @@ export function AlertsWidget() {
       setAlerts(newAlerts)
       saveAlerts(newAlerts)
     }
-  }, [marketData, alerts, soundEnabled])
+  }, [marketData, alerts, soundEnabled, notificationsEnabled])
 
   const addAlert = useCallback(() => {
     const sym = symbol.trim()
@@ -143,13 +173,27 @@ export function AlertsWidget() {
             <span className="text-[9px] text-primary font-medium">{activeAlerts.length} active</span>
           )}
         </div>
-        <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
-          title={soundEnabled ? "Mute alerts" : "Unmute alerts"}
-        >
-          {soundEnabled ? <Volume2 className="size-3" /> : <VolumeX className="size-3" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleNotifications}
+            className="relative rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title={notificationsEnabled ? "Disable notifications" : "Enable notifications"}
+          >
+            <Bell className="size-3" />
+            <span
+              className={`absolute top-0.5 right-0.5 size-1.5 rounded-full transition-colors ${
+                notificationsEnabled ? "bg-green-400" : "bg-muted-foreground/40"
+              }`}
+            />
+          </button>
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title={soundEnabled ? "Mute alerts" : "Unmute alerts"}
+          >
+            {soundEnabled ? <Volume2 className="size-3" /> : <VolumeX className="size-3" />}
+          </button>
+        </div>
       </div>
 
       {/* Alert list */}

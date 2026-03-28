@@ -26,6 +26,14 @@ import {
   Filter,
   PieChart,
   Percent,
+  LayoutGrid,
+  BookOpen,
+  Cpu,
+  Image,
+  Coins,
+  Radio,
+  Award,
+  Palette,
   type LucideIcon,
 } from "lucide-react"
 
@@ -44,8 +52,9 @@ export type WidgetId =
   | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard" | "liquidations" | "heatmap" | "exchange-flows"
   | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
   | "chat" | "news" | "private-messages"
-  | "token-screener" | "dominance-chart"
-  | "funding-rates"
+  | "token-screener" | "dominance-chart" | "funding-rates"
+  | "multi-chart" | "trade-journal" | "correlation-matrix" | "dex-prices" | "nft-tracker"
+  | "onchain-metrics" | "staking-calculator" | "trading-signals" | "user-badges" | "theme-creator"
 
 export type WidgetCategory = "market" | "trade" | "tools" | "comms"
 
@@ -223,6 +232,56 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     minSize: { w: 250, h: 280 },
     singleton: true,
   },
+  {
+    id: "multi-chart",
+    titleKey: "widget.multiChart",
+    fallbackTitle: "Multi Chart",
+    icon: LayoutGrid,
+    category: "market",
+    defaultSize: { w: 60, h: 60 },
+    minSize: { w: 400, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "correlation-matrix",
+    titleKey: "widget.correlationMatrix",
+    fallbackTitle: "Correlation Matrix",
+    icon: Grid3x3,
+    category: "market",
+    defaultSize: { w: 35, h: 50 },
+    minSize: { w: 300, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "dex-prices",
+    titleKey: "widget.dexPrices",
+    fallbackTitle: "DEX Prices",
+    icon: Zap,
+    category: "market",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 300, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "nft-tracker",
+    titleKey: "widget.nftTracker",
+    fallbackTitle: "NFT Floor Prices",
+    icon: Image,
+    category: "market",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "onchain-metrics",
+    titleKey: "widget.onchainMetrics",
+    fallbackTitle: "On-Chain Metrics",
+    icon: Cpu,
+    category: "market",
+    defaultSize: { w: 30, h: 45 },
+    minSize: { w: 250, h: 250 },
+    singleton: true,
+  },
   // ─── Tools ───
   {
     id: "portfolio",
@@ -294,6 +353,46 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     minSize: { w: 280, h: 280 },
     singleton: true,
   },
+  {
+    id: "trade-journal",
+    titleKey: "widget.tradeJournal",
+    fallbackTitle: "Trade Journal",
+    icon: BookOpen,
+    category: "tools",
+    defaultSize: { w: 40, h: 55 },
+    minSize: { w: 320, h: 300 },
+    singleton: true,
+  },
+  {
+    id: "staking-calculator",
+    titleKey: "widget.stakingCalculator",
+    fallbackTitle: "Staking Calculator",
+    icon: Coins,
+    category: "tools",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 260, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "user-badges",
+    titleKey: "widget.userBadges",
+    fallbackTitle: "Badges & Levels",
+    icon: Award,
+    category: "tools",
+    defaultSize: { w: 30, h: 50 },
+    minSize: { w: 250, h: 280 },
+    singleton: true,
+  },
+  {
+    id: "theme-creator",
+    titleKey: "widget.themeCreator",
+    fallbackTitle: "Theme Creator",
+    icon: Palette,
+    category: "tools",
+    defaultSize: { w: 30, h: 55 },
+    minSize: { w: 260, h: 300 },
+    singleton: true,
+  },
   // ─── Comms ───
   {
     id: "chat",
@@ -313,6 +412,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     category: "comms",
     defaultSize: { w: 33, h: 100 },
     minSize: { w: 200, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "trading-signals",
+    titleKey: "widget.tradingSignals",
+    fallbackTitle: "Trading Signals",
+    icon: Radio,
+    category: "comms",
+    defaultSize: { w: 35, h: 55 },
+    minSize: { w: 280, h: 280 },
     singleton: true,
   },
   {

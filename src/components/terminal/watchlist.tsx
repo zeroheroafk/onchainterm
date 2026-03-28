@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Star, Plus, X, Search, Loader2 } from "lucide-react"
+import { Star, Plus, X, Search, Loader2, Share2, Check, Download } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 
@@ -52,12 +52,28 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [searchResults, setSearchResults] = useState<WatchlistCoinMeta[]>([])
   const [searching, setSearching] = useState(false)
   const [extraPrices, setExtraPrices] = useState<Record<string, CoinPrice>>({})
+  const [copied, setCopied] = useState(false)
+  const [importBanner, setImportBanner] = useState<{ ids: string[] } | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setWatchlist(loadWatchlist())
     setMeta(loadMeta())
+  }, [])
+
+  // Check URL for shared watchlist on mount
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const encoded = params.get("watchlist")
+      if (encoded) {
+        const decoded = JSON.parse(atob(encoded)) as string[]
+        if (Array.isArray(decoded) && decoded.length > 0 && decoded.every(id => typeof id === "string")) {
+          setImportBanner({ ids: decoded })
+        }
+      }
+    } catch {}
   }, [])
 
   // Fetch prices for coins not in marketData
@@ -124,6 +140,39 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     saveWatchlist(updated)
   }, [watchlist])
 
+  const shareWatchlist = useCallback(() => {
+    const encoded = btoa(JSON.stringify(watchlist))
+    const url = `${window.location.origin}?watchlist=${encoded}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
+  }, [watchlist])
+
+  const importSharedWatchlist = useCallback(() => {
+    if (!importBanner) return
+    const currentSet = new Set(watchlist)
+    const newIds = importBanner.ids.filter(id => !currentSet.has(id))
+    if (newIds.length > 0) {
+      const updated = [...watchlist, ...newIds]
+      setWatchlist(updated)
+      saveWatchlist(updated)
+    }
+    setImportBanner(null)
+    const params = new URLSearchParams(window.location.search)
+    params.delete("watchlist")
+    const newSearch = params.toString()
+    window.history.replaceState({}, "", window.location.pathname + (newSearch ? `?${newSearch}` : ""))
+  }, [watchlist, importBanner])
+
+  const dismissSharedWatchlist = useCallback(() => {
+    setImportBanner(null)
+    const params = new URLSearchParams(window.location.search)
+    params.delete("watchlist")
+    const newSearch = params.toString()
+    window.history.replaceState({}, "", window.location.pathname + (newSearch ? `?${newSearch}` : ""))
+  }, [])
+
   const getCoinDisplay = (coinId: string) => {
     const marketCoin = marketData.find(c => c.id === coinId)
     if (marketCoin) {
@@ -158,13 +207,51 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Watchlist</span>
           <span className="text-[9px] text-muted-foreground">{watchlist.length} coins</span>
         </div>
-        <button
-          onClick={() => { setAddMode(!addMode); setSearchQuery(""); setSearchResults([]) }}
-          className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
-        >
-          {addMode ? <X className="size-3" /> : <Plus className="size-3" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={shareWatchlist}
+            className="relative rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title="Share watchlist"
+          >
+            {copied ? <Check className="size-3 text-green-400" /> : <Share2 className="size-3" />}
+            {copied && (
+              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-green-400 whitespace-nowrap font-medium">
+                Copied!
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => { setAddMode(!addMode); setSearchQuery(""); setSearchResults([]) }}
+            className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+          >
+            {addMode ? <X className="size-3" /> : <Plus className="size-3" />}
+          </button>
+        </div>
       </div>
+
+      {/* Import banner */}
+      {importBanner && (
+        <div className="border-b border-border px-3 py-2 shrink-0 bg-secondary/50">
+          <div className="flex items-center gap-2">
+            <Download className="size-3 text-amber-400 shrink-0" />
+            <span className="text-[10px] text-foreground flex-1">
+              Import shared watchlist? ({importBanner.ids.length} coins)
+            </span>
+            <button
+              onClick={importSharedWatchlist}
+              className="text-[10px] font-bold text-green-400 hover:text-green-300 transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
+            >
+              Import
+            </button>
+            <button
+              onClick={dismissSharedWatchlist}
+              className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       {addMode && (

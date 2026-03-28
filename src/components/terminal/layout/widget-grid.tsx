@@ -33,6 +33,16 @@ const AlertsWidget = lazy(() => import("@/components/terminal/alerts").then(m =>
 const TokenScreenerWidget = lazy(() => import("@/components/terminal/token-screener").then(m => ({ default: m.TokenScreenerWidget })))
 const DominanceChart = lazy(() => import("@/components/terminal/dominance-chart").then(m => ({ default: m.DominanceChart })))
 const FundingRates = lazy(() => import("@/components/terminal/funding-rates").then(m => ({ default: m.FundingRates })))
+const MultiChart = lazy(() => import("@/components/terminal/multi-chart").then(m => ({ default: m.MultiChart })))
+const TradeJournal = lazy(() => import("@/components/terminal/trade-journal").then(m => ({ default: m.TradeJournal })))
+const CorrelationMatrix = lazy(() => import("@/components/terminal/correlation-matrix").then(m => ({ default: m.CorrelationMatrix })))
+const DexPrices = lazy(() => import("@/components/terminal/dex-prices").then(m => ({ default: m.DexPrices })))
+const NftTracker = lazy(() => import("@/components/terminal/nft-tracker").then(m => ({ default: m.NftTracker })))
+const OnchainMetrics = lazy(() => import("@/components/terminal/onchain-metrics").then(m => ({ default: m.OnchainMetrics })))
+const StakingCalculator = lazy(() => import("@/components/terminal/staking-calculator").then(m => ({ default: m.StakingCalculator })))
+const TradingSignals = lazy(() => import("@/components/terminal/trading-signals").then(m => ({ default: m.TradingSignals })))
+const UserBadges = lazy(() => import("@/components/terminal/user-badges").then(m => ({ default: m.UserBadges })))
+const ThemeCreator = lazy(() => import("@/components/terminal/theme-creator").then(m => ({ default: m.ThemeCreator })))
 
 function WidgetLoadingFallback() {
   return (
@@ -98,6 +108,26 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <DominanceChart />
     case "funding-rates":
       return <FundingRates />
+    case "multi-chart":
+      return <MultiChart />
+    case "trade-journal":
+      return <TradeJournal />
+    case "correlation-matrix":
+      return <CorrelationMatrix />
+    case "dex-prices":
+      return <DexPrices />
+    case "nft-tracker":
+      return <NftTracker />
+    case "onchain-metrics":
+      return <OnchainMetrics />
+    case "staking-calculator":
+      return <StakingCalculator />
+    case "trading-signals":
+      return <TradingSignals />
+    case "user-badges":
+      return <UserBadges />
+    case "theme-creator":
+      return <ThemeCreator />
     case "private-messages":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
     default: {
