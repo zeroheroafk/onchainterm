@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Percent, RefreshCw, Info } from "lucide-react"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 
 interface FundingItem {
   symbol: string
@@ -29,9 +30,8 @@ export function FundingRates() {
   const [data, setData] = useState<FundingItem[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [showTooltip, setShowTooltip] = useState(false)
-  const [, setTick] = useState(0)
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchFunding = useCallback(async () => {
     try {
@@ -40,7 +40,7 @@ export function FundingRates() {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       setData(json)
-      setLastUpdated(new Date())
+      markUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
@@ -56,6 +56,7 @@ export function FundingRates() {
   }, [fetchFunding])
 
   // Tick every 30s to keep countdowns visually up-to-date between data refreshes
+  const [, setTick] = useState(0)
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30_000)
     return () => clearInterval(interval)
@@ -90,6 +91,7 @@ export function FundingRates() {
             <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
             LIVE
           </span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-1">
           <div className="relative">
@@ -184,7 +186,7 @@ export function FundingRates() {
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          Binance Futures · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+          Binance Futures{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

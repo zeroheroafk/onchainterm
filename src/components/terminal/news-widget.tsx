@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { ExternalLink, RefreshCw } from "lucide-react"
 import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 
 interface NewsItem {
   title: string
@@ -30,6 +31,7 @@ export function NewsWidget() {
   const animatedUrlsRef = useRef<Set<string>>(new Set())
   const isInitialLoadRef = useRef(true)
   const lastFetchRef = useRef<number>(0)
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchNews = useCallback(async () => {
     try {
@@ -57,13 +59,14 @@ export function NewsWidget() {
       lastFetchRef.current = Date.now()
 
       setNews(items)
+      markUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markUpdated])
 
   useEffect(() => {
     fetchNews()
@@ -164,7 +167,7 @@ export function NewsWidget() {
 
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          GNews · {news.length} articles
+          GNews · {news.length} articles{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

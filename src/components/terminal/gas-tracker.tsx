@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Fuel, RefreshCw, Clock, Zap, Rocket } from "lucide-react"
 import { CardsSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 
 interface GasData {
   low: number
@@ -30,7 +31,7 @@ export function GasTracker() {
   const [gasData, setGasData] = useState<GasData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
 
   const fetchGas = useCallback(async () => {
     try {
@@ -39,7 +40,7 @@ export function GasTracker() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setGasData(data)
-      setLastUpdated(new Date())
+      markUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
@@ -74,6 +75,7 @@ export function GasTracker() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Fuel className="size-4" />
           <span className="text-[10px] font-bold uppercase tracking-wider">ETH Gas · Live</span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <button
           onClick={fetchGas}
@@ -146,7 +148,7 @@ export function GasTracker() {
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">
-          Etherscan Gas Oracle · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
+          Etherscan Gas Oracle{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

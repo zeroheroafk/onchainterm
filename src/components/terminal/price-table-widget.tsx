@@ -4,6 +4,8 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
+import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
 import type { CoinMarketData } from "@/types/market"
 
 interface PriceTableWidgetProps {
@@ -58,11 +60,20 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
 
 export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   const { data, isLoading, error } = useMarketData()
+  const { showMenu } = useCoinContextMenu()
   const [sortKey, setSortKey] = useState<SortKey>("rank")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1)
   const [flashMap, setFlashMap] = useState<Record<string, "up" | "down">>({})
   const prevPricesRef = useRef<Record<string, number>>({})
+  const tableRef = useRef<HTMLDivElement>(null)
+  const { markUpdated, formatLastUpdated } = useLastUpdated()
+
+  // Mark updated when data changes
+  useEffect(() => {
+    if (data.length > 0) markUpdated()
+  }, [data, markUpdated])
 
   // Detect price changes and trigger flash animations
   useEffect(() => {
@@ -129,6 +140,36 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
     onSelectSymbol(coin.id)
   }
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        setSelectedIndex(prev => Math.min(prev + 1, sorted.length - 1))
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        setSelectedIndex(prev => Math.max(prev - 1, 0))
+        break
+      case "Enter":
+        if (selectedIndex >= 0 && selectedIndex < sorted.length) {
+          const coin = sorted[selectedIndex]
+          setSelectedId(coin.id)
+          onSelectSymbol(coin.id)
+        }
+        break
+      case "Escape":
+        setSelectedIndex(-1)
+        break
+    }
+  }, [sorted, selectedIndex, onSelectSymbol])
+
+  useEffect(() => {
+    if (selectedIndex >= 0) {
+      const row = tableRef.current?.querySelector(`[data-row-index="${selectedIndex}"]`)
+      row?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+    }
+  }, [selectedIndex])
+
   const SortHeader = ({ label, sortKeyVal, className = "" }: { label: string; sortKeyVal: SortKey; className?: string }) => (
     <th
       className={`py-1.5 px-2 text-right text-[10px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors ${
@@ -157,7 +198,12 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   }
 
   return (
-    <div className="h-full overflow-auto">
+    <div ref={tableRef} tabIndex={0} onKeyDown={handleKeyDown} className="h-full overflow-auto focus:outline-none">
+      {formatLastUpdated() && (
+        <div className="text-right px-2 pt-1">
+          <span className="text-[8px] text-muted-foreground">Updated {formatLastUpdated()}</span>
+        </div>
+      )}
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-card z-[1]">
           <tr className="border-b border-border">
@@ -173,17 +219,26 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((coin) => (
+          {sorted.map((coin, i) => (
             <tr
               key={coin.id}
-              onClick={() => handleClick(coin)}
+              data-row-index={i}
+              onClick={() => { setSelectedIndex(i); handleClick(coin) }}
+              onContextMenu={(e) => showMenu(e, coin.id, coin.symbol)}
               className={`border-b border-border/50 cursor-pointer transition-colors duration-150 ${
-                selectedId === coin.id
-                  ? "bg-primary/10"
-                  : "hover:bg-secondary/40"
+                selectedIndex === i
+                  ? "bg-primary/15 ring-1 ring-primary/30"
+                  : selectedId === coin.id
+                    ? "bg-primary/10"
+                    : "hover:bg-secondary/40"
               } ${flashMap[coin.id] === "up" ? "flash-up" : flashMap[coin.id] === "down" ? "flash-down" : ""}`}
             >
-              <td className="py-1.5 px-2 text-muted-foreground">{coin.market_cap_rank}</td>
+              <td className="py-1.5 px-2 text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  {selectedIndex === i && <span className="text-primary font-bold">&gt;</span>}
+                  {coin.market_cap_rank}
+                </span>
+              </td>
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

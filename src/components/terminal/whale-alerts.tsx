@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Activity, RefreshCw, ExternalLink, ArrowRight, Volume2, VolumeX } from "lucide-react"
 import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
+import { useLastUpdated } from "@/hooks/useLastUpdated"
+import { useSound } from "@/lib/sound-context"
 
 const WHALE_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipGJdWBYX3uRmpWAfXd8jZiXj4B3dn6OmZmUhXx5gI6YlpKEe3l/jZeVkoR7eX+Nl5WShHt5f42XlZKEe3l/jZeVkoR7eYA="
 
@@ -56,6 +58,8 @@ export function WhaleAlerts() {
   const seenHashesRef = useRef<Set<string>>(new Set())
   const animatedTxRef = useRef<Set<string>>(new Set())
   const isInitialLoadRef = useRef(true)
+  const { playSound: playSoundGlobal } = useSound()
+  const { markUpdated: markHookUpdated, formatLastUpdated } = useLastUpdated()
 
   const playSound = useCallback(() => {
     if (!soundEnabled) return
@@ -75,7 +79,10 @@ export function WhaleAlerts() {
       // Check for new transactions (sound alert)
       if (seenHashesRef.current.size > 0) {
         const hasNew = data.transactions.some((tx: WhaleTx) => !seenHashesRef.current.has(tx.hash))
-        if (hasNew) playSound()
+        if (hasNew) {
+          playSound()
+          playSoundGlobal("whale")
+        }
       }
       data.transactions.forEach((tx: WhaleTx) => seenHashesRef.current.add(tx.hash))
 
@@ -88,13 +95,14 @@ export function WhaleAlerts() {
       setTransactions(data.transactions)
       setLatestBlock(data.latestBlock)
       setLastUpdated(new Date())
+      markHookUpdated()
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
       setLoading(false)
     }
-  }, [playSound])
+  }, [playSound, playSoundGlobal])
 
   useEffect(() => {
     fetchWhales()
@@ -123,6 +131,7 @@ export function WhaleAlerts() {
           <Activity className="size-3.5 text-muted-foreground" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ETH Whale Alerts</span>
           <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-2">
           {latestBlock && (

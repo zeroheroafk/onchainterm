@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Bell, BellRing, Plus, Trash2, Volume2, VolumeX, ArrowUp, ArrowDown } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
+import { useSound } from "@/lib/sound-context"
 import { formatPrice } from "@/lib/constants"
 
 interface PriceAlert {
@@ -43,6 +44,7 @@ function saveAlerts(alerts: PriceAlert[]) {
 
 export function AlertsWidget() {
   const { data: marketData } = useMarketData()
+  const { playSound: playSoundGlobal } = useSound()
   const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [symbol, setSymbol] = useState("")
@@ -109,13 +111,16 @@ export function AlertsWidget() {
           })
         }
 
-        // Sound
+        // Sound (local widget toggle)
         if (soundEnabled) {
           try {
             if (!audioRef.current) audioRef.current = new Audio(ALERT_SOUND_URL)
             audioRef.current.play().catch(() => {})
           } catch {}
         }
+
+        // Global sound system
+        playSoundGlobal("alert")
 
         return { ...alert, triggered: true }
       }
@@ -131,7 +136,7 @@ export function AlertsWidget() {
     for (const coin of marketData) {
       prevPricesRef.current.set(coin.id, coin.current_price)
     }
-  }, [marketData, alerts, soundEnabled, notificationsEnabled])
+  }, [marketData, alerts, soundEnabled, notificationsEnabled, playSoundGlobal])
 
   const addAlert = useCallback(() => {
     const sym = symbol.trim()

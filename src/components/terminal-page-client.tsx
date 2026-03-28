@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Palette, LogIn, LogOut, User, Pencil, Save, X } from "lucide-react"
+import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
 import { AuthProvider, useAuth } from "@/lib/auth-context"
@@ -11,12 +11,15 @@ import { WidgetGrid } from "@/components/terminal/layout/widget-grid"
 import { WidgetCatalogDrawer } from "@/components/terminal/layout/widget-catalog-drawer"
 import { PresetBar } from "@/components/terminal/layout/preset-bar"
 import { CommandBar } from "@/components/terminal/command-bar"
+import { DashboardBar } from "@/components/terminal/dashboard-bar"
 import { CRTOverlay } from "@/components/effects/CRTOverlay"
 import { OnboardingTour } from "@/components/terminal/onboarding-tour"
 import type { TerminalWidgetContext } from "@/components/terminal/layout/widget-registry"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { ShortcutsHelp } from "@/components/terminal/shortcuts-help"
 import { PresetManager } from "@/components/terminal/preset-manager"
+import { SoundProvider, useSound } from "@/lib/sound-context"
+import { CoinContextMenuProvider } from "@/components/terminal/coin-context-menu"
 
 function BloombergClock() {
   const [time, setTime] = useState("")
@@ -190,6 +193,7 @@ function UserMenu() {
 
 function TerminalHeader() {
   const { theme, themeId, setTheme } = useTheme()
+  const { muted, toggleMute } = useSound()
   const [showThemes, setShowThemes] = useState(false)
   const isBloomberg = theme.bloombergMode
   const isNeon = theme.neonMode
@@ -221,6 +225,14 @@ function TerminalHeader() {
       <div className="flex items-center gap-2">
         {/* User auth */}
         <UserMenu />
+        {/* Sound toggle */}
+        <button
+          onClick={toggleMute}
+          className={`flex items-center gap-1 border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${isBloomberg ? "" : "rounded-md"}`}
+          title={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {muted ? <VolumeX className="size-3" /> : <Volume2 className="size-3" />}
+        </button>
         {/* Theme picker */}
         <div className="relative">
           <button
@@ -347,11 +359,14 @@ function TerminalContent() {
     <div className="flex h-screen flex-col">
       <TerminalHeader />
       <CommandBar />
+      <DashboardBar />
       <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />
-      <WidgetGrid context={context} />
-      <PresetBar />
-      <WidgetCatalogDrawer />
-      <PresetManager externalOpen={showPresets} onExternalClose={() => setShowPresets(false)} />
+      <CoinContextMenuProvider onSelectSymbol={context.setChartSymbol}>
+        <WidgetGrid context={context} />
+        <PresetBar />
+        <WidgetCatalogDrawer />
+        <PresetManager externalOpen={showPresets} onExternalClose={() => setShowPresets(false)} />
+      </CoinContextMenuProvider>
       {theme.crtEffects && <CRTOverlay />}
       {theme.neonMode && (
         <>
@@ -368,13 +383,15 @@ function TerminalContent() {
 export function TerminalPageClient() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <MarketDataProvider>
-          <LayoutProvider>
-            <TerminalContent />
-          </LayoutProvider>
-        </MarketDataProvider>
-      </AuthProvider>
+      <SoundProvider>
+        <AuthProvider>
+          <MarketDataProvider>
+            <LayoutProvider>
+              <TerminalContent />
+            </LayoutProvider>
+          </MarketDataProvider>
+        </AuthProvider>
+      </SoundProvider>
     </ThemeProvider>
   )
 }

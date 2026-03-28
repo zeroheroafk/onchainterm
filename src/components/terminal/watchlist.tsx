@@ -6,6 +6,7 @@ import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 import { useToast } from "@/lib/toast-context"
+import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
 
 const STORAGE_KEY = "onchainterm_watchlists"
 const WATCHLIST_META_KEY = "onchainterm_watchlist_meta"
@@ -65,6 +66,7 @@ function saveMeta(meta: Record<string, WatchlistCoinMeta>) {
 export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
   const { data: marketData, isLoading: marketLoading } = useMarketData()
   const { toast } = useToast()
+  const { showMenu } = useCoinContextMenu()
   const [watchlists, setWatchlists] = useState<Watchlist[]>([])
   const [activeListId, setActiveListId] = useState("default")
   const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>({})
@@ -471,6 +473,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                   key={coinId}
                   className="flex items-center justify-between px-3 py-2 group hover:bg-secondary/30 transition-colors duration-150 cursor-pointer"
                   onClick={() => onSelectSymbol?.(coinId)}
+                  onContextMenu={(e) => showMenu(e, coinId, coin.symbol)}
                 >
                   <div className="flex items-center gap-2">
                     {coin.image ? (

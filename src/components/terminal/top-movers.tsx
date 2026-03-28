@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 import { FeedSkeleton } from "@/components/terminal/widget-skeleton"
+import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
 
 interface MoverCoin {
   id: string
@@ -14,6 +15,7 @@ interface MoverCoin {
 }
 
 export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
+  const { showMenu } = useCoinContextMenu()
   const [gainers, setGainers] = useState<MoverCoin[]>([])
   const [losers, setLosers] = useState<MoverCoin[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,7 +78,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
         ) : (
           <div key={tab} className="divide-y divide-border/50 tab-content">
             {list.map((coin, i) => (
-              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => onSelectSymbol?.(coin.id)}>
+              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => onSelectSymbol?.(coin.id)} onContextMenu={(e) => showMenu(e, coin.id, coin.symbol)}>
                 <div>
                   <span className="text-xs font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                   <span className="text-[10px] text-muted-foreground ml-1.5">{coin.name}</span>
