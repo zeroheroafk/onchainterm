@@ -62,10 +62,9 @@ async function etherscanCall(params: string): Promise<any> {
   const res = await fetch(url, { next: { revalidate: 15 } })
   if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
   const data = await res.json()
-  // V2 proxy calls wrap JSON-RPC in { result: { jsonrpc, id, result: ... } }
-  // Unwrap if needed so callers get the inner result directly
-  if (data.result && typeof data.result === "object" && "jsonrpc" in data.result) {
-    return { ...data, result: data.result.result }
+  // V2 returns rate limit / error as { status: "0", message: "NOTOK", result: "error string" }
+  if (data.status === "0" || data.message === "NOTOK") {
+    throw new Error(`Etherscan: ${data.result || data.message}`)
   }
   return data
 }
@@ -74,16 +73,15 @@ export async function GET() {
   try {
     // 1. Get latest block number
     const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
-    console.log("[whales] blockNumData:", JSON.stringify(blockNumData).slice(0, 500))
     const blockResult = blockNumData.result
     const latestBlock = typeof blockResult === "string" ? parseInt(blockResult, 16) : NaN
     if (isNaN(latestBlock)) {
-      throw new Error(`Invalid block number from Etherscan: ${JSON.stringify(blockNumData).slice(0, 200)}`)
+      throw new Error("Invalid block number from Etherscan")
     }
 
-    // 2. Fetch last 15 blocks (~3 min) in batches of 3 to respect rate limits
-    const BLOCKS_TO_SCAN = 15
-    const BATCH_SIZE = 3
+    // 2. Fetch last 5 blocks in batches of 1 to respect V2 rate limits
+    const BLOCKS_TO_SCAN = 5
+    const BATCH_SIZE = 1
     const blockNumbers = Array.from({ length: BLOCKS_TO_SCAN }, (_, i) => latestBlock - i)
 
     const allTxs: {
@@ -145,6 +143,10 @@ export async function GET() {
             block: blkNum,
           })
         }
+      }
+      // Small delay between batches to avoid V2 rate limits
+      if (i + BATCH_SIZE < blockNumbers.length) {
+        await new Promise(r => setTimeout(r, 250))
       }
     }
 
