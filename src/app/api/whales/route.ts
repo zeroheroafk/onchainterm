@@ -74,9 +74,11 @@ export async function GET() {
   try {
     // 1. Get latest block number
     const blockNumData = await etherscanCall("module=proxy&action=eth_blockNumber")
-    const latestBlock = parseInt(blockNumData.result as string, 16)
+    console.log("[whales] blockNumData:", JSON.stringify(blockNumData).slice(0, 500))
+    const blockResult = blockNumData.result
+    const latestBlock = typeof blockResult === "string" ? parseInt(blockResult, 16) : NaN
     if (isNaN(latestBlock)) {
-      throw new Error("Invalid block number from Etherscan")
+      throw new Error(`Invalid block number from Etherscan: ${JSON.stringify(blockNumData).slice(0, 200)}`)
     }
 
     // 2. Fetch last 15 blocks (~3 min) in batches of 3 to respect rate limits
@@ -103,11 +105,15 @@ export async function GET() {
           const data = await etherscanCall(
             `module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`
           )
-          return data.result as {
+          const blockData = data.result
+          // V2 may return null or have no transactions
+          if (!blockData || typeof blockData !== "object") return null
+          if (!Array.isArray(blockData.transactions)) return null
+          return blockData as {
             transactions: BlockTx[]
             timestamp: string
             number: string
-          } | null
+          }
         })
       )
 
