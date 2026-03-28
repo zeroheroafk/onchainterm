@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX } from "lucide-react"
+import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX, Camera } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
 import { AuthProvider, useAuth } from "@/lib/auth-context"
@@ -16,6 +16,7 @@ import { CRTOverlay } from "@/components/effects/CRTOverlay"
 import { OnboardingTour } from "@/components/terminal/onboarding-tour"
 import type { TerminalWidgetContext } from "@/components/terminal/layout/widget-registry"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import { useScreenshot } from "@/hooks/useScreenshot"
 import { ShortcutsHelp } from "@/components/terminal/shortcuts-help"
 import { PresetManager } from "@/components/terminal/preset-manager"
 import { SoundProvider, useSound } from "@/lib/sound-context"
@@ -196,6 +197,7 @@ function UserMenu() {
 function TerminalHeader() {
   const { theme, themeId, setTheme } = useTheme()
   const { muted, toggleMute } = useSound()
+  const { captureScreenshot } = useScreenshot()
   const [showThemes, setShowThemes] = useState(false)
   const isBloomberg = theme.bloombergMode
   const isNeon = theme.neonMode
@@ -237,6 +239,14 @@ function TerminalHeader() {
           title={muted ? "Unmute sounds" : "Mute sounds"}
         >
           {muted ? <VolumeX className="size-3" /> : <Volume2 className="size-3" />}
+        </button>
+        {/* Screenshot */}
+        <button
+          onClick={captureScreenshot}
+          className={`flex items-center gap-1 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
+          title="Export screenshot"
+        >
+          <Camera className="size-3" />
         </button>
         {/* Theme picker */}
         <div className="relative">
@@ -361,7 +371,7 @@ function TerminalContent() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div id="terminal-content" className="flex h-screen flex-col">
       <div className="loading-bar" id="global-loading" style={{ display: 'none' }} />
       <TerminalHeader />
       <CommandBar />
@@ -369,7 +379,7 @@ function TerminalContent() {
       <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />
       <CoinContextMenuProvider onSelectSymbol={context.setChartSymbol}>
         <WidgetGrid context={context} />
-        <PresetBar />
+        <div className="hide-mobile"><PresetBar /></div>
         <WidgetCatalogDrawer />
         <PresetManager externalOpen={showPresets} onExternalClose={() => setShowPresets(false)} />
       </CoinContextMenuProvider>

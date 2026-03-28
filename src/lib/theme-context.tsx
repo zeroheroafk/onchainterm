@@ -297,6 +297,7 @@ function getTheme(id: ThemeId): ThemeConfig {
 
 function applyTheme(theme: ThemeConfig) {
   const root = document.documentElement
+  root.classList.add("theme-transitioning")
   root.style.setProperty("--primary", theme.primary)
   root.style.setProperty("--primary-foreground", theme.primaryForeground)
   root.style.setProperty("--accent", theme.accent)
@@ -352,6 +353,10 @@ function applyTheme(theme: ThemeConfig) {
   } else {
     root.classList.remove("neon-active")
   }
+
+  setTimeout(() => {
+    root.classList.remove("theme-transitioning")
+  }, 350)
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

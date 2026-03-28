@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { Bell, Trash2, CheckCheck, AlertTriangle, Waves, TrendingUp, Zap, Info } from "lucide-react"
 import { useNotifications, type NotificationType } from "@/lib/notification-context"
+import { getTimestampOpacity } from "@/hooks/useTimestampAge"
 
 const ICONS: Record<NotificationType, typeof Bell> = {
   alert: AlertTriangle,
@@ -74,7 +75,7 @@ export function NotificationBell() {
                         <p className="text-[10px] font-semibold text-foreground truncate">{n.title}</p>
                         <p className="text-[9px] text-muted-foreground truncate">{n.message}</p>
                       </div>
-                      <span className="text-[8px] text-muted-foreground/40 shrink-0">{timeAgo(n.timestamp)}</span>
+                      <span className={`text-[8px] shrink-0 ${getTimestampOpacity(n.timestamp)}`}>{timeAgo(n.timestamp)}</span>
                     </div>
                   )
                 })
