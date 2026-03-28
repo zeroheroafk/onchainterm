@@ -164,6 +164,28 @@ button:focus-visible {
   background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
 }
 
+/* ── Table row hover accent ── */
+.widget-panel tbody tr {
+  transition: background-color 0.1s ease;
+  position: relative;
+}
+
+.widget-panel tbody tr::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.widget-panel tbody tr:hover::before {
+  opacity: 0.6;
+}
+
 .widget-panel thead {
   background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 97%, var(--secondary)) 100%);
   backdrop-filter: blur(8px);
@@ -653,6 +675,41 @@ button:focus-visible {
 .status-dot-error {
   background: var(--color-negative);
   opacity: 0.8;
+}
+
+/* ── Refined tooltips ── */
+[title] {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 95%, white);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  animation: dropdown-slide 0.1s ease-out;
+}
+
+/* ── Number count-up entrance ── */
+@keyframes number-enter {
+  0% { opacity: 0; transform: translateY(4px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.num-enter {
+  animation: number-enter 0.4s ease-out;
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */
