@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-
-const ETHERSCAN_URL = "https://api.etherscan.io/api"
+import { etherscanFetch } from "@/lib/etherscan"
 
 // Major exchange hot wallets
 const EXCHANGES: { name: string; addresses: string[] }[] = [
@@ -11,11 +10,6 @@ const EXCHANGES: { name: string; addresses: string[] }[] = [
 ]
 
 export async function GET() {
-  const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "Etherscan API key not configured" }, { status: 500 })
-  }
-
   try {
     const exchangeFlows: {
       name: string
@@ -30,19 +24,11 @@ export async function GET() {
       const addr = exchange.addresses[0]
 
       // Get balance
-      const balRes = await fetch(
-        `${ETHERSCAN_URL}?module=account&action=balance&address=${addr}&tag=latest&apikey=${apiKey}`,
-        { next: { revalidate: 60 } }
-      )
-      const balData = await balRes.json()
+      const balData = await etherscanFetch(`module=account&action=balance&address=${addr}&tag=latest`, 60)
       const balanceEth = balData.status === "1" ? Number(balData.result) / 1e18 : 0
 
       // Get recent transactions to calculate inflow/outflow
-      const txRes = await fetch(
-        `${ETHERSCAN_URL}?module=account&action=txlist&address=${addr}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${apiKey}`,
-        { next: { revalidate: 60 } }
-      )
-      const txData = await txRes.json()
+      const txData = await etherscanFetch(`module=account&action=txlist&address=${addr}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`, 60)
 
       let inflow = 0
       let outflow = 0
