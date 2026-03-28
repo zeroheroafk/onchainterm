@@ -93,7 +93,7 @@ function persistUserPresets(presets: UserPreset[]) {
 
 /* ── Component ───────────────────────────────────────────────── */
 
-export function PresetManager() {
+export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?: boolean; onExternalClose?: () => void } = {}) {
   const {
     layout,
     activeWidgets,
@@ -102,7 +102,12 @@ export function PresetManager() {
     removeWidget,
   } = useLayout()
 
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = externalOpen ?? internalOpen
+  const setOpen = (v: boolean) => {
+    if (!v && onExternalClose) onExternalClose()
+    setInternalOpen(v)
+  }
   const [userPresets, setUserPresets] = useState<UserPreset[]>([])
   const [saveName, setSaveName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -196,7 +201,7 @@ export function PresetManager() {
     <div className="relative inline-block">
       {/* Toggle button */}
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2.5 py-1.5 text-[11px] font-medium text-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
       >
         <FolderOpen className="size-3.5" />

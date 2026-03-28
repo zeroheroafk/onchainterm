@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Star, Plus, X, Search, Loader2, Share2, Check, Download } from "lucide-react"
+import { Star, Plus, X, Search, Loader2, Share2, Check, Download, ChevronDown, Pencil, Trash2, FolderPlus } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 
-const STORAGE_KEY = "onchainterm_watchlist"
+const STORAGE_KEY = "onchainterm_watchlists"
 const WATCHLIST_META_KEY = "onchainterm_watchlist_meta"
 
 interface WatchlistCoinMeta {
@@ -21,15 +21,32 @@ interface CoinPrice {
   usd_24h_change: number | null
 }
 
-function loadWatchlist(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : ["bitcoin", "ethereum", "solana"]
-  } catch { return ["bitcoin", "ethereum", "solana"] }
+interface Watchlist {
+  id: string
+  name: string
+  coins: string[]
 }
 
-function saveWatchlist(ids: string[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)) } catch {}
+function loadWatchlists(): Watchlist[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) return parsed
+    }
+    // Migrate from old single-watchlist format
+    const oldRaw = localStorage.getItem("onchainterm_watchlist")
+    const oldCoins = oldRaw ? JSON.parse(oldRaw) : ["bitcoin", "ethereum", "solana"]
+    const migrated: Watchlist[] = [{ id: "default", name: "Main", coins: oldCoins }]
+    saveWatchlists(migrated)
+    return migrated
+  } catch {
+    return [{ id: "default", name: "Main", coins: ["bitcoin", "ethereum", "solana"] }]
+  }
+}
+
+function saveWatchlists(lists: Watchlist[]) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(lists)) } catch {}
 }
 
 function loadMeta(): Record<string, WatchlistCoinMeta> {
@@ -45,7 +62,8 @@ function saveMeta(meta: Record<string, WatchlistCoinMeta>) {
 
 export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
   const { data: marketData } = useMarketData()
-  const [watchlist, setWatchlist] = useState<string[]>([])
+  const [watchlists, setWatchlists] = useState<Watchlist[]>([])
+  const [activeListId, setActiveListId] = useState("default")
   const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>({})
   const [addMode, setAddMode] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -54,13 +72,31 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [extraPrices, setExtraPrices] = useState<Record<string, CoinPrice>>({})
   const [copied, setCopied] = useState(false)
   const [importBanner, setImportBanner] = useState<{ ids: string[] } | null>(null)
+  const [showListMenu, setShowListMenu] = useState(false)
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const listMenuRef = useRef<HTMLDivElement>(null)
+
+  const activeList = watchlists.find(l => l.id === activeListId) || watchlists[0]
+  const watchlist = activeList?.coins || []
 
   useEffect(() => {
-    setWatchlist(loadWatchlist())
+    const lists = loadWatchlists()
+    setWatchlists(lists)
+    setActiveListId(lists[0]?.id || "default")
     setMeta(loadMeta())
   }, [])
+
+  // Close list menu on outside click
+  useEffect(() => {
+    if (!showListMenu) return
+    function handle(e: MouseEvent) {
+      if (listMenuRef.current && !listMenuRef.current.contains(e.target as Node)) setShowListMenu(false)
+    }
+    document.addEventListener("mousedown", handle)
+    return () => document.removeEventListener("mousedown", handle)
+  }, [showListMenu])
 
   // Check URL for shared watchlist on mount
   useEffect(() => {
@@ -120,11 +156,58 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
   }, [searchQuery, watchlist])
 
+  // ─── List management ───
+
+  const updateActiveList = useCallback((updater: (list: Watchlist) => Watchlist) => {
+    setWatchlists(prev => {
+      const updated = prev.map(l => l.id === activeListId ? updater(l) : l)
+      saveWatchlists(updated)
+      return updated
+    })
+  }, [activeListId])
+
+  const createList = useCallback(() => {
+    const id = `wl_${Date.now()}`
+    const name = `Watchlist ${watchlists.length + 1}`
+    const newList: Watchlist = { id, name, coins: [] }
+    const updated = [...watchlists, newList]
+    setWatchlists(updated)
+    saveWatchlists(updated)
+    setActiveListId(id)
+    setShowListMenu(false)
+  }, [watchlists])
+
+  const deleteList = useCallback((listId: string) => {
+    if (watchlists.length <= 1) return
+    const updated = watchlists.filter(l => l.id !== listId)
+    setWatchlists(updated)
+    saveWatchlists(updated)
+    if (activeListId === listId) setActiveListId(updated[0].id)
+    setShowListMenu(false)
+  }, [watchlists, activeListId])
+
+  const startRename = useCallback((listId: string) => {
+    const list = watchlists.find(l => l.id === listId)
+    if (!list) return
+    setRenaming(listId)
+    setRenameValue(list.name)
+  }, [watchlists])
+
+  const confirmRename = useCallback(() => {
+    if (!renaming || !renameValue.trim()) { setRenaming(null); return }
+    setWatchlists(prev => {
+      const updated = prev.map(l => l.id === renaming ? { ...l, name: renameValue.trim() } : l)
+      saveWatchlists(updated)
+      return updated
+    })
+    setRenaming(null)
+  }, [renaming, renameValue])
+
+  // ─── Coin management ───
+
   const addCoin = useCallback((coin: WatchlistCoinMeta) => {
     if (watchlist.includes(coin.id)) return
-    const updated = [...watchlist, coin.id]
-    setWatchlist(updated)
-    saveWatchlist(updated)
+    updateActiveList(l => ({ ...l, coins: [...l.coins, coin.id] }))
 
     const updatedMeta = { ...meta, [coin.id]: coin }
     setMeta(updatedMeta)
@@ -132,13 +215,11 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
     setSearchQuery("")
     setSearchResults([])
-  }, [watchlist, meta])
+  }, [watchlist, meta, updateActiveList])
 
   const removeCoin = useCallback((coinId: string) => {
-    const updated = watchlist.filter(id => id !== coinId)
-    setWatchlist(updated)
-    saveWatchlist(updated)
-  }, [watchlist])
+    updateActiveList(l => ({ ...l, coins: l.coins.filter(id => id !== coinId) }))
+  }, [updateActiveList])
 
   const shareWatchlist = useCallback(() => {
     const encoded = btoa(JSON.stringify(watchlist))
@@ -154,16 +235,14 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     const currentSet = new Set(watchlist)
     const newIds = importBanner.ids.filter(id => !currentSet.has(id))
     if (newIds.length > 0) {
-      const updated = [...watchlist, ...newIds]
-      setWatchlist(updated)
-      saveWatchlist(updated)
+      updateActiveList(l => ({ ...l, coins: [...l.coins, ...newIds] }))
     }
     setImportBanner(null)
     const params = new URLSearchParams(window.location.search)
     params.delete("watchlist")
     const newSearch = params.toString()
     window.history.replaceState({}, "", window.location.pathname + (newSearch ? `?${newSearch}` : ""))
-  }, [watchlist, importBanner])
+  }, [watchlist, importBanner, updateActiveList])
 
   const dismissSharedWatchlist = useCallback(() => {
     setImportBanner(null)
@@ -200,14 +279,76 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
+      {/* Header with list selector */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <div className="flex items-center gap-2">
-          <Star className="size-3.5 text-amber-400" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Watchlist</span>
-          <span className="text-[9px] text-muted-foreground">{watchlist.length} coins</span>
+        <div className="flex items-center gap-2 min-w-0 flex-1" ref={listMenuRef}>
+          <Star className="size-3.5 text-amber-400 shrink-0" />
+          <button
+            onClick={() => setShowListMenu(!showListMenu)}
+            className="flex items-center gap-1 min-w-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="truncate">{activeList?.name || "Watchlist"}</span>
+            <ChevronDown className={`size-3 shrink-0 transition-transform ${showListMenu ? "rotate-180" : ""}`} />
+          </button>
+          <span className="text-[9px] text-muted-foreground shrink-0">{watchlist.length}</span>
+
+          {/* List dropdown */}
+          {showListMenu && (
+            <div className="absolute left-0 top-full z-50 w-full border-b border-x border-border bg-card shadow-lg max-h-48 overflow-auto">
+              {watchlists.map(list => (
+                <div
+                  key={list.id}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+                    list.id === activeListId ? "bg-primary/10 text-primary" : "hover:bg-secondary/50"
+                  }`}
+                >
+                  {renaming === list.id ? (
+                    <input
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onBlur={confirmRename}
+                      onKeyDown={e => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenaming(null) }}
+                      className="flex-1 bg-transparent text-xs outline-none border-b border-primary"
+                      autoFocus
+                    />
+                  ) : (
+                    <button
+                      onClick={() => { setActiveListId(list.id); setShowListMenu(false) }}
+                      className="flex-1 text-left text-xs font-medium truncate"
+                    >
+                      {list.name}
+                      <span className="ml-1.5 text-[9px] text-muted-foreground">({list.coins.length})</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startRename(list.id) }}
+                    className="p-0.5 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                    title="Rename"
+                  >
+                    <Pencil className="size-2.5" />
+                  </button>
+                  {watchlists.length > 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteList(list.id) }}
+                      className="p-0.5 text-muted-foreground hover:text-red-400 transition-colors shrink-0"
+                      title="Delete"
+                    >
+                      <Trash2 className="size-2.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                onClick={createList}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-xs text-muted-foreground hover:text-primary hover:bg-secondary/50 transition-colors border-t border-border"
+              >
+                <FolderPlus className="size-3" />
+                New watchlist
+              </button>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={shareWatchlist}
             className="relative rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
@@ -259,7 +400,6 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
           <div className="flex items-center gap-1.5 rounded border border-border bg-background px-2">
             <Search className="size-3 text-muted-foreground shrink-0" />
             <input
-              ref={inputRef}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search any coin..."
@@ -297,7 +437,7 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
       <div className="flex-1 overflow-auto min-h-0">
         {watchlist.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            Your watchlist is empty. Click + to add coins.
+            {watchlists.length > 1 ? "This watchlist is empty. Click + to add coins." : "Your watchlist is empty. Click + to add coins."}
           </div>
         ) : (
           <div className="divide-y divide-border/50">

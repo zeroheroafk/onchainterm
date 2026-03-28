@@ -262,15 +262,41 @@ function ActionBar() {
   const { theme } = useTheme()
   const isBloomberg = theme.bloombergMode
 
-  if (!isBloomberg) return null
+  // Fn keys are clickable — dispatch the actual key event
+  const handleFnClick = (fnKey: string) => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: fnKey, bubbles: true }))
+  }
+
+  const FN_KEYS = [
+    { key: "F1",  label: "HELP" },
+    { key: "F2",  label: "SEARCH" },
+    { key: "F3",  label: "CHART" },
+    { key: "F4",  label: "PRICES" },
+    { key: "F5",  label: "NEWS" },
+    { key: "F6",  label: "PORTFL" },
+    { key: "F7",  label: "WATCH" },
+    { key: "F8",  label: "CHAT" },
+    { key: "F9",  label: "SIGNAL" },
+    { key: "F10", label: "LAYOUT" },
+    { key: "F11", label: "FULL" },
+    { key: "F12", label: "THEME" },
+  ]
 
   return (
-    <div className="hidden md:flex items-center gap-1.5 border-b border-border bg-secondary/20 px-3 shrink-0 py-0.5">
-      <div className="ml-auto hidden lg:flex items-center gap-0 font-mono">
-        <span className="bloomberg-fn-key">F1</span><span className="bloomberg-fn-label">HELP</span>
-        <span className="bloomberg-fn-key">F5</span><span className="bloomberg-fn-label">CHART</span>
-        <span className="bloomberg-fn-key">F8</span><span className="bloomberg-fn-label">NEWS</span>
-        <span className="bloomberg-fn-key">F10</span><span className="bloomberg-fn-label">LAYOUT</span>
+    <div className="hidden md:flex items-center border-b border-border bg-secondary/20 px-1 shrink-0 py-0.5 overflow-x-auto">
+      <div className="flex items-center gap-0 font-mono mx-auto">
+        {FN_KEYS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => handleFnClick(key)}
+            className={`flex items-center shrink-0 transition-colors hover:bg-primary/10 active:bg-primary/20 rounded-sm ${
+              isBloomberg ? "" : "px-0.5"
+            }`}
+          >
+            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-1 py-0.5 text-[9px] font-bold text-primary/70"}>{key}</span>
+            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[9px] text-muted-foreground pr-1.5"}>{label}</span>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -279,7 +305,7 @@ function ActionBar() {
 function TerminalContent() {
   const [chartSymbol, setChartSymbol] = useState("bitcoin")
   const { theme } = useTheme()
-  const { showHelp, setShowHelp } = useKeyboardShortcuts()
+  const { showHelp, setShowHelp, showPresets, setShowPresets } = useKeyboardShortcuts()
 
   const context: TerminalWidgetContext = {
     chartSymbol,
@@ -294,7 +320,7 @@ function TerminalContent() {
       <WidgetGrid context={context} />
       <PresetBar />
       <WidgetCatalogDrawer />
-      <PresetManager />
+      <PresetManager externalOpen={showPresets} onExternalClose={() => setShowPresets(false)} />
       {theme.crtEffects && <CRTOverlay />}
       {theme.neonMode && (
         <>
