@@ -121,9 +121,21 @@ export function WhaleAlerts() {
 
   if (error && transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-        <span className="text-negative">{error}</span>
-        <button onClick={fetchWhales} className="text-primary hover:underline">Retry</button>
+      <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
+        <div className="text-muted-foreground/20">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] text-foreground/70 font-medium mb-1">Unable to fetch whale data</p>
+          <p className="text-[9px] text-muted-foreground/50 max-w-[180px]">Etherscan API may be temporarily unavailable</p>
+        </div>
+        <button onClick={fetchWhales} className="text-[10px] text-primary/70 hover:text-primary transition-colors uppercase tracking-wider font-medium">
+          Try again
+        </button>
       </div>
     )
   }

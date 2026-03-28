@@ -19,14 +19,8 @@ export async function GET() {
       lastBlock: Number(result.LastBlock),
     })
   } catch (err) {
-    // Fallback: return simulated gas data when Etherscan is unreachable
-    console.warn("[gas] Etherscan fetch failed, returning fallback data:", err instanceof Error ? err.message : err)
-    return NextResponse.json({
-      low: Math.floor(8 + Math.random() * 10),
-      average: Math.floor(18 + Math.random() * 15),
-      high: Math.floor(35 + Math.random() * 20),
-      baseFee: +(12 + Math.random() * 8).toFixed(2),
-      lastBlock: 19_500_000 + Math.floor(Math.random() * 100000),
-    })
+    const message = err instanceof Error ? err.message : "Failed to fetch gas data"
+    console.error("[gas]", message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
