@@ -199,9 +199,9 @@ export function CommandBar() {
   return (
     <div ref={containerRef} className="relative">
       {/* Inline search bar */}
-      <div className="flex items-center gap-2 border-b border-border bg-secondary/30 px-4 py-1.5">
-        <Terminal className="size-3.5 text-primary shrink-0" />
-        <span className="text-xs font-bold text-primary shrink-0">{">"}</span>
+      <div className="flex items-center gap-2.5 border-b border-border/40 bg-gradient-to-r from-secondary/20 via-secondary/30 to-secondary/20 px-4 py-1.5">
+        <Terminal className="size-3.5 text-primary/70 shrink-0" />
+        <span className="text-xs font-bold text-primary/60 shrink-0 font-mono">{">"}</span>
         <input
           ref={inputRef}
           type="text"
@@ -221,11 +221,11 @@ export function CommandBar() {
           }}
           onKeyDown={handleKeyDown}
           placeholder="Search commands, widgets, actions..."
-          className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none font-mono"
+          className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none font-mono"
           aria-label="Command bar search"
         />
         <div className="flex items-center gap-2">
-          <kbd className="hidden sm:inline-flex rounded border border-border bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground font-mono">
+          <kbd className="hidden sm:inline-flex rounded border border-border/40 bg-secondary/60 px-1.5 py-0.5 text-[8px] text-muted-foreground/60 font-mono">
             Ctrl+K
           </kbd>
           <Search className="size-3.5 text-muted-foreground" />
@@ -234,10 +234,10 @@ export function CommandBar() {
 
       {/* Dropdown results */}
       {isOpen && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card shadow-lg animate-dropdown">
+        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border/50 bg-card/95 backdrop-blur-sm shadow-2xl animate-dropdown">
           {!query.trim() && coins.length > 0 && (
             <div className="border-b border-border px-2 py-1.5">
-              <span className="text-[8px] text-muted-foreground uppercase tracking-wider">Quick Prices</span>
+              <span className="text-[8px] text-muted-foreground/50 uppercase tracking-[0.15em] font-medium">Quick Prices</span>
               <div className="mt-1 flex flex-col gap-0.5">
                 {coins.slice(0, 5).map(coin => (
                   <div key={coin.id} className="flex items-center gap-2 px-1 py-0.5 text-[10px]">
@@ -263,10 +263,10 @@ export function CommandBar() {
                 key={cmd.id}
                 onClick={() => handleSelect(cmd)}
                 onMouseEnter={() => setSelectedIndex(i)}
-                className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${
+                className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-all duration-100 ${
                   i === selectedIndex
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground/80 hover:bg-secondary/50"
+                    ? "bg-primary/8 text-primary border-l-2 border-l-primary/60"
+                    : "text-foreground/70 hover:bg-secondary/30 border-l-2 border-l-transparent"
                 }`}
               >
                 <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : "opacity-60"}`} />

@@ -66,37 +66,37 @@ export function DashboardBar() {
   if (!stats) return null
 
   return (
-    <div className="flex items-center justify-center gap-4 border-b border-border bg-secondary/10 px-3 py-0.5 text-[9px] font-mono shrink-0 overflow-x-auto">
+    <div className="flex items-center justify-center gap-5 border-b border-border/30 bg-secondary/5 px-4 py-1 text-[9px] font-mono shrink-0 overflow-x-auto">
       <div className="flex items-center gap-1">
         <BarChart3 className="size-2.5 text-muted-foreground" />
-        <span className="text-muted-foreground">MCap</span>
-        <span className="text-foreground font-bold">{formatCompact(stats.totalMarketCap)}</span>
+        <span className="text-muted-foreground/60">MCap</span>
+        <span className="text-foreground/90 font-semibold">{formatCompact(stats.totalMarketCap)}</span>
         <span className={stats.marketCapChange24h >= 0 ? "text-green-400" : "text-red-400"}>
           {stats.marketCapChange24h >= 0 ? "+" : ""}{stats.marketCapChange24h.toFixed(1)}%
         </span>
       </div>
 
-      <span className="text-border hidden sm:inline">|</span>
+      <span className="text-border/40 hidden sm:inline">|</span>
 
       <div className="hidden sm:flex items-center gap-1">
         <Activity className="size-2.5 text-muted-foreground" />
-        <span className="text-muted-foreground">Vol</span>
-        <span className="text-foreground font-bold">{formatCompact(stats.totalVolume)}</span>
+        <span className="text-muted-foreground/60">Vol</span>
+        <span className="text-foreground/90 font-semibold">{formatCompact(stats.totalVolume)}</span>
       </div>
 
-      <span className="text-border">|</span>
+      <span className="text-border/40">|</span>
 
       <div className="flex items-center gap-1">
-        <span className="text-muted-foreground">BTC.D</span>
+        <span className="text-muted-foreground/60">BTC.D</span>
         <span className="text-amber-400 font-bold">{stats.btcDominance.toFixed(1)}%</span>
       </div>
 
       {fearGreed && (
         <>
-          <span className="text-border hidden sm:inline">|</span>
+          <span className="text-border/40 hidden sm:inline">|</span>
           <div className="hidden sm:flex items-center gap-1">
             <Shield className="size-2.5 text-muted-foreground" />
-            <span className="text-muted-foreground">F&G</span>
+            <span className="text-muted-foreground/60">F&G</span>
             <span className={`font-bold ${fgColor(fearGreed.value)}`}>{fearGreed.value}</span>
             <span className={`${fgColor(fearGreed.value)} opacity-70`}>{fearGreed.classification}</span>
           </div>

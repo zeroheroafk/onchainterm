@@ -107,7 +107,7 @@ function UserMenu() {
       <>
         <button
           onClick={() => setShowAuthModal(true)}
-          className={`flex items-center gap-1.5 border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${isBloomberg ? "" : "rounded-md"}`}
+          className={`flex items-center gap-1.5 border border-border/50 px-2.5 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
         >
           <LogIn className="size-3" />
           <span className="hidden sm:inline">Sign In</span>
@@ -201,9 +201,9 @@ function TerminalHeader() {
   const isNeon = theme.neonMode
 
   return (
-    <div className={`flex items-center justify-between border-b border-border px-3 shrink-0 ${isBloomberg ? "bg-card py-1" : "bg-card sm:px-4 py-1.5 sm:py-2"}`}>
+    <div className={`flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5"}`}>
       <div className="flex items-center gap-3">
-        <h1 className={`font-bold uppercase tracking-widest text-primary ${isBloomberg ? "text-xs font-mono" : "text-sm"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
+        <h1 className={`font-bold uppercase text-primary ${isBloomberg ? "text-xs font-mono tracking-widest" : "text-sm tracking-[0.2em] font-heading"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
           {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
         </h1>
         {isNeon && <span className="neon-cursor" />}
@@ -219,7 +219,7 @@ function TerminalHeader() {
             // CRYPTO MARKET INTELLIGENCE
           </span>
         ) : (
-          <span className="text-[9px] text-muted-foreground uppercase tracking-wider hidden sm:inline">
+          <span className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.15em] hidden sm:inline font-medium">
             Crypto Market Intelligence
           </span>
         )}
@@ -232,7 +232,7 @@ function TerminalHeader() {
         {/* Sound toggle */}
         <button
           onClick={toggleMute}
-          className={`flex items-center gap-1 border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${isBloomberg ? "" : "rounded-md"}`}
+          className={`flex items-center gap-1 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
           title={muted ? "Unmute sounds" : "Mute sounds"}
         >
           {muted ? <VolumeX className="size-3" /> : <Volume2 className="size-3" />}
@@ -241,7 +241,7 @@ function TerminalHeader() {
         <div className="relative">
           <button
             onClick={() => setShowThemes(!showThemes)}
-            className={`flex items-center gap-1.5 border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${isBloomberg ? "" : "rounded-md"}`}
+            className={`flex items-center gap-1.5 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
           >
             <Palette className="size-3" />
             <span className="hidden sm:inline">{THEMES.find(t => t.id === themeId)?.label}</span>
@@ -249,7 +249,7 @@ function TerminalHeader() {
           {showThemes && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowThemes(false)} />
-              <div className={`absolute right-0 top-full mt-1 z-50 w-40 border border-border bg-card py-1 ${isBloomberg ? "" : "rounded-md shadow-xl"}`}>
+              <div className={`absolute right-0 top-full mt-1.5 z-50 w-44 border bg-card/95 backdrop-blur-sm py-1 ${isBloomberg ? "border-border" : "rounded-lg shadow-2xl border-border/50 ring-1 ring-white/5"}`}>
                 {THEMES.map((t) => (
                   <button
                     key={t.id}
@@ -259,8 +259,8 @@ function TerminalHeader() {
                     }`}
                   >
                     <div className="flex gap-0.5">
-                      <div className="size-3" style={{ background: t.swatch[0], border: "1px solid #333" }} />
-                      <div className="size-3" style={{ background: t.swatch[1], border: "1px solid #333" }} />
+                      <div className="size-2.5 rounded-full ring-1 ring-white/10" style={{ background: t.swatch[0] }} />
+                      <div className="size-2.5 rounded-full ring-1 ring-white/10" style={{ background: t.swatch[1] }} />
                     </div>
                     {t.label}
                   </button>
@@ -330,18 +330,18 @@ function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onSh
   ]
 
   return (
-    <div className="hidden md:flex items-center border-b border-border bg-secondary/20 px-1 shrink-0 py-0.5 overflow-x-auto">
+    <div className="hidden md:flex items-center border-b border-border/40 bg-gradient-to-r from-secondary/15 via-secondary/25 to-secondary/15 px-1 shrink-0 py-0.5 overflow-x-auto">
       <div className="flex items-center gap-0 font-mono mx-auto">
         {FN_KEYS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => handleFnClick(key)}
-            className={`flex items-center shrink-0 transition-all duration-100 hover:bg-secondary hover-lift active:bg-primary/20 rounded-sm ${
-              isBloomberg ? "" : "px-0.5"
+            className={`flex items-center shrink-0 transition-all duration-100 hover:bg-secondary/60 active:bg-primary/20 ${
+              isBloomberg ? "" : "px-0.5 rounded-sm"
             }`}
           >
-            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-1 py-0.5 text-[9px] font-bold text-primary/70"}>{key}</span>
-            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[9px] text-muted-foreground pr-1.5"}>{label}</span>
+            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-primary/80 bg-primary/5 rounded-sm mr-0.5"}>{key}</span>
+            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[9px] text-muted-foreground/70 pr-2 font-medium"}>{label}</span>
           </button>
         ))}
       </div>
