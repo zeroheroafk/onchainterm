@@ -180,9 +180,6 @@ export function ChatWidget() {
             {connected ? "● LIVE" : "● Connecting..."}
           </span>
         </div>
-        <span className="text-[9px] text-muted-foreground">
-          {userCount} online
-        </span>
       </div>
 
       {/* Messages */}
