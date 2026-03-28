@@ -212,7 +212,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
       {open && (
         <div
           ref={panelRef}
-          className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-background shadow-xl"
+          className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-card/95 backdrop-blur-md shadow-2xl shadow-black/30 ring-1 ring-white/5"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -231,7 +231,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
           <div className="max-h-96 overflow-y-auto">
             {/* Save current layout */}
             <div className="border-b border-border px-4 py-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Save Current Layout
               </p>
               <form
@@ -252,7 +252,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
                 <button
                   type="submit"
                   disabled={!saveName.trim()}
-                  className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
+                  className="flex items-center gap-1 rounded-md bg-primary/90 px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition-colors hover:bg-primary disabled:opacity-40"
                 >
                   <Save className="size-3" />
                   Save
@@ -262,7 +262,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
 
             {/* Built-in presets */}
             <div className="border-b border-border px-4 py-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Built-in Presets
               </p>
               <div className="flex flex-col gap-1">
@@ -270,7 +270,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
                   <button
                     key={preset.id}
                     onClick={() => applyPreset(preset)}
-                    className="flex items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-secondary"
+                    className="flex items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors duration-100 hover:bg-secondary"
                   >
                     <div>
                       <span className="font-medium text-foreground">
@@ -288,7 +288,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
 
             {/* User presets */}
             <div className="px-4 py-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 Your Presets
               </p>
               {userPresets.length === 0 ? (
@@ -300,7 +300,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
                   {userPresets.map((preset) => (
                     <div
                       key={preset.id}
-                      className="group flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-secondary"
+                      className="group flex items-center justify-between rounded-md px-3 py-2 transition-colors duration-100 hover:bg-secondary"
                     >
                       <button
                         onClick={() => applyPreset(preset)}

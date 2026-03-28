@@ -257,11 +257,11 @@ export function UserBadges() {
 
         {/* XP bar */}
         <div className="mb-1">
-          <div className="flex justify-between text-xs text-gray-500 num mb-1">
+          <div className="flex justify-between text-xs text-muted-foreground/50 num mb-1">
             <span>{xp.toLocaleString()} XP</span>
             <span>{level < 50 ? `${nextLevelXP.toLocaleString()} XP` : "MAX"}</span>
           </div>
-          <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-secondary/40 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
               style={{ width: `${xpProgress}%` }}
@@ -269,7 +269,7 @@ export function UserBadges() {
           </div>
         </div>
 
-        <div className="flex justify-between text-xs text-gray-500 num">
+        <div className="flex justify-between text-xs text-muted-foreground/50 num">
           <span>
             {earnedCount}/{BADGES.length} badges
           </span>
@@ -283,7 +283,7 @@ export function UserBadges() {
 
       {/* Activity counters */}
       <div>
-        <div className="text-xs text-gray-500 font-mono uppercase tracking-wider mb-2">
+        <div className="text-xs text-muted-foreground/50 font-mono uppercase tracking-wider mb-2">
           Your Activity
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -303,7 +303,7 @@ export function UserBadges() {
 
       {/* Badge grid */}
       <div>
-        <div className="text-xs text-gray-500 font-mono uppercase tracking-wider mb-2">
+        <div className="text-xs text-muted-foreground/50 font-mono uppercase tracking-wider mb-2">
           Badges
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -329,12 +329,12 @@ export function UserBadges() {
                     className={`w-6 h-6 ${earned ? "text-positive" : "text-muted-foreground/40"}`}
                   />
                   {!earned && (
-                    <Lock className="w-3 h-3 text-gray-500 absolute -bottom-0.5 -right-1" />
+                    <Lock className="w-3 h-3 text-muted-foreground/50 absolute -bottom-0.5 -right-1" />
                   )}
                 </div>
                 <span
                   className={`text-xs font-mono text-center leading-tight ${
-                    earned ? "text-white" : "text-gray-500"
+                    earned ? "text-white" : "text-muted-foreground/50"
                   }`}
                 >
                   {badge.name}
@@ -359,7 +359,7 @@ export function UserBadges() {
                         }}
                       />
                     </div>
-                    <div className="text-xs text-gray-500 num">
+                    <div className="text-xs text-muted-foreground/50 num">
                       {earned
                         ? "Earned!"
                         : `${prog.current} / ${prog.target}`}

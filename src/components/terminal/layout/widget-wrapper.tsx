@@ -8,6 +8,7 @@ interface WidgetWrapperProps {
   title: string
   icon: LucideIcon
   status?: "live" | "stale" | "error"
+  collapsedPreview?: string
   isLocked: boolean
   onRemove: () => void
   onDragStart?: (e: React.MouseEvent) => void
@@ -15,7 +16,7 @@ interface WidgetWrapperProps {
 }
 
 export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
-  function WidgetWrapper({ title, icon: Icon, status, isLocked, onRemove, onDragStart, children }, ref) {
+  function WidgetWrapper({ title, icon: Icon, status, collapsedPreview, isLocked, onRemove, onDragStart, children }, ref) {
     const [collapsed, setCollapsed] = useState(false)
     const [fullscreen, setFullscreen] = useState(false)
 
@@ -86,6 +87,11 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
             )}
           </div>
         </div>
+        {collapsed && collapsedPreview && (
+          <div className="px-2.5 py-1 text-[9px] text-muted-foreground/60 num truncate border-b border-border/20 bg-secondary/5">
+            {collapsedPreview}
+          </div>
+        )}
         <div
           className="flex-1 min-h-0 overflow-hidden relative"
           style={{

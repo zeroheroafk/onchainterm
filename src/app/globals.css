@@ -164,6 +164,28 @@ button:focus-visible {
   background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
 }
 
+/* ── Table row hover accent ── */
+.widget-panel tbody tr {
+  transition: background-color 0.1s ease;
+  position: relative;
+}
+
+.widget-panel tbody tr::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.widget-panel tbody tr:hover::before {
+  opacity: 0.6;
+}
+
 .widget-panel thead {
   background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 97%, var(--secondary)) 100%);
   backdrop-filter: blur(8px);
@@ -233,6 +255,16 @@ button:focus-visible {
   height: 1px;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 30%, transparent), transparent);
   pointer-events: none;
+}
+
+/* ── Logo mark subtle animation ── */
+@keyframes logo-breathe {
+  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 0px transparent); }
+  50% { opacity: 1; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--primary) 25%, transparent)); }
+}
+
+h1 svg {
+  animation: logo-breathe 4s ease-in-out infinite;
 }
 
 /* ── Live status dot ── */
@@ -369,8 +401,10 @@ button:focus-visible {
 .widget-dragging {
   transition: none !important;
   will-change: transform;
-  opacity: 0.92;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent);
+  opacity: 0.85;
+  filter: brightness(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px color-mix(in srgb, var(--primary) 40%, transparent);
+  transform: scale(1.02);
 }
 
 .widget-grid-editing .widget-panel {
@@ -653,6 +687,135 @@ button:focus-visible {
 .status-dot-error {
   background: var(--color-negative);
   opacity: 0.8;
+}
+
+/* ── Refined tooltips ── */
+[title] {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 95%, white);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  animation: dropdown-slide 0.1s ease-out;
+}
+
+/* ── Number count-up entrance ── */
+@keyframes number-enter {
+  0% { opacity: 0; transform: translateY(4px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.num-enter {
+  animation: number-enter 0.4s ease-out;
+}
+
+/* ── Smooth theme transitions ── */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
+}
+
+/* ── Drag ghost preview ── */
+.widget-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.7;
+  filter: blur(1px) brightness(1.1);
+  transform: scale(0.95) rotate(1deg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 2px color-mix(in srgb, var(--primary) 40%, transparent);
+  border-radius: var(--radius);
+  transition: opacity 0.15s ease;
+}
+
+/* Drop zone indicator */
+.widget-drop-zone {
+  border: 2px dashed color-mix(in srgb, var(--primary) 40%, transparent);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.widget-drop-zone-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow: inset 0 0 20px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .widget-panel {
+    min-height: auto;
+  }
+
+  .widget-panel > div:first-child {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* Stack widgets vertically on mobile */
+  .widget-grid-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    padding: 8px;
+    height: auto !important;
+    overflow-y: auto;
+  }
+
+  .widget-grid-mobile > * {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 200px;
+  }
+
+  /* Hide less important UI elements on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Compact header on mobile */
+  .terminal-header-mobile {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  /* Smaller text on mobile */
+  .widget-panel table {
+    font-size: 10px;
+  }
+
+  .widget-panel table th,
+  .widget-panel table td {
+    padding: 4px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .widget-grid-mobile > * {
+    min-height: 160px;
+  }
 }
 
 /* ── CRT Retro Theme (conditional on .crt-active) ── */

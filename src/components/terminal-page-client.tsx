@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX } from "lucide-react"
+import { Palette, LogIn, LogOut, User, Pencil, Save, X, Volume2, VolumeX, Camera, PanelTop, Eye, EyeOff } from "lucide-react"
 import { ThemeProvider, useTheme, THEMES, type ThemeId } from "@/lib/theme-context"
 import { MarketDataProvider } from "@/lib/market-data-context"
 import { AuthProvider, useAuth } from "@/lib/auth-context"
@@ -16,6 +16,7 @@ import { CRTOverlay } from "@/components/effects/CRTOverlay"
 import { OnboardingTour } from "@/components/terminal/onboarding-tour"
 import type { TerminalWidgetContext } from "@/components/terminal/layout/widget-registry"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import { useScreenshot } from "@/hooks/useScreenshot"
 import { ShortcutsHelp } from "@/components/terminal/shortcuts-help"
 import { PresetManager } from "@/components/terminal/preset-manager"
 import { SoundProvider, useSound } from "@/lib/sound-context"
@@ -193,19 +194,38 @@ function UserMenu() {
   )
 }
 
-function TerminalHeader() {
+function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboardBar, showActionBar }: { onToggleDashboardBar: () => void; onToggleActionBar: () => void; showDashboardBar: boolean; showActionBar: boolean }) {
   const { theme, themeId, setTheme } = useTheme()
   const { muted, toggleMute } = useSound()
+  const { captureScreenshot } = useScreenshot()
   const [showThemes, setShowThemes] = useState(false)
+  const [showViewMenu, setShowViewMenu] = useState(false)
   const isBloomberg = theme.bloombergMode
   const isNeon = theme.neonMode
 
   return (
     <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5 header-glow"}`}>
       <div className="flex items-center gap-3">
-        <h1 className={`font-bold uppercase text-primary ${isBloomberg ? "text-xs font-mono tracking-widest" : "text-sm tracking-[0.2em] font-heading"} ${isNeon ? "font-mono neon-glitch-text" : ""}`}>
-          {isBloomberg ? "ONCHAINTERM" : "OnchainTerm"}
-        </h1>
+        {isBloomberg ? (
+          <h1 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
+            ONCHAINTERM
+          </h1>
+        ) : (
+          <h1 className={`flex items-center gap-0 ${isNeon ? "font-mono neon-glitch-text" : "font-heading"}`}>
+            {/* Logo mark */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mr-1.5 shrink-0 opacity-80">
+              <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.5" className="text-primary" />
+              <path d="M8 16V11L12 8L16 11V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" className="text-primary/60" />
+            </svg>
+            <span className="text-sm font-light tracking-[0.18em] uppercase text-foreground/90">
+              Onchain
+            </span>
+            <span className="text-sm font-bold tracking-[0.18em] uppercase text-gradient">
+              Term
+            </span>
+          </h1>
+        )}
         <span className="live-dot" title="Live data connected" />
         {isNeon && <span className="neon-cursor" />}
         {isBloomberg ? (
@@ -238,6 +258,52 @@ function TerminalHeader() {
         >
           {muted ? <VolumeX className="size-3" /> : <Volume2 className="size-3" />}
         </button>
+        {/* Screenshot */}
+        <button
+          onClick={captureScreenshot}
+          className={`flex items-center gap-1 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
+          title="Export screenshot"
+        >
+          <Camera className="size-3" />
+        </button>
+        {/* View toggle */}
+        <div className="relative hidden sm:block">
+          <button
+            onClick={() => setShowViewMenu(!showViewMenu)}
+            className={`flex items-center gap-1 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground hover:border-border ${isBloomberg ? "" : "rounded-md"}`}
+            title="Toggle bars"
+          >
+            <PanelTop className="size-3" />
+            <span className="hidden md:inline">View</span>
+          </button>
+          {showViewMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowViewMenu(false)} />
+              <div className={`absolute right-0 top-full mt-1.5 z-50 w-48 border bg-card/95 backdrop-blur-sm py-1 ${isBloomberg ? "border-border" : "rounded-lg shadow-2xl border-border/50 ring-1 ring-white/5"}`}>
+                <button
+                  onClick={() => { onToggleDashboardBar(); setShowViewMenu(false) }}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {showDashboardBar ? <Eye className="size-3 text-primary" /> : <EyeOff className="size-3 text-muted-foreground/50" />}
+                    Market Stats Bar
+                  </span>
+                  <span className={`text-[9px] ${showDashboardBar ? "text-positive" : "text-muted-foreground/40"}`}>{showDashboardBar ? "ON" : "OFF"}</span>
+                </button>
+                <button
+                  onClick={() => { onToggleActionBar(); setShowViewMenu(false) }}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {showActionBar ? <Eye className="size-3 text-primary" /> : <EyeOff className="size-3 text-muted-foreground/50" />}
+                    Shortcuts Bar
+                  </span>
+                  <span className={`text-[9px] ${showActionBar ? "text-positive" : "text-muted-foreground/40"}`}>{showActionBar ? "ON" : "OFF"}</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         {/* Theme picker */}
         <div className="relative">
           <button
@@ -331,18 +397,18 @@ function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onSh
   ]
 
   return (
-    <div className="hidden md:flex items-center border-b border-border/40 bg-gradient-to-r from-secondary/15 via-secondary/25 to-secondary/15 px-1 shrink-0 py-0.5 overflow-x-auto">
-      <div className="flex items-center gap-0 font-mono mx-auto">
+    <div className="hidden md:flex items-center border-b border-border/40 bg-gradient-to-r from-secondary/15 via-secondary/25 to-secondary/15 px-2 shrink-0 py-1.5 overflow-x-auto">
+      <div className="flex items-center gap-0.5 font-mono mx-auto">
         {FN_KEYS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => handleFnClick(key)}
             className={`flex items-center shrink-0 transition-all duration-100 hover:bg-secondary/60 active:bg-primary/20 ${
-              isBloomberg ? "" : "px-0.5 rounded-sm"
+              isBloomberg ? "" : "px-1 py-0.5 rounded"
             }`}
           >
-            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-primary/80 bg-primary/5 rounded-sm mr-0.5"}>{key}</span>
-            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[9px] text-muted-foreground/70 pr-2 font-medium"}>{label}</span>
+            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-primary/80 bg-primary/8 rounded mr-1"}>{key}</span>
+            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[10px] text-muted-foreground/70 pr-2.5 font-medium tracking-wide"}>{label}</span>
           </button>
         ))}
       </div>
@@ -354,6 +420,8 @@ function TerminalContent() {
   const [chartSymbol, setChartSymbol] = useState("bitcoin")
   const { theme } = useTheme()
   const { showHelp, setShowHelp, showPresets, setShowPresets } = useKeyboardShortcuts()
+  const [showDashboardBar, setShowDashboardBar] = useState(true)
+  const [showActionBar, setShowActionBar] = useState(true)
 
   const context: TerminalWidgetContext = {
     chartSymbol,
@@ -361,15 +429,15 @@ function TerminalContent() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div id="terminal-content" className="flex h-screen flex-col">
       <div className="loading-bar" id="global-loading" style={{ display: 'none' }} />
-      <TerminalHeader />
+      <TerminalHeader onToggleDashboardBar={() => setShowDashboardBar(p => !p)} onToggleActionBar={() => setShowActionBar(p => !p)} showDashboardBar={showDashboardBar} showActionBar={showActionBar} />
       <CommandBar />
-      <DashboardBar />
-      <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />
+      {showDashboardBar && <DashboardBar />}
+      {showActionBar && <ActionBar onShowHelp={() => setShowHelp(prev => !prev)} onShowPresets={() => setShowPresets(prev => !prev)} />}
       <CoinContextMenuProvider onSelectSymbol={context.setChartSymbol}>
         <WidgetGrid context={context} />
-        <PresetBar />
+        <div className="hide-mobile"><PresetBar /></div>
         <WidgetCatalogDrawer />
         <PresetManager externalOpen={showPresets} onExternalClose={() => setShowPresets(false)} />
       </CoinContextMenuProvider>

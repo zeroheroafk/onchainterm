@@ -214,7 +214,7 @@ export function ThemeCreator() {
 
   return (
     <div
-      className="flex flex-col gap-4 rounded-lg border p-4"
+      className="flex flex-col gap-4 rounded-lg border p-4 bg-card"
       style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--foreground)" }}
     >
       {/* Header */}
@@ -231,7 +231,7 @@ export function ThemeCreator() {
               type="color"
               value={colors[key]}
               onChange={e => updateColor(key, e.target.value)}
-              className="h-7 w-7 cursor-pointer rounded border-none bg-transparent p-0"
+              className="h-7 w-7 cursor-pointer rounded border-none bg-transparent p-0 ring-1 ring-border/40 rounded overflow-hidden"
             />
             <span className="min-w-[120px]" style={{ color: "var(--muted-foreground)" }}>
               {label}
@@ -250,7 +250,7 @@ export function ThemeCreator() {
           Preview
         </div>
         <div
-          className="rounded-md border p-3"
+          className="rounded-lg border p-3"
           style={{
             background: colors["--background"],
             borderColor: colors["--border"],
@@ -314,7 +314,7 @@ export function ThemeCreator() {
       {/* Saved Themes List */}
       {savedThemes.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <div className="text-xs font-semibold" style={{ color: "var(--muted-foreground)" }}>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60" style={{ color: "var(--muted-foreground)" }}>
             Saved Themes
           </div>
           {savedThemes.map(theme => (
@@ -380,7 +380,7 @@ export function ThemeCreator() {
         <button
           type="button"
           onClick={handleReset}
-          className="flex items-center gap-1 rounded border px-2 py-1 text-xs transition-opacity hover:opacity-80"
+          className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-secondary/50 transition-colors"
           style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
         >
           <RotateCcw className="h-3 w-3" />
@@ -392,7 +392,7 @@ export function ThemeCreator() {
           type="button"
           onClick={handleExport}
           disabled={savedThemes.length === 0}
-          className="flex items-center gap-1 rounded border px-2 py-1 text-xs transition-opacity hover:opacity-80 disabled:opacity-40"
+          className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-secondary/50 transition-colors disabled:opacity-40"
           style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
         >
           <Download className="h-3 w-3" />
@@ -403,7 +403,7 @@ export function ThemeCreator() {
         <button
           type="button"
           onClick={() => importRef.current?.click()}
-          className="flex items-center gap-1 rounded border px-2 py-1 text-xs transition-opacity hover:opacity-80"
+          className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-secondary/50 transition-colors"
           style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
         >
           <Upload className="h-3 w-3" />

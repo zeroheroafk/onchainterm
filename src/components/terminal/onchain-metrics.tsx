@@ -148,11 +148,11 @@ export function OnchainMetrics() {
 
       {/* Metrics Grid */}
       {data && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           {METRICS_CONFIG.map(({ key, label, icon: Icon, color, borderColor, format }, i) => (
             <div
               key={key}
-              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5 hover-3d animate-fade-in`}
+              className={`rounded-lg border ${borderColor} bg-secondary/20 p-2.5 hover-3d shadow-sm hover:shadow-md transition-shadow animate-fade-in`}
               style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
             >
               <div className="flex items-center gap-1.5 mb-1">

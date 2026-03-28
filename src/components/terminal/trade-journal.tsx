@@ -185,35 +185,35 @@ export function TradeJournal() {
 
       {/* Summary stats */}
       {stats && (
-        <div className="border-b border-border px-3 py-2 shrink-0">
+        <div className="bg-secondary/10 rounded-lg p-2 mx-3 my-2 shrink-0">
           <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Trades</div>
               <div className="text-xs font-bold">{stats.total}</div>
             </div>
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Win Rate</div>
               <div className={`text-xs font-bold num ${stats.winRate >= 50 ? "text-positive" : "text-negative"}`}>
                 {stats.winRate.toFixed(1)}%
               </div>
             </div>
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Total P&L</div>
               <div className={`text-xs font-bold num ${stats.totalPnl >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatPrice(stats.totalPnl)}
               </div>
             </div>
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Avg P&L</div>
               <div className={`text-xs font-bold num ${stats.avgPnl >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatPrice(stats.avgPnl)}
               </div>
             </div>
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Best</div>
               <div className="text-xs font-bold num text-positive">{formatPrice(stats.best)}</div>
             </div>
-            <div className="hover-3d">
+            <div className="hover-3d bg-card/50 rounded-lg">
               <div className="text-[9px] text-muted-foreground">Worst</div>
               <div className="text-xs font-bold num text-negative">{formatPrice(stats.worst)}</div>
             </div>

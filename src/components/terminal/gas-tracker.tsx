@@ -61,9 +61,21 @@ export function GasTracker() {
 
   if (error && !gasData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-        <span className="text-negative">{error}</span>
-        <button onClick={fetchGas} className="text-primary hover:underline">Retry</button>
+      <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
+        <div className="text-muted-foreground/20">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] text-foreground/70 font-medium mb-1">Unable to fetch gas data</p>
+          <p className="text-[9px] text-muted-foreground/50 max-w-[180px]">Etherscan API may be temporarily unavailable</p>
+        </div>
+        <button onClick={fetchGas} className="text-[10px] text-primary/70 hover:text-primary transition-colors uppercase tracking-wider font-medium">
+          Try again
+        </button>
       </div>
     )
   }

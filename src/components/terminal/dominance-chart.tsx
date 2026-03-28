@@ -133,7 +133,7 @@ export function DominanceChart() {
         {/* Legend */}
         <div className="flex items-center gap-3">
           {segments.map((seg) => (
-            <div key={seg.label} className="flex items-center gap-1.5 hover-3d">
+            <div key={seg.label} className="flex items-center gap-1.5 hover:bg-secondary/20 rounded px-1.5 py-0.5 transition-colors cursor-pointer hover-3d">
               <div
                 className="size-2 rounded-sm"
                 style={{ backgroundColor: seg.color, opacity: 0.85 }}
@@ -147,7 +147,7 @@ export function DominanceChart() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded border border-border bg-secondary/30 px-2.5 py-2">
+          <div className="rounded-lg border border-border/30 bg-secondary/10 shadow-sm px-2.5 py-2">
             <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
               Total Market Cap
             </div>
@@ -155,7 +155,7 @@ export function DominanceChart() {
               {formatLargeNumber(data.total_market_cap)}
             </div>
           </div>
-          <div className="rounded border border-border bg-secondary/30 px-2.5 py-2">
+          <div className="rounded-lg border border-border/30 bg-secondary/10 shadow-sm px-2.5 py-2">
             <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
               24h Volume
             </div>
@@ -165,7 +165,7 @@ export function DominanceChart() {
           </div>
         </div>
 
-        <div className="rounded border border-border bg-secondary/30 px-2.5 py-2">
+        <div className="rounded-lg border border-border/30 bg-secondary/10 shadow-sm px-2.5 py-2">
           <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
             Active Cryptocurrencies
           </div>

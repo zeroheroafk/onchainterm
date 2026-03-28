@@ -20,6 +20,7 @@ export async function GET() {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch gas data"
+    console.error("[gas]", message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

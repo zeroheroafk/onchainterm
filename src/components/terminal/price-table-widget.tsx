@@ -6,6 +6,7 @@ import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
 import { useCoinContextMenu } from "@/components/terminal/coin-context-menu"
+import { CoinTooltip } from "@/components/terminal/coin-tooltip"
 import { useLastUpdated } from "@/hooks/useLastUpdated"
 import { useToast } from "@/lib/toast-context"
 import type { CoinMarketData } from "@/types/market"
@@ -28,7 +29,6 @@ function PercentCell({ value }: { value: number | null }) {
 function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
   if (!prices || prices.length < 2) return <span className="text-muted-foreground text-[10px]">—</span>
 
-  // Downsample to ~30 points for performance
   const step = Math.max(1, Math.floor(prices.length / 30))
   const sampled = prices.filter((_, i) => i % step === 0)
 
@@ -40,22 +40,63 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
 
   const points = sampled.map((p, i) => {
     const x = (i / (sampled.length - 1)) * w
-    const y = h - ((p - min) / range) * h
-    return `${x},${y}`
-  }).join(" ")
+    const y = h - ((p - min) / range) * (h - 2) - 1
+    return { x, y, price: p }
+  })
 
-  const color = change >= 0 ? "#16c784" : "#ea3943"
+  const polyPoints = points.map(p => `${p.x},${p.y}`).join(" ")
+  const areaPoints = `0,${h} ${polyPoints} ${w},${h}`
+  const color = change >= 0 ? "#2dd4a0" : "#f87171"
+  const gradId = `sparkGrad${change >= 0 ? "Up" : "Down"}${Math.random().toString(36).slice(2, 6)}`
+
+  const [hover, setHover] = useState<{ x: number; y: number; price: number } | null>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const mouseX = e.clientX - rect.left
+    // Find closest point
+    let closest = points[0]
+    let minDist = Infinity
+    for (const p of points) {
+      const dist = Math.abs(p.x - mouseX)
+      if (dist < minDist) { minDist = dist; closest = p }
+    }
+    setHover(closest)
+  }
 
   return (
-    <svg width={w} height={h} className="shrink-0">
+    <svg
+      width={w}
+      height={h}
+      className="shrink-0 cursor-crosshair"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHover(null)}
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${gradId})`} />
       <polyline
-        points={points}
+        points={polyPoints}
         fill="none"
         stroke={color}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      {hover && (
+        <>
+          <line x1={hover.x} y1={0} x2={hover.x} y2={h} stroke={color} strokeWidth="0.5" strokeDasharray="2 2" opacity="0.5" />
+          <circle cx={hover.x} cy={hover.y} r="2" fill={color} stroke="var(--card)" strokeWidth="1" />
+          <rect x={Math.min(hover.x - 18, w - 36)} y={hover.y < 10 ? hover.y + 4 : hover.y - 14} width="36" height="12" rx="2" fill="var(--card)" stroke={color} strokeWidth="0.5" opacity="0.9" />
+          <text x={Math.min(hover.x - 18, w - 36) + 18} y={hover.y < 10 ? hover.y + 13 : hover.y - 5} textAnchor="middle" fill={color} fontSize="7" fontFamily="var(--font-mono)">
+            ${hover.price < 1 ? hover.price.toFixed(4) : hover.price < 100 ? hover.price.toFixed(2) : hover.price.toFixed(0)}
+          </text>
+        </>
+      )}
     </svg>
   )
 }
@@ -264,12 +305,14 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                 </span>
               </td>
               <td className="py-1.5 px-2">
-                <div className="flex items-center gap-1.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coin.image} alt="" className="size-4 shrink-0 coin-avatar" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                  <span className="font-semibold text-foreground/95">{coin.symbol.toUpperCase()}</span>
-                  <span className="text-muted-foreground/50 text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
-                </div>
+                <CoinTooltip coinId={coin.id}>
+                  <div className="flex items-center gap-1.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={coin.image} alt="" className="size-4 shrink-0 coin-avatar" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    <span className="font-semibold text-foreground/95">{coin.symbol.toUpperCase()}</span>
+                    <span className="text-muted-foreground/50 text-[10px] hidden xl:inline truncate max-w-[80px]">{coin.name}</span>
+                  </div>
+                </CoinTooltip>
               </td>
               <td className="py-1.5 px-2 text-right num text-foreground">
                 {formatPrice(coin.current_price)}

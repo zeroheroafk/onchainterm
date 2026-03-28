@@ -300,8 +300,8 @@ export function ChatWidget() {
             </div>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
-              <span className="shrink-0 text-[10px] text-muted-foreground/60 tabular-nums num">
+            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${msg.username === myUsername ? " bg-primary/8 border-l-2 border-l-primary/40 rounded-r-lg pl-2" : " bg-secondary/15 rounded-lg"}${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
+              <span className="shrink-0 text-[10px] text-muted-foreground/50 tabular-nums num">
                 {formatTime(msg.created_at)}
               </span>
               <div className="flex-1 min-w-0">
@@ -332,7 +332,7 @@ export function ChatWidget() {
           onSubmit={handleSubmit}
           className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
         >
-          <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
+          <div className="flex flex-1 items-center gap-2 rounded border border-border/40 bg-secondary/30 px-2 transition-colors focus-within:border-primary/40">
             <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
               {myUsername}{">"}
             </span>

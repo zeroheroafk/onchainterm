@@ -143,8 +143,8 @@ export async function GET() {
       blocksScanned: BLOCKS_TO_SCAN,
     })
   } catch (err) {
-    console.error("[whales] fatal:", err)
     const message = err instanceof Error ? err.message : "Failed to fetch whale data"
+    console.error("[whales]", message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

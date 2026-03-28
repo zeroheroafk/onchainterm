@@ -134,7 +134,7 @@ function ChartPane({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border border-border/40 rounded-md">
+    <div className="flex h-full flex-col overflow-hidden border border-border/40 rounded-lg">
       {/* symbol input bar */}
       <div className="flex items-center gap-1 px-2 py-1 bg-muted/30 border-b border-border/40">
         <input
