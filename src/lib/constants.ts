@@ -44,7 +44,7 @@ export const COIN_IDS = [
   "the-graph",
 ] as const;
 
-export const REFRESH_INTERVAL_MS = 45_000;
+export const REFRESH_INTERVAL_MS = 120_000; // 2 min — CoinGecko for market cap/volume only, Binance WS handles live prices
 
 export function formatPrice(price: number): string {
   return new Intl.NumberFormat("en-US", {

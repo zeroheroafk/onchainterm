@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
-const GNEWS_API_KEY = process.env.GNEWS_API_KEY
-const GNEWS_URL = "https://gnews.io/api/v4/search"
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// In-memory cache to minimize API calls (target: <150 req/day)
+// In-memory cache
 let cachedNews: NewsItem[] | null = null
 let cacheTimestamp = 0
-const CACHE_TTL = 3 * 60 * 1000 // 3 minutes (~480 req/day)
+const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
 
 interface NewsItem {
   title: string
   url: string
   source: string
   published_at: string
+  image?: string | null
   currencies: string[]
 }
-
-// ── RSS fallback sources ──
-const RSS_SOURCES = [
-  { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
-  { name: "CoinTelegraph", url: "https://cointelegraph.com/rss" },
-  { name: "Decrypt", url: "https://decrypt.co/feed" },
-]
 
 const CRYPTO_TAGS = ["BTC", "BITCOIN", "ETH", "ETHEREUM", "SOL", "SOLANA", "XRP", "RIPPLE", "BNB", "ADA", "CARDANO", "DOGE", "DOGECOIN", "DOT", "POLKADOT", "AVAX", "AVALANCHE", "MATIC", "POLYGON", "LINK", "CHAINLINK", "UNI", "UNISWAP", "ATOM", "COSMOS", "LTC", "LITECOIN", "NEAR", "APT", "APTOS", "ARB", "ARBITRUM", "OP", "OPTIMISM", "SUI", "TRX", "TRON", "SHIB", "PEPE", "DEFI", "NFT"]
 
@@ -41,35 +36,36 @@ function extractCurrencies(text: string): string[] {
   return Array.from(found).slice(0, 5)
 }
 
-// ── GNews fetch ──
-async function fetchFromGNews(): Promise<NewsItem[]> {
-  if (!GNEWS_API_KEY) throw new Error("No GNews API key")
+// ── Primary: read from Supabase (populated by edge function cron) ──
+async function fetchFromSupabase(): Promise<NewsItem[]> {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-  const params = new URLSearchParams({
-    q: "crypto OR bitcoin OR ethereum OR blockchain OR solana OR defi OR altcoin OR web3 OR NFT OR memecoin",
-    lang: "en",
-    max: "30",
-    apikey: GNEWS_API_KEY,
-  })
+  const { data, error } = await supabase
+    .from("news_articles")
+    .select("title, url, source_name, published_at, image, description")
+    .order("published_at", { ascending: false })
+    .limit(30)
 
-  const res = await fetch(`${GNEWS_URL}?${params}`)
-  if (!res.ok) throw new Error(`GNews: ${res.status}`)
+  if (error) throw new Error(`Supabase: ${error.message}`)
+  if (!data || data.length === 0) throw new Error("No articles in database")
 
-  const data = await res.json()
-  if (!data.articles || !Array.isArray(data.articles)) {
-    throw new Error("Invalid GNews response")
-  }
-
-  return data.articles.map((a: { title: string; url: string; source: { name: string }; publishedAt: string; description?: string }) => ({
+  return data.map((a) => ({
     title: a.title,
     url: a.url,
-    source: a.source.name,
-    published_at: a.publishedAt,
+    source: a.source_name || "Unknown",
+    published_at: a.published_at,
+    image: a.image,
     currencies: extractCurrencies(a.title + " " + (a.description || "")),
   }))
 }
 
-// ── RSS fallback ──
+// ── RSS fallback (if Supabase has no data yet) ──
+const RSS_SOURCES = [
+  { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
+  { name: "CoinTelegraph", url: "https://cointelegraph.com/rss" },
+  { name: "Decrypt", url: "https://decrypt.co/feed" },
+]
+
 function decodeHtmlEntities(str: string): string {
   return str
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
@@ -126,11 +122,11 @@ export async function GET() {
 
     let news: NewsItem[] = []
 
-    // Try GNews first (if key available)
+    // Primary: read from Supabase (edge function populates this every 10 min)
     try {
-      news = await fetchFromGNews()
+      news = await fetchFromSupabase()
     } catch {
-      // GNews failed or no key — fall back to RSS
+      // Supabase empty or error — fall back to RSS
       news = await fetchFromRSS()
     }
 
