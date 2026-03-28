@@ -102,7 +102,7 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
   if (loading) return <ChartSkeleton />
   if (error && coins.length === 0) return (
     <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-      <span className="text-red-400">{error}</span>
+      <span className="text-negative">{error}</span>
       <button onClick={fetchData} className="text-primary hover:underline">Retry</button>
     </div>
   )
@@ -175,7 +175,7 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
                 style={{ width: `${width}px`, height: `${width * 0.7}px`, minHeight: "40px" }}
               >
                 <span className="text-[10px] font-bold leading-tight">{coin.symbol}</span>
-                <span className="text-[9px] font-mono leading-tight">{sign}{change.toFixed(1)}%</span>
+                <span className="text-[9px] num leading-tight">{sign}{change.toFixed(1)}%</span>
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex flex-col items-center justify-center text-[9px] rounded-sm">
                   <span className="text-foreground font-bold">{coin.symbol}</span>
                   <span className="text-foreground/80">{formatPrice(coin.price)}</span>
@@ -189,13 +189,13 @@ export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => v
 
       {/* Legend */}
       <div className="border-t border-border px-3 py-1 shrink-0 flex items-center justify-center gap-1">
-        <span className="text-[8px] text-red-400">-10%</span>
+        <span className="text-[8px] text-negative">-10%</span>
         <div className="flex gap-0.5">
           {["bg-red-700", "bg-red-600", "bg-red-500/80", "bg-red-500/50", "bg-zinc-700", "bg-green-500/50", "bg-green-500/80", "bg-green-600", "bg-green-700"].map((c, i) => (
             <div key={i} className={`w-3 h-2 rounded-sm ${c}`} />
           ))}
         </div>
-        <span className="text-[8px] text-green-400">+10%</span>
+        <span className="text-[8px] text-positive">+10%</span>
       </div>
     </div>
   )

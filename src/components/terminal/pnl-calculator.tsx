@@ -51,26 +51,26 @@ export function PnlCalculator() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 shrink-0">
         <Calculator className="size-3.5 text-muted-foreground" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">P&L Calculator</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">P&L Calculator</span>
       </div>
 
       <div className="flex-1 overflow-auto p-3 space-y-3">
         {/* Position type toggle */}
-        <div className="flex rounded overflow-hidden border border-border">
+        <div className="flex rounded overflow-hidden border border-border/30 rounded-md">
           <button
             onClick={() => setPositionType("long")}
-            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors hover-lift ${
-              positionType === "long" ? "bg-green-500/20 text-green-400" : "text-muted-foreground hover:bg-secondary"
+            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors ${
+              positionType === "long" ? "bg-positive-subtle text-positive" : "text-muted-foreground/60 hover:bg-secondary/30"
             }`}
           >
             LONG
           </button>
           <button
             onClick={() => setPositionType("short")}
-            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors hover-lift ${
-              positionType === "short" ? "bg-red-500/20 text-red-400" : "text-muted-foreground hover:bg-secondary"
+            className={`flex-1 py-1.5 text-[10px] font-bold transition-colors ${
+              positionType === "short" ? "bg-negative-subtle text-negative" : "text-muted-foreground/60 hover:bg-secondary/30"
             }`}
           >
             SHORT
@@ -80,37 +80,37 @@ export function PnlCalculator() {
         {/* Inputs */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[9px] text-muted-foreground uppercase">Entry Price ($)</label>
+            <label className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">Entry Price ($)</label>
             <input
               type="number"
               value={entryPrice}
               onChange={e => setEntryPrice(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs font-mono outline-none focus:border-primary/40"
+              className="w-full rounded border border-border/30 bg-background px-2 py-1.5 text-xs num outline-none focus:border-primary/40"
             />
           </div>
           <div>
-            <label className="text-[9px] text-muted-foreground uppercase">Exit Price ($)</label>
+            <label className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">Exit Price ($)</label>
             <input
               type="number"
               value={exitPrice}
               onChange={e => setExitPrice(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs font-mono outline-none focus:border-primary/40"
+              className="w-full rounded border border-border/30 bg-background px-2 py-1.5 text-xs num outline-none focus:border-primary/40"
             />
           </div>
           <div>
-            <label className="text-[9px] text-muted-foreground uppercase">Position Size ($)</label>
+            <label className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">Position Size ($)</label>
             <input
               type="number"
               value={positionSize}
               onChange={e => setPositionSize(e.target.value)}
               placeholder="1000"
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs font-mono outline-none focus:border-primary/40"
+              className="w-full rounded border border-border/30 bg-background px-2 py-1.5 text-xs num outline-none focus:border-primary/40"
             />
           </div>
           <div>
-            <label className="text-[9px] text-muted-foreground uppercase">Leverage</label>
+            <label className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">Leverage</label>
             <input
               type="number"
               value={leverage}
@@ -118,18 +118,18 @@ export function PnlCalculator() {
               placeholder="1"
               min="1"
               max="125"
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs font-mono outline-none focus:border-primary/40"
+              className="w-full rounded border border-border/30 bg-background px-2 py-1.5 text-xs num outline-none focus:border-primary/40"
             />
           </div>
           <div className="col-span-2">
-            <label className="text-[9px] text-muted-foreground uppercase">Fee per trade (%)</label>
+            <label className="text-[8px] text-muted-foreground/50 uppercase tracking-wider">Fee per trade (%)</label>
             <input
               type="number"
               value={feePercent}
               onChange={e => setFeePercent(e.target.value)}
               placeholder="0.1"
               step="0.01"
-              className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs font-mono outline-none focus:border-primary/40"
+              className="w-full rounded border border-border/30 bg-background px-2 py-1.5 text-xs num outline-none focus:border-primary/40"
             />
           </div>
         </div>
@@ -139,38 +139,38 @@ export function PnlCalculator() {
           <div className="animate-fade-in space-y-2 border-t border-border pt-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Gross P&L</span>
-              <span className={`text-xs font-mono font-bold ${result.grossPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-xs num font-bold ${result.grossPnl >= 0 ? "text-positive" : "text-negative"}`}>
                 {result.grossPnl >= 0 ? "+" : ""}${result.grossPnl.toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Total Fees</span>
-              <span className="text-xs font-mono text-amber-400">-${result.totalFees.toFixed(2)}</span>
+              <span className="text-xs num text-amber-400">-${result.totalFees.toFixed(2)}</span>
             </div>
             <div className="h-px bg-border" />
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-foreground font-medium">Net P&L</span>
-              <span className={`text-sm font-mono font-bold number-transition ${result.netPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-sm num font-bold number-transition ${result.netPnl >= 0 ? "text-gradient" : "text-negative"}`}>
                 {result.netPnl >= 0 ? "+" : ""}${result.netPnl.toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">ROI</span>
-              <span className={`text-xs font-mono font-bold ${result.roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-xs num font-bold ${result.roi >= 0 ? "text-positive" : "text-negative"}`}>
                 {result.roi >= 0 ? "+" : ""}{result.roi.toFixed(2)}%
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground">Leveraged Change</span>
-              <span className={`text-xs font-mono ${result.leveragedPct >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <span className={`text-xs num ${result.leveragedPct >= 0 ? "text-positive" : "text-negative"}`}>
                 {result.leveragedPct >= 0 ? "+" : ""}{result.leveragedPct.toFixed(2)}%
               </span>
             </div>
             {result.liquidationPrice !== null && (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-red-400 font-medium">Liquidation Price</span>
-                  <span className="text-xs font-mono text-red-400">${result.liquidationPrice.toFixed(2)}</span>
+                  <span className="text-[10px] text-negative font-medium">Liquidation Price</span>
+                  <span className="text-xs num text-negative">${result.liquidationPrice.toFixed(2)}</span>
                 </div>
                 <span className="text-[9px] text-muted-foreground">* Approximate — varies by exchange</span>
               </div>

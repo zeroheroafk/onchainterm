@@ -84,12 +84,12 @@ export function LiquidationsFeed() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 shrink-0">
         <div className="flex items-center gap-2">
-          <Zap className="size-3.5 text-amber-400" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Liquidations</span>
+          <Zap className="size-3.5 text-amber-400/70" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">Liquidations</span>
         </div>
-        <button onClick={fetchData} className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors">
+        <button onClick={fetchData} className="rounded-md p-1 text-muted-foreground/40 hover:text-primary hover:bg-secondary/50 transition-colors">
           <RefreshCw className="size-3" />
         </button>
       </div>
@@ -97,14 +97,14 @@ export function LiquidationsFeed() {
       {hasRealData && (
         <>
           {/* Long/Short ratio bar */}
-          <div className="px-3 py-2 border-b border-border/50 shrink-0">
+          <div className="px-3 py-2 border-b border-border/20 shrink-0">
             <div className="flex items-center justify-between text-[9px] mb-1">
-              <span className="text-red-400 font-medium">Longs {formatAmount(totalLongs)}</span>
-              <span className="text-green-400 font-medium">Shorts {formatAmount(totalShorts)}</span>
+              <span className="text-positive font-medium">Longs {formatAmount(totalLongs)}</span>
+              <span className="text-negative font-medium">Shorts {formatAmount(totalShorts)}</span>
             </div>
-            <div className="h-2 rounded-full bg-green-500/30 overflow-hidden">
+            <div className="h-2 rounded-full bg-negative overflow-hidden">
               <div
-                className="h-full bg-red-500 rounded-full transition-all progress-fill"
+                className="h-full bg-positive rounded-full transition-all progress-fill"
                 style={{ width: `${longPct}%` }}
               />
             </div>
@@ -112,7 +112,7 @@ export function LiquidationsFeed() {
 
           {/* Feed */}
           <div className="flex-1 overflow-auto min-h-0">
-            <div className="divide-y divide-border/50">
+            <div className="divide-y divide-border/20">
               {liquidations.map((liq, i) => {
                 const liqKey = `${liq.symbol}-${liq.timestamp}-${i}`
                 const isNew = !seenLiqRef.current.has(liqKey)
@@ -120,16 +120,16 @@ export function LiquidationsFeed() {
                 <div key={liqKey} className={`px-3 py-1.5 hover:bg-secondary/30 transition-colors ${isNew ? "animate-slide-in" : ""}`} onAnimationEnd={() => seenLiqRef.current.add(liqKey)}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      <span className={`font-semibold text-[9px] uppercase px-1.5 py-0.5 rounded ${
                         liq.side === "long"
-                          ? "bg-red-500/15 text-red-400"
-                          : "bg-green-500/15 text-green-400"
+                          ? "bg-positive/15 text-positive"
+                          : "bg-negative/15 text-negative"
                       }`}>
                         {liq.side === "long" ? "LONG" : "SHORT"}
                       </span>
                       <span className="text-xs font-bold text-foreground">{liq.symbol}</span>
                     </div>
-                    <span className={`text-xs font-bold font-mono ${
+                    <span className={`text-xs font-bold num ${
                       liq.amount >= 500000 ? "text-amber-400" : "text-foreground"
                     }`}>
                       {formatAmount(liq.amount)}
@@ -137,7 +137,7 @@ export function LiquidationsFeed() {
                   </div>
                   <div className="flex items-center justify-between mt-0.5 text-[9px] text-muted-foreground">
                     <span>{liq.exchange} @ ${liq.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                    <span>{timeAgo(liq.timestamp)}</span>
+                    <span className="text-muted-foreground/40">{timeAgo(liq.timestamp)}</span>
                   </div>
                 </div>
                 )
@@ -145,7 +145,7 @@ export function LiquidationsFeed() {
             </div>
           </div>
 
-          <div className="border-t border-border px-3 py-1 shrink-0 text-center">
+          <div className="border-t border-border/20 px-3 py-1 shrink-0 text-center">
             <span className="text-[8px] text-muted-foreground">
               CoinGlass · {liquidations.length} events
             </span>

@@ -38,10 +38,10 @@ function formatEth(value: number): string {
 }
 
 function getValueColor(value: number): string {
-  if (value >= 10000) return "text-red-400"
+  if (value >= 10000) return "text-negative"
   if (value >= 1000) return "text-amber-400"
-  if (value >= 500) return "text-yellow-400"
-  return "text-green-400"
+  if (value >= 500) return "text-yellow-300"
+  return "text-positive"
 }
 
 function isKnownLabel(label: string): boolean {
@@ -122,7 +122,7 @@ export function WhaleAlerts() {
   if (error && transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
-        <span className="text-red-400">{error}</span>
+        <span className="text-negative">{error}</span>
         <button onClick={fetchWhales} className="text-primary hover:underline">Retry</button>
       </div>
     )
@@ -134,13 +134,13 @@ export function WhaleAlerts() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <Activity className="size-3.5 text-muted-foreground" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ETH Whale Alerts</span>
-          <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">ETH Whale Alerts</span>
+          <span className="text-[9px] text-positive font-medium">● LIVE</span>
           {formatLastUpdated() && <span className="text-[8px] text-muted-foreground">{formatLastUpdated()}</span>}
         </div>
         <div className="flex items-center gap-2">
           {latestBlock && (
-            <span className="text-[9px] text-muted-foreground/60 font-mono">#{latestBlock.toLocaleString()}</span>
+            <span className="text-[9px] text-muted-foreground/60 num">#{latestBlock.toLocaleString()}</span>
           )}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -160,7 +160,7 @@ export function WhaleAlerts() {
       </div>
 
       {/* Threshold info */}
-      <div className="px-3 py-1 border-b border-border/50 bg-secondary/10 text-[9px] text-muted-foreground/60 shrink-0">
+      <div className="px-3 py-1 border-b border-border/20 bg-secondary/10 text-[9px] text-muted-foreground/60 shrink-0">
         Scanning last 15 blocks · Showing transfers ≥ 50 ETH · Sorted by value
       </div>
 
@@ -171,19 +171,19 @@ export function WhaleAlerts() {
             No large transfers in recent blocks
           </div>
         ) : (
-          <div className="divide-y divide-border/50">
+          <div className="divide-y divide-border/20">
             {transactions.map((tx) => {
               const isNew = !animatedTxRef.current.has(tx.hash)
               return (
               <div key={tx.hash} className={`px-3 py-2 hover:bg-secondary/30 transition-colors ${isNew ? "animate-slide-in animate-item-glow" : ""}`} onAnimationEnd={() => animatedTxRef.current.add(tx.hash)}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-sm text-primary font-bold font-mono ${getValueColor(tx.value)}`}>
+                    <span className={`text-sm text-primary font-bold num ${getValueColor(tx.value)}`}>
                       {formatEth(tx.value)} ETH
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[9px] text-muted-foreground">{timeAgo(tx.timestamp)}</span>
+                    <span className="text-[9px] text-muted-foreground/40">{timeAgo(tx.timestamp)}</span>
                     <a
                       href={`https://etherscan.io/tx/${tx.hash}`}
                       target="_blank"
@@ -219,7 +219,7 @@ export function WhaleAlerts() {
 
       {/* Footer */}
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
-        <span className="text-[8px] text-muted-foreground">
+        <span className="text-[8px] text-muted-foreground/40">
           Etherscan · {transactions.length} whale txs found · {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : ""}
         </span>
       </div>

@@ -68,26 +68,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-sm border border-border bg-card shadow-2xl rounded-lg overflow-hidden">
+      <div className="relative z-10 w-full max-w-sm border border-border/50 bg-card/95 backdrop-blur-md shadow-2xl shadow-black/40 rounded-lg overflow-hidden ring-1 ring-white/5">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
+        <div className="flex items-center justify-between border-b border-border/40 px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-[0.12em] font-heading">
             {mode === "login" ? "Sign In" : "Create Account"}
           </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="text-muted-foreground/50 hover:text-foreground transition-colors rounded-md p-1 hover:bg-secondary/50">
             <X className="size-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-4">
+        <div className="px-5 py-4">
           {error && (
-            <div className="mb-3 rounded bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-400">
+            <div className="mb-3 rounded-md bg-red-500/8 border border-red-500/20 px-3 py-2 text-[11px] text-red-400">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-3 rounded bg-green-500/10 border border-green-500/30 px-3 py-2 text-xs text-green-400">
+            <div className="mb-3 rounded-md bg-green-500/8 border border-green-500/20 px-3 py-2 text-[11px] text-green-400">
               {success}
             </div>
           )}
@@ -95,33 +95,33 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {mode === "signup" && (
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/40" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Username"
-                  className="w-full rounded border border-border bg-secondary/30 py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  className="w-full rounded-md border border-border/40 bg-secondary/20 py-2.5 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/10 transition-all"
                   autoComplete="username"
                 />
               </div>
             )}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/40" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
-                className="w-full rounded border border-border bg-secondary/30 py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                className="w-full rounded-md border border-border/40 bg-secondary/20 py-2.5 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/10 transition-all"
                 autoComplete="email"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/40" />
               <input
                 type="password"
                 value={password}
@@ -129,7 +129,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 placeholder="Password"
                 required
                 minLength={6}
-                className="w-full rounded border border-border bg-secondary/30 py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                className="w-full rounded-md border border-border/40 bg-secondary/20 py-2.5 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/10 transition-all"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
             </div>
@@ -137,7 +137,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded bg-primary py-2 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/80 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-xs font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50"
             >
               {loading ? <Loader2 className="size-3.5 animate-spin" /> : null}
               {mode === "login" ? "Sign In" : "Create Account"}
@@ -146,7 +146,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-border/30" />
             </div>
             <div className="relative flex justify-center">
               <span className="bg-card px-2 text-[10px] text-muted-foreground uppercase">or</span>
@@ -155,7 +155,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <button
             onClick={handleGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded border border-border py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-border/40 py-2.5 text-xs font-medium text-foreground/80 transition-all hover:bg-secondary/50 hover:text-foreground hover:border-border"
           >
             <svg className="size-3.5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -168,7 +168,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border px-4 py-3 text-center">
+        <div className="border-t border-border/30 px-5 py-3 text-center bg-secondary/5">
           {mode === "login" ? (
             <p className="text-[11px] text-muted-foreground">
               Don&apos;t have an account?{" "}

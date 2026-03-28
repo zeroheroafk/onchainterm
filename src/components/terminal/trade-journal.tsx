@@ -187,35 +187,35 @@ export function TradeJournal() {
       {stats && (
         <div className="border-b border-border px-3 py-2 shrink-0">
           <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Trades</div>
               <div className="text-xs font-bold">{stats.total}</div>
             </div>
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Win Rate</div>
-              <div className={`text-xs font-bold ${stats.winRate >= 50 ? "text-green-400" : "text-red-400"}`}>
+              <div className={`text-xs font-bold num ${stats.winRate >= 50 ? "text-positive" : "text-negative"}`}>
                 {stats.winRate.toFixed(1)}%
               </div>
             </div>
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Total P&L</div>
-              <div className={`text-xs font-bold ${stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <div className={`text-xs font-bold num ${stats.totalPnl >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatPrice(stats.totalPnl)}
               </div>
             </div>
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Avg P&L</div>
-              <div className={`text-xs font-bold ${stats.avgPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <div className={`text-xs font-bold num ${stats.avgPnl >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatPrice(stats.avgPnl)}
               </div>
             </div>
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Best</div>
-              <div className="text-xs font-bold text-green-400">{formatPrice(stats.best)}</div>
+              <div className="text-xs font-bold num text-positive">{formatPrice(stats.best)}</div>
             </div>
-            <div className="hover-lift">
+            <div className="hover-3d">
               <div className="text-[9px] text-muted-foreground">Worst</div>
-              <div className="text-xs font-bold text-red-400">{formatPrice(stats.worst)}</div>
+              <div className="text-xs font-bold num text-negative">{formatPrice(stats.worst)}</div>
             </div>
           </div>
         </div>
@@ -245,14 +245,14 @@ export function TradeJournal() {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isWin
-                        ? <TrendingUp className="size-3 text-green-400 shrink-0" />
-                        : <TrendingDown className="size-3 text-red-400 shrink-0" />
+                        ? <TrendingUp className="size-3 text-positive shrink-0" />
+                        : <TrendingDown className="size-3 text-negative shrink-0" />
                       }
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-bold">{trade.coin}</span>
                           <span className={`text-[9px] font-bold px-1 rounded ${
-                            trade.side === "Long" ? "bg-green-400/15 text-green-400" : "bg-red-400/15 text-red-400"
+                            trade.side === "Long" ? "bg-positive-subtle text-positive" : "bg-negative-subtle text-negative"
                           }`}>
                             {trade.side}
                           </span>
@@ -267,16 +267,16 @@ export function TradeJournal() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="text-right">
-                        <div className={`text-xs font-mono font-bold ${isWin ? "text-green-400" : "text-red-400"}`}>
+                        <div className={`text-xs num font-bold ${isWin ? "text-positive" : "text-negative"}`}>
                           {pnl >= 0 ? "+" : ""}{formatPrice(pnl)}
                         </div>
-                        <div className={`text-[10px] font-mono ${isWin ? "text-green-400" : "text-red-400"}`}>
+                        <div className={`text-[10px] num ${isWin ? "text-positive" : "text-negative"}`}>
                           {pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(2)}%
                         </div>
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); removeTrade(trade.id) }}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-negative transition-all"
                       >
                         <Trash2 className="size-3" />
                       </button>
@@ -314,8 +314,8 @@ export function TradeJournal() {
                 onClick={() => setSide(side === "Long" ? "Short" : "Long")}
                 className={`rounded px-2 py-1 text-[10px] font-bold transition-colors ${
                   side === "Long"
-                    ? "bg-green-400/15 text-green-400 border border-green-400/30"
-                    : "bg-red-400/15 text-red-400 border border-red-400/30"
+                    ? "bg-positive-subtle text-positive border border-green-400/30"
+                    : "bg-negative-subtle text-negative border border-red-400/30"
                 }`}
               >
                 {side}

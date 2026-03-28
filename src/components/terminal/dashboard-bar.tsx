@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Activity, BarChart3, Shield } from "lucide-react"
+import { AnimatedNumber } from "./animated-number"
 
 interface GlobalStats {
   totalMarketCap: number
@@ -56,10 +57,10 @@ export function DashboardBar() {
   }
 
   const fgColor = (v: number) => {
-    if (v <= 25) return "text-red-400"
+    if (v <= 25) return "text-negative"
     if (v <= 45) return "text-orange-400"
     if (v <= 55) return "text-yellow-400"
-    if (v <= 75) return "text-green-400"
+    if (v <= 75) return "text-positive"
     return "text-emerald-400"
   }
 
@@ -70,8 +71,8 @@ export function DashboardBar() {
       <div className="flex items-center gap-1">
         <BarChart3 className="size-2.5 text-muted-foreground" />
         <span className="text-muted-foreground/60">MCap</span>
-        <span className="text-foreground/90 font-semibold">{formatCompact(stats.totalMarketCap)}</span>
-        <span className={stats.marketCapChange24h >= 0 ? "text-green-400" : "text-red-400"}>
+        <AnimatedNumber value={stats.totalMarketCap} format={formatCompact} className="text-foreground/90 font-semibold" />
+        <span className={stats.marketCapChange24h >= 0 ? "text-positive" : "text-negative"}>
           {stats.marketCapChange24h >= 0 ? "+" : ""}{stats.marketCapChange24h.toFixed(1)}%
         </span>
       </div>
@@ -81,14 +82,14 @@ export function DashboardBar() {
       <div className="hidden sm:flex items-center gap-1">
         <Activity className="size-2.5 text-muted-foreground" />
         <span className="text-muted-foreground/60">Vol</span>
-        <span className="text-foreground/90 font-semibold">{formatCompact(stats.totalVolume)}</span>
+        <AnimatedNumber value={stats.totalVolume} format={formatCompact} className="text-foreground/90 font-semibold" />
       </div>
 
       <span className="text-border/40">|</span>
 
       <div className="flex items-center gap-1">
         <span className="text-muted-foreground/60">BTC.D</span>
-        <span className="text-amber-400 font-bold">{stats.btcDominance.toFixed(1)}%</span>
+        <AnimatedNumber value={stats.btcDominance} format={(v) => `${v.toFixed(1)}%`} className="text-amber-400 font-bold" />
       </div>
 
       {fearGreed && (

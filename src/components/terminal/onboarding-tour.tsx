@@ -82,14 +82,14 @@ export function OnboardingTour() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* backdrop */}
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={finish}
       />
 
       {/* card */}
-      <div className="relative z-10 w-full max-w-sm mx-4 border border-border bg-card rounded-lg shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-sm mx-4 border border-border/40 bg-card/95 backdrop-blur-md rounded-lg shadow-2xl shadow-black/30 ring-1 ring-white/5 overflow-hidden">
         {/* step indicator bar */}
-        <div className="h-1 bg-secondary">
+        <div className="h-1 bg-secondary/30">
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
@@ -98,17 +98,17 @@ export function OnboardingTour() {
 
         <div className="px-5 pt-5 pb-4">
           {/* step number */}
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/40 mb-1">
             Step {step + 1} of {STEPS.length}
           </p>
 
           {/* title */}
-          <h2 className="text-base font-bold text-foreground mb-2">
+          <h2 className="text-base font-semibold text-foreground font-heading mb-2">
             {current.title}
           </h2>
 
           {/* description */}
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground/70 leading-relaxed">
             {current.description}
           </p>
         </div>
@@ -126,7 +126,7 @@ export function OnboardingTour() {
                     ? "bg-primary"
                     : i < step
                       ? "bg-primary/40"
-                      : "bg-secondary"
+                      : "bg-secondary/30"
                 }`}
               />
             ))}
@@ -136,13 +136,13 @@ export function OnboardingTour() {
           <div className="flex items-center gap-2">
             <button
               onClick={finish}
-              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="px-3 py-1.5 text-xs text-muted-foreground/50 hover:text-foreground transition-colors"
             >
               Skip
             </button>
             <button
               onClick={next}
-              className="px-4 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
+              className="px-4 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 hover:shadow-lg hover:shadow-primary/20 transition-all"
             >
               {isLast ? "Get Started" : "Next"}
             </button>

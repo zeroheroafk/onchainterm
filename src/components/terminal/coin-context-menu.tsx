@@ -81,14 +81,14 @@ export function CoinContextMenuProvider({
       {children}
       {menu.visible && (
         <div
-          className="fixed z-[300] min-w-[180px] border border-border bg-card py-1 shadow-xl animate-dropdown font-mono"
+          className="fixed z-[300] min-w-[180px] border border-border/40 bg-card/95 backdrop-blur-md py-1 shadow-2xl shadow-black/30 animate-dropdown font-mono rounded-lg ring-1 ring-white/5"
           style={{
             left: Math.min(menu.x, window.innerWidth - 200),
             top: Math.min(menu.y, window.innerHeight - 200),
           }}
         >
-          <div className="px-3 py-1.5 border-b border-border">
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+          <div className="px-3 py-1.5 border-b border-border/30">
+            <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-[0.1em]">
               {menu.coinSymbol.toUpperCase()}
             </span>
           </div>
@@ -96,9 +96,9 @@ export function CoinContextMenuProvider({
             <button
               key={action.id}
               onClick={() => handleAction(action.id)}
-              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground/80 hover:bg-secondary/50 hover:text-foreground transition-colors"
             >
-              <action.icon className="size-3 text-muted-foreground" />
+              <action.icon className="size-3 text-muted-foreground/50" />
               {action.label}
             </button>
           ))}

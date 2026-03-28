@@ -133,12 +133,12 @@ export function DominanceChart() {
         {/* Legend */}
         <div className="flex items-center gap-3">
           {segments.map((seg) => (
-            <div key={seg.label} className="flex items-center gap-1.5 hover-lift">
+            <div key={seg.label} className="flex items-center gap-1.5 hover-3d">
               <div
                 className="size-2 rounded-sm"
                 style={{ backgroundColor: seg.color, opacity: 0.85 }}
               />
-              <span className="text-[10px] font-mono text-foreground/80">
+              <span className="text-[10px] num text-foreground/80">
                 {seg.label}: {seg.value.toFixed(2)}%
               </span>
             </div>
@@ -151,7 +151,7 @@ export function DominanceChart() {
             <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
               Total Market Cap
             </div>
-            <div className="text-sm font-bold font-mono text-foreground">
+            <div className="text-sm font-bold num text-foreground">
               {formatLargeNumber(data.total_market_cap)}
             </div>
           </div>
@@ -159,7 +159,7 @@ export function DominanceChart() {
             <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
               24h Volume
             </div>
-            <div className="text-sm font-bold font-mono text-foreground">
+            <div className="text-sm font-bold num text-foreground">
               {formatLargeNumber(data.total_volume)}
             </div>
           </div>
@@ -169,7 +169,7 @@ export function DominanceChart() {
           <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
             Active Cryptocurrencies
           </div>
-          <div className="text-sm font-bold font-mono text-foreground">
+          <div className="text-sm font-bold num text-foreground">
             {data.active_cryptocurrencies.toLocaleString()}
           </div>
         </div>

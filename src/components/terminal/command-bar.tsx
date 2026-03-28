@@ -242,8 +242,8 @@ export function CommandBar() {
                 {coins.slice(0, 5).map(coin => (
                   <div key={coin.id} className="flex items-center gap-2 px-1 py-0.5 text-[10px]">
                     <span className="text-foreground font-bold w-10 truncate">{coin.symbol?.toUpperCase()}</span>
-                    <span className="text-amber-400 font-mono">${coin.current_price?.toLocaleString()}</span>
-                    <span className={coin.price_change_percentage_24h >= 0 ? "text-green-400" : "text-red-400"}>
+                    <span className="text-amber-400 num">${coin.current_price?.toLocaleString()}</span>
+                    <span className={coin.price_change_percentage_24h >= 0 ? "text-positive" : "text-negative"}>
                       {coin.price_change_percentage_24h >= 0 ? "+" : ""}{coin.price_change_percentage_24h?.toFixed(1)}%
                     </span>
                     <MiniSparkline prices={coin.sparkline_in_7d?.price || []} />

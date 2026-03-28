@@ -34,9 +34,9 @@ const STORAGE_KEY = "onchainterm_portfolio"
 const HISTORY_KEY = "onchainterm-portfolio-history"
 
 const PIE_COLORS = [
-  "#f7931a", "#627eea", "#00d4aa", "#e84142", "#2775ca",
-  "#14f195", "#e6007a", "#ff007a", "#00adef", "#8247e5",
-  "#f0b90b", "#26a17b",
+  "#ff8c00", "#3b82f6", "#2dd4a0", "#f87171", "#a78bfa",
+  "#fbbf24", "#ec4899", "#06b6d4", "#84cc16", "#f97316",
+  "#8b5cf6", "#14b8a6",
 ]
 
 function loadPortfolio(): PortfolioEntry[] {
@@ -62,8 +62,8 @@ function PortfolioSparkline({ history }: { history: { t: number; v: number }[] }
   ).join(" ")
   const isUp = values[values.length - 1] >= values[0]
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50">
-      <span className="text-[8px] text-muted-foreground uppercase">Value History</span>
+    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/20">
+      <span className="text-[8px] text-muted-foreground/40 uppercase">Value History</span>
       <svg width={w} height={h} className="flex-1">
         <polyline points={points} fill="none" stroke={isUp ? "#22c55e" : "#ef4444"} strokeWidth="1.5" />
       </svg>
@@ -313,11 +313,11 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                 <Download className="size-3" />
               </button>
             )}
-            <span className="text-sm font-bold text-foreground">{formatLargeNumber(totalValue)}</span>
+            <span className="text-sm font-bold text-gradient num">{formatLargeNumber(totalValue)}</span>
           </div>
         </div>
         {entries.length > 0 && (
-          <div className={`text-[10px] text-right font-mono ${totalPnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+          <div className={`text-[10px] text-right num ${totalPnl >= 0 ? "text-positive" : "text-negative"}`}>
             {totalPnl >= 0 ? "+" : ""}{formatPrice(totalPnl)} ({totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%)
           </div>
         )}
@@ -334,7 +334,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
             {pieSlices.map((slice, i) => (
               <div key={i} className="flex items-center gap-1">
                 <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
-                <span className="text-[9px] text-muted-foreground">{slice.label} {slice.pct.toFixed(1)}%</span>
+                <span className="text-[9px] text-muted-foreground">{slice.label} <span className="num">{slice.pct.toFixed(1)}%</span></span>
               </div>
             ))}
           </div>
@@ -378,8 +378,8 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-xs font-mono">{cp ? formatPrice(value) : "—"}</div>
-                      <div className={`text-[10px] font-mono ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                      <div className="text-xs num">{cp ? formatPrice(value) : "—"}</div>
+                      <div className={`text-[10px] num ${pnl >= 0 ? "text-positive" : "text-negative"}`}>
                         {pnl >= 0 ? "+" : ""}{formatPrice(pnl)} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
                       </div>
                     </div>

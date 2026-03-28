@@ -23,9 +23,9 @@ function formatTvl(n: number): string {
 
 function ChangeCell({ value }: { value: number | null }) {
   if (value === null || value === undefined) return <span className="text-muted-foreground">—</span>
-  const color = value >= 0 ? "text-green-400" : "text-red-400"
+  const color = value >= 0 ? "text-positive" : "text-negative"
   const sign = value >= 0 ? "+" : ""
-  return <span className={`${color} font-mono`}>{sign}{value.toFixed(1)}%</span>
+  return <span className={`${color} num`}>{sign}{value.toFixed(1)}%</span>
 }
 
 export function DefiDashboard() {
@@ -67,12 +67,12 @@ export function DefiDashboard() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">DeFi Dashboard</span>
-          <span className="text-[9px] text-green-400 font-medium">● LIVE</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">DeFi Dashboard</span>
+          <span className="badge badge-positive">LIVE</span>
         </div>
-        <button onClick={fetchData} className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors">
+        <button onClick={fetchData} className="rounded-md p-1 text-muted-foreground/40 hover:text-primary hover:bg-secondary/50 transition-colors">
           <RefreshCw className="size-3" />
         </button>
       </div>
@@ -81,7 +81,7 @@ export function DefiDashboard() {
       {globalTvl > 0 && (
         <div className="px-3 py-2 border-b border-border bg-secondary/10 shrink-0">
           <div className="text-[9px] uppercase text-muted-foreground font-medium">Total Value Locked (All Chains)</div>
-          <div className="text-lg font-bold text-foreground font-mono">{formatTvl(globalTvl)}</div>
+          <div className="text-lg font-bold text-foreground text-gradient num">{formatTvl(globalTvl)}</div>
         </div>
       )}
 
@@ -89,17 +89,17 @@ export function DefiDashboard() {
       <div className="flex-1 overflow-auto min-h-0">
         <table className="w-full text-xs">
           <thead className="sticky top-0 bg-card z-[1]">
-            <tr className="border-b border-border">
-              <th className="py-1.5 px-2 text-left text-[9px] uppercase tracking-wider text-muted-foreground">#</th>
-              <th className="py-1.5 px-2 text-left text-[9px] uppercase tracking-wider text-muted-foreground">Protocol</th>
-              <th className="py-1.5 px-2 text-right text-[9px] uppercase tracking-wider text-muted-foreground">TVL</th>
-              <th className="py-1.5 px-2 text-right text-[9px] uppercase tracking-wider text-muted-foreground">1D</th>
-              <th className="py-1.5 px-2 text-right text-[9px] uppercase tracking-wider text-muted-foreground hidden lg:table-cell">7D</th>
+            <tr className="border-b border-border/20">
+              <th className="py-1.5 px-2 text-left text-[9px] font-medium text-muted-foreground/70 uppercase">#</th>
+              <th className="py-1.5 px-2 text-left text-[9px] font-medium text-muted-foreground/70 uppercase">Protocol</th>
+              <th className="py-1.5 px-2 text-right text-[9px] font-medium text-muted-foreground/70 uppercase">TVL</th>
+              <th className="py-1.5 px-2 text-right text-[9px] font-medium text-muted-foreground/70 uppercase">1D</th>
+              <th className="py-1.5 px-2 text-right text-[9px] font-medium text-muted-foreground/70 uppercase hidden lg:table-cell">7D</th>
             </tr>
           </thead>
           <tbody>
             {protocols.map((p, i) => (
-              <tr key={p.name} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+              <tr key={p.name} className="border-b border-border/20 hover:bg-secondary/30 transition-colors">
                 <td className="py-1.5 px-2 text-muted-foreground">{i + 1}</td>
                 <td className="py-1.5 px-2">
                   <div className="flex items-center gap-1.5">
@@ -113,7 +113,7 @@ export function DefiDashboard() {
                     </div>
                   </div>
                 </td>
-                <td className="py-1.5 px-2 text-right font-mono text-foreground">{formatTvl(p.tvl)}</td>
+                <td className="py-1.5 px-2 text-right num text-foreground">{formatTvl(p.tvl)}</td>
                 <td className="py-1.5 px-2 text-right text-[10px]"><ChangeCell value={p.change1d} /></td>
                 <td className="py-1.5 px-2 text-right text-[10px] hidden lg:table-cell"><ChangeCell value={p.change7d} /></td>
               </tr>
@@ -122,7 +122,7 @@ export function DefiDashboard() {
         </table>
       </div>
 
-      <div className="border-t border-border px-3 py-1 shrink-0 text-center">
+      <div className="border-t border-border/20 px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground">DeFiLlama · {protocols.length} protocols</span>
       </div>
     </div>

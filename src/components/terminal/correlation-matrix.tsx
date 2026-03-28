@@ -32,22 +32,13 @@ function pearson(xs: number[], ys: number[]): number {
 }
 
 function correlationColor(r: number): string {
-  // Interpolate: -1 = dark red, 0 = neutral/zinc, +1 = dark green
   const clamped = Math.max(-1, Math.min(1, r))
   if (clamped >= 0) {
-    // 0 -> rgb(39,39,42) (zinc-800), 1 -> rgb(22,101,52) (green-800)
     const t = clamped
-    const red = Math.round(39 + (22 - 39) * t)
-    const green = Math.round(39 + (101 - 39) * t)
-    const blue = Math.round(42 + (52 - 42) * t)
-    return `rgb(${red},${green},${blue})`
+    return `rgba(45, 212, 160, ${(t * 0.35).toFixed(2)})`
   } else {
-    // 0 -> rgb(39,39,42) (zinc-800), -1 -> rgb(153,27,27) (red-800)
     const t = -clamped
-    const red = Math.round(39 + (153 - 39) * t)
-    const green = Math.round(39 + (27 - 39) * t)
-    const blue = Math.round(42 + (27 - 42) * t)
-    return `rgb(${red},${green},${blue})`
+    return `rgba(248, 113, 113, ${(t * 0.35).toFixed(2)})`
   }
 }
 
@@ -109,7 +100,7 @@ export function CorrelationMatrix() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-1.5">
           <Grid3x3 className="size-3 text-muted-foreground" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
             Correlation Matrix
           </span>
         </div>
@@ -134,7 +125,7 @@ export function CorrelationMatrix() {
                   {TRACKED_SYMBOLS.map((sym) => (
                     <th
                       key={sym}
-                      className="text-[8px] font-bold text-muted-foreground px-0.5 py-1 text-center"
+                      className="text-[8px] font-semibold text-muted-foreground/70 px-0.5 py-1 text-center"
                       style={{ minWidth: "32px" }}
                     >
                       {sym}
@@ -145,7 +136,7 @@ export function CorrelationMatrix() {
               <tbody>
                 {TRACKED_SYMBOLS.map((rowSym) => (
                   <tr key={rowSym}>
-                    <td className="sticky left-0 z-10 bg-background text-[8px] font-bold text-muted-foreground pr-1 py-0.5 text-right whitespace-nowrap">
+                    <td className="sticky left-0 z-10 bg-background text-[8px] font-semibold text-muted-foreground/70 pr-1 py-0.5 text-right whitespace-nowrap">
                       {rowSym}
                     </td>
                     {TRACKED_SYMBOLS.map((colSym) => {
@@ -154,7 +145,7 @@ export function CorrelationMatrix() {
                       return (
                         <td
                           key={colSym}
-                          className="text-center text-[9px] font-mono px-0.5 py-0.5 hover:ring-1 hover:ring-primary/50 transition-all duration-100"
+                          className="text-center text-[9px] num px-0.5 py-0.5 hover:ring-1 hover:ring-primary/50 transition-all duration-100"
                           style={{
                             backgroundColor: isDiagonal ? "rgb(39,39,42)" : correlationColor(r),
                             minWidth: "32px",
@@ -177,9 +168,9 @@ export function CorrelationMatrix() {
 
       {/* Legend */}
       <div className="border-t border-border px-3 py-1 shrink-0 flex items-center justify-center gap-1.5">
-        <span className="text-[8px] text-red-400">-1</span>
+        <span className="text-[8px] text-negative">-1</span>
         <div className="h-2 flex-1 rounded" style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #eab308, #22c55e, #3b82f6)' }} />
-        <span className="text-[8px] text-green-400">+1</span>
+        <span className="text-[8px] text-positive">+1</span>
       </div>
     </div>
   )

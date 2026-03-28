@@ -250,12 +250,12 @@ export function TradingSignals() {
       <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-2">
           <Radio className="size-3 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-primary">
             Signals
           </h2>
           <span
             className={`text-[9px] font-medium ${
-              connected ? "text-green-400" : "text-muted-foreground"
+              connected ? "text-positive" : "text-muted-foreground"
             }`}
           >
             {connected ? "● LIVE" : "● Connecting..."}
@@ -266,10 +266,10 @@ export function TradingSignals() {
             <button
               key={mode}
               onClick={() => setSortMode(mode)}
-              className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+              className={`widget-tab ${
                 sortMode === mode
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "widget-tab-active"
+                  : ""
               }`}
             >
               {mode}
@@ -301,12 +301,12 @@ export function TradingSignals() {
               >
                 {/* Top row: coin + direction + timeframe + time */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold font-mono text-foreground">
+                  <span className="text-xs font-semibold num text-foreground">
                     {signal.coin}
                   </span>
                   <span
                     className={`flex items-center gap-0.5 text-[10px] font-bold uppercase ${
-                      isBullish ? "text-green-500" : "text-red-500"
+                      isBullish ? "badge badge-positive" : "badge badge-negative"
                     }`}
                   >
                     {isBullish ? (
@@ -316,10 +316,10 @@ export function TradingSignals() {
                     )}
                     {signal.direction}
                   </span>
-                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold font-mono text-primary">
+                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold num text-primary">
                     {signal.timeframe}
                   </span>
-                  <span className="ml-auto text-[9px] text-muted-foreground/60 font-mono">
+                  <span className="ml-auto text-[9px] text-muted-foreground/40 num">
                     {timeAgo(signal.created_at)}
                   </span>
                 </div>
@@ -331,7 +331,7 @@ export function TradingSignals() {
 
                 {/* Bottom row: username + votes */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-mono">
+                  <span className="text-[10px] text-muted-foreground num">
                     @{signal.username}
                   </span>
                   <div className="flex items-center gap-2">
@@ -339,28 +339,28 @@ export function TradingSignals() {
                       onClick={() => handleVote(signal.id, "up")}
                       className={`flex items-center gap-0.5 text-[10px] transition-colors ${
                         myVote === "up"
-                          ? "text-green-500"
-                          : "text-muted-foreground hover:text-green-500"
+                          ? "text-positive"
+                          : "text-muted-foreground hover:text-positive"
                       }`}
                     >
                       <ThumbsUp className="size-3" />
-                      <span className="font-mono">{signal.upvotes}</span>
+                      <span className="num">{signal.upvotes}</span>
                     </button>
                     <button
                       onClick={() => handleVote(signal.id, "down")}
                       className={`flex items-center gap-0.5 text-[10px] transition-colors ${
                         myVote === "down"
-                          ? "text-red-500"
-                          : "text-muted-foreground hover:text-red-500"
+                          ? "text-negative"
+                          : "text-muted-foreground hover:text-negative"
                       }`}
                     >
                       <ThumbsDown className="size-3" />
-                      <span className="font-mono">{signal.downvotes}</span>
+                      <span className="num">{signal.downvotes}</span>
                     </button>
                     {score !== 0 && (
                       <span
-                        className={`text-[9px] font-bold font-mono ${
-                          score > 0 ? "text-green-500" : "text-red-500"
+                        className={`text-[9px] font-semibold num ${
+                          score > 0 ? "text-positive" : "text-negative"
                         }`}
                       >
                         {score > 0 ? `+${score}` : score}
@@ -385,7 +385,7 @@ export function TradingSignals() {
             <button
               type="button"
               onClick={() => setShowForm((v) => !v)}
-              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
             >
               <Plus className="size-3" />
               {showForm ? "Cancel" : "New Signal"}
@@ -401,7 +401,7 @@ export function TradingSignals() {
                       onChange={(e) => setCoin(e.target.value)}
                       placeholder="COIN"
                       maxLength={10}
-                      className="w-16 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] font-mono font-bold text-foreground uppercase placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
+                      className="w-16 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] num font-semibold text-foreground uppercase placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
                     />
                     <button
                       type="button"
@@ -410,8 +410,8 @@ export function TradingSignals() {
                       }
                       className={`flex items-center gap-1 rounded px-2 py-1 text-[10px] font-bold uppercase transition-colors duration-150 ${
                         direction === "bullish"
-                          ? "bg-green-500/15 text-green-500 border border-green-500/30"
-                          : "bg-red-500/15 text-red-500 border border-red-500/30"
+                          ? "bg-positive/15 text-positive border border-positive/30"
+                          : "bg-negative/15 text-negative border border-negative/30"
                       }`}
                     >
                       {direction === "bullish" ? (
@@ -424,7 +424,7 @@ export function TradingSignals() {
                     <select
                       value={timeframe}
                       onChange={(e) => setTimeframe(e.target.value)}
-                      className="rounded border border-border bg-secondary/30 px-1.5 py-1 text-[10px] font-mono font-bold text-foreground focus:outline-none focus:border-primary"
+                      className="rounded border border-border bg-secondary/30 px-1.5 py-1 text-[10px] num font-semibold text-foreground focus:outline-none focus:border-primary"
                     >
                       {TIMEFRAMES.map((tf) => (
                         <option key={tf} value={tf}>
@@ -442,7 +442,7 @@ export function TradingSignals() {
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Brief note (max 140 chars)..."
                       maxLength={140}
-                      className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary font-mono"
+                      className="flex-1 rounded border border-border bg-secondary/30 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary num"
                     />
                     <button
                       type="submit"

@@ -60,8 +60,8 @@ export function ConverterWidget() {
             onClick={() => { setConvIndex(i); setInputValue("") }}
             className={`rounded px-2 py-1 text-[10px] font-medium transition-colors ${
               convIndex === i
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "text-muted-foreground border border-border hover:bg-secondary"
+                ? "bg-primary/10 text-primary border border-primary/20"
+                : "text-muted-foreground/60 border border-border/30 hover:bg-secondary/30"
             }`}
           >
             {c.label}
@@ -71,29 +71,29 @@ export function ConverterWidget() {
 
       {/* Input */}
       <div className="space-y-2">
-        <div className="rounded-lg border border-border bg-secondary/20 p-3">
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground">{fromLabel}</label>
+        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3">
+          <label className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-medium">{fromLabel}</label>
           <input
             type="number"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="0"
-            className="w-full bg-transparent text-lg font-mono text-foreground outline-none mt-1"
+            className="w-full bg-transparent text-lg num text-foreground outline-none mt-1"
           />
         </div>
 
         <div className="flex justify-center">
           <button
             onClick={() => { setDirection(d => d === "forward" ? "reverse" : "forward"); addRecentConversion() }}
-            className="rounded-full p-1.5 border border-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+            className="rounded-full p-2 border border-border/30 text-muted-foreground/50 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all"
           >
             <ArrowUpDown className="size-3.5 transition-transform duration-200 hover:rotate-180" />
           </button>
         </div>
 
-        <div className="rounded-lg border border-border bg-secondary/20 p-3">
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground">{toLabel}</label>
-          <div key={resultKey} className="text-lg font-mono text-primary mt-1 break-all animate-fade-in">
+        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3">
+          <label className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-medium">{toLabel}</label>
+          <div key={resultKey} className="text-lg num text-primary mt-1 break-all animate-fade-in">
             {formattedResult}
           </div>
         </div>
