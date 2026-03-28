@@ -6,7 +6,7 @@ const GNEWS_URL = "https://gnews.io/api/v4/search"
 // In-memory cache to minimize API calls (target: <150 req/day)
 let cachedNews: NewsItem[] | null = null
 let cacheTimestamp = 0
-const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+const CACHE_TTL = 3 * 60 * 1000 // 3 minutes (~480 req/day)
 
 interface NewsItem {
   title: string
