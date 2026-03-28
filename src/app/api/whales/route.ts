@@ -51,26 +51,16 @@ function getLabel(addr: string): string {
   return KNOWN_LABELS[addr.toLowerCase()] || shortenAddress(addr)
 }
 
-const ETHERSCAN_BASE = "https://api.etherscan.io/api"
+const ETHERSCAN_BASE = "https://api.etherscan.io/v2/api"
 
 async function etherscanCall(params: string): Promise<Record<string, unknown>> {
   const apiKey = process.env.ETHERSCAN_API_KEY
-  const url = apiKey
-    ? `${ETHERSCAN_BASE}?${params}&apikey=${apiKey}`
-    : `${ETHERSCAN_BASE}?${params}`
+  const chainParam = params.includes("chainid=") ? "" : "&chainid=1"
+  const keyParam = apiKey ? `&apikey=${apiKey}` : ""
+  const url = `${ETHERSCAN_BASE}?${params}${chainParam}${keyParam}`
   const res = await fetch(url, { next: { revalidate: 15 } })
   if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
-  const data = await res.json()
-
-  // If API key is invalid, retry without it
-  if ((data.status === "0" || data.message === "NOTOK") && apiKey) {
-    console.warn("[whales] API key invalid, retrying without key")
-    const fallbackRes = await fetch(`${ETHERSCAN_BASE}?${params}`, { next: { revalidate: 15 } })
-    if (!fallbackRes.ok) throw new Error(`Etherscan HTTP ${fallbackRes.status}`)
-    return fallbackRes.json()
-  }
-
-  return data
+  return res.json()
 }
 
 export async function GET() {
