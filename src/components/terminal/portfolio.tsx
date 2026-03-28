@@ -1,16 +1,31 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { Plus, Trash2, Wallet, Download } from "lucide-react"
-import { useCryptoPrices } from "@/hooks/useCryptoPrices"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { Plus, Trash2, Wallet, Download, Search, Loader2, X } from "lucide-react"
+import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
 
 interface PortfolioEntry {
   id: string
   coinId: string
   symbol: string
+  name: string
+  thumb: string
   amount: number
   buyPrice: number
+}
+
+interface CoinPrice {
+  usd: number
+  usd_24h_change: number | null
+}
+
+interface SearchCoin {
+  id: string
+  name: string
+  symbol: string
+  thumb: string
+  market_cap_rank: number | null
 }
 
 const STORAGE_KEY = "onchainterm_portfolio"
@@ -39,7 +54,7 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
   const cy = size / 2
   const r = 32
 
-  let cumulativeAngle = -90 // start from top
+  let cumulativeAngle = -90
 
   const paths = slices.map((slice, i) => {
     const startAngle = cumulativeAngle
@@ -77,32 +92,93 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
   )
 }
 
-export function PortfolioWidget() {
-  const { data: marketData } = useCryptoPrices()
+export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
+  const { data: marketData } = useMarketData()
   const [entries, setEntries] = useState<PortfolioEntry[]>([])
   const [showAdd, setShowAdd] = useState(false)
-  const [symbol, setSymbol] = useState("")
   const [amount, setAmount] = useState("")
   const [buyPrice, setBuyPrice] = useState("")
+  const [extraPrices, setExtraPrices] = useState<Record<string, CoinPrice>>({})
+
+  // Coin search state
+  const [coinQuery, setCoinQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchCoin[]>([])
+  const [searching, setSearching] = useState(false)
+  const [selectedCoin, setSelectedCoin] = useState<SearchCoin | null>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { setEntries(loadPortfolio()) }, [])
 
+  // Fetch prices for coins not in marketData
+  useEffect(() => {
+    const marketIds = new Set(marketData.map(c => c.id))
+    const missingIds = [...new Set(entries.map(e => e.coinId))].filter(id => !marketIds.has(id))
+    if (missingIds.length === 0) return
+
+    let cancelled = false
+    async function fetchPrices() {
+      try {
+        const res = await fetch(`/api/coin-price?ids=${missingIds.join(",")}`)
+        if (!res.ok) return
+        const { prices } = await res.json()
+        if (!cancelled) setExtraPrices(prev => ({ ...prev, ...prices }))
+      } catch {}
+    }
+
+    fetchPrices()
+    const interval = setInterval(fetchPrices, 60_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [entries, marketData])
+
+  // Debounced coin search
+  useEffect(() => {
+    if (!coinQuery.trim()) {
+      // Show marketData coins when query is empty but add mode is active
+      setSearchResults([])
+      return
+    }
+
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/coin-search?q=${encodeURIComponent(coinQuery)}`)
+        if (res.ok) {
+          const { coins } = await res.json()
+          setSearchResults(coins)
+        }
+      } catch {}
+      setSearching(false)
+    }, 300)
+
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
+  }, [coinQuery])
+
+  const selectCoin = useCallback((coin: SearchCoin) => {
+    setSelectedCoin(coin)
+    setCoinQuery("")
+    setSearchResults([])
+  }, [])
+
   const addEntry = useCallback(() => {
-    if (!symbol.trim() || !amount || !buyPrice) return
-    const coin = marketData.find(c => c.symbol.toLowerCase() === symbol.toLowerCase())
+    if (!selectedCoin || !amount || !buyPrice) return
     const entry: PortfolioEntry = {
       id: `${Date.now()}`,
-      coinId: coin?.id || symbol.toLowerCase(),
-      symbol: symbol.toUpperCase(),
+      coinId: selectedCoin.id,
+      symbol: selectedCoin.symbol.toUpperCase(),
+      name: selectedCoin.name,
+      thumb: selectedCoin.thumb || "",
       amount: parseFloat(amount),
       buyPrice: parseFloat(buyPrice),
     }
     const updated = [...entries, entry]
     setEntries(updated)
     savePortfolio(updated)
-    setSymbol(""); setAmount(""); setBuyPrice("")
+    setSelectedCoin(null)
+    setAmount("")
+    setBuyPrice("")
     setShowAdd(false)
-  }, [symbol, amount, buyPrice, entries, marketData])
+  }, [selectedCoin, amount, buyPrice, entries])
 
   const removeEntry = (id: string) => {
     const updated = entries.filter(e => e.id !== id)
@@ -112,7 +188,8 @@ export function PortfolioWidget() {
 
   const getCurrentPrice = (entry: PortfolioEntry) => {
     const coin = marketData.find(c => c.id === entry.coinId || c.symbol.toLowerCase() === entry.symbol.toLowerCase())
-    return coin?.current_price ?? null
+    if (coin) return coin.current_price
+    return extraPrices[entry.coinId]?.usd ?? null
   }
 
   const exportCsv = useCallback(() => {
@@ -135,7 +212,7 @@ export function PortfolioWidget() {
     a.click()
     URL.revokeObjectURL(url)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, marketData])
+  }, [entries, marketData, extraPrices])
 
   let totalValue = 0
   let totalCost = 0
@@ -147,7 +224,6 @@ export function PortfolioWidget() {
   const totalPnl = totalValue - totalCost
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0
 
-  // Pie chart data
   const pieSlices = useMemo(() => {
     if (entries.length === 0 || totalValue === 0) return []
     const slices: { pct: number; color: string; label: string }[] = []
@@ -162,8 +238,8 @@ export function PortfolioWidget() {
       })
     })
     return slices.sort((a, b) => b.pct - a.pct)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, totalValue, marketData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, totalValue, marketData, extraPrices])
 
   return (
     <div className="flex h-full flex-col">
@@ -224,7 +300,11 @@ export function PortfolioWidget() {
               const pnl = value - cost
               const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0
               return (
-                <div key={entry.id} className="flex items-center justify-between px-3 py-2 group">
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between px-3 py-2 group cursor-pointer hover:bg-secondary/30 transition-colors"
+                  onClick={() => onSelectSymbol?.(entry.coinId)}
+                >
                   <div className="flex items-center gap-2">
                     <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <div>
@@ -242,7 +322,7 @@ export function PortfolioWidget() {
                       </div>
                     </div>
                     <button
-                      onClick={() => removeEntry(entry.id)}
+                      onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
                       className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
                     >
                       <Trash2 className="size-3" />
@@ -258,12 +338,57 @@ export function PortfolioWidget() {
       {/* Add form */}
       <div className="border-t border-border px-3 py-2 shrink-0">
         {showAdd ? (
-          <div className="flex items-center gap-1.5">
-            <input value={symbol} onChange={e => setSymbol(e.target.value)} placeholder="BTC" className="w-14 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
-            <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
-            <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
-            <button onClick={addEntry} className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground hover:bg-primary/90">Add</button>
-            <button onClick={() => setShowAdd(false)} className="text-muted-foreground hover:text-foreground text-[10px]">Cancel</button>
+          <div className="flex flex-col gap-1.5">
+            {/* Coin search */}
+            {!selectedCoin ? (
+              <div className="relative">
+                <div className="flex items-center gap-1.5 rounded border border-border bg-background px-2">
+                  <Search className="size-3 text-muted-foreground shrink-0" />
+                  <input
+                    value={coinQuery}
+                    onChange={e => setCoinQuery(e.target.value)}
+                    placeholder="Search any coin..."
+                    className="w-full py-1 text-[10px] bg-transparent outline-none"
+                    autoFocus
+                  />
+                  {searching && <Loader2 className="size-3 text-muted-foreground animate-spin shrink-0" />}
+                </div>
+                {searchResults.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-0.5 z-10 max-h-32 overflow-auto rounded border border-border bg-card shadow-lg divide-y divide-border/50">
+                    {searchResults.map(coin => (
+                      <button
+                        key={coin.id}
+                        onClick={() => selectCoin(coin)}
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-left hover:bg-secondary/50 transition-colors"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {coin.thumb && <img src={coin.thumb} alt="" className="size-4 rounded-full" />}
+                        <span className="text-[10px] font-bold">{coin.symbol?.toUpperCase()}</span>
+                        <span className="text-[9px] text-muted-foreground truncate">{coin.name}</span>
+                        {coin.market_cap_rank && (
+                          <span className="ml-auto text-[8px] text-muted-foreground/60">#{coin.market_cap_rank}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {selectedCoin.thumb && <img src={selectedCoin.thumb} alt="" className="size-3 rounded-full" />}
+                  <span className="text-[10px] font-bold text-primary">{selectedCoin.symbol.toUpperCase()}</span>
+                  <button onClick={() => setSelectedCoin(null)} className="text-primary/60 hover:text-primary ml-0.5">
+                    <X className="size-2.5" />
+                  </button>
+                </div>
+                <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <input value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder="Buy $" type="number" className="w-16 rounded border border-border bg-background px-1.5 py-1 text-[10px] outline-none focus:border-primary/40" />
+                <button onClick={addEntry} disabled={!amount || !buyPrice} className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">Add</button>
+              </div>
+            )}
+            <button onClick={() => { setShowAdd(false); setSelectedCoin(null); setCoinQuery("") }} className="text-muted-foreground hover:text-foreground text-[10px] text-left">Cancel</button>
           </div>
         ) : (
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors">

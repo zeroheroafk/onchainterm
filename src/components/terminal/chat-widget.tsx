@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, type FormEvent } from "react"
 import { Send, MessagesSquare } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
+import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 
 interface ChatMessage {
@@ -11,6 +12,16 @@ interface ChatMessage {
   text: string
   created_at: string
 }
+
+type RoomId = "general" | "btc" | "eth" | "defi" | "memes"
+
+const ROOMS: { id: RoomId; label: string }[] = [
+  { id: "general", label: "General" },
+  { id: "btc", label: "BTC" },
+  { id: "eth", label: "ETH" },
+  { id: "defi", label: "DeFi" },
+  { id: "memes", label: "Memes" },
+]
 
 // 12-color palettes for username coloring (dark/light)
 const USER_COLORS_DARK = [
@@ -64,8 +75,11 @@ function getOrCreateUsername(): string {
 
 export function ChatWidget() {
   const { themeId } = useTheme()
+  const { user, username: authUsername } = useAuth()
   const isLight = themeId === "light"
-  const [myUsername] = useState(() => getOrCreateUsername())
+  const [fallbackUsername] = useState(() => getOrCreateUsername())
+  const myUsername = authUsername || fallbackUsername
+  const [activeRoom, setActiveRoom] = useState<RoomId>("general")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
@@ -82,43 +96,61 @@ export function ChatWidget() {
     }
   }, [messages])
 
-  // Load recent messages + subscribe to real-time
+  // Load messages + subscribe based on active room
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null
+    const channelName = `chat_${activeRoom}`
+    let pgChannel: ReturnType<typeof supabase.channel> | null = null
+    let broadcastChannel: ReturnType<typeof supabase.channel> | null = null
 
     async function init() {
-      // Fetch last 50 messages
-      const { data } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .order("created_at", { ascending: true })
-        .limit(50)
+      if (activeRoom === "general") {
+        // General room: persisted via postgres_changes (backward compatible)
+        const { data } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .order("created_at", { ascending: true })
+          .limit(50)
 
-      if (data) {
-        setMessages(data)
+        if (data) {
+          setMessages(data)
+        }
+
+        pgChannel = supabase
+          .channel("chat_messages")
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "chat_messages" },
+            (payload) => {
+              const newMsg = payload.new as ChatMessage
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === newMsg.id)) return prev
+                return [...prev, newMsg]
+              })
+            }
+          )
+          .subscribe((status) => {
+            setConnected(status === "SUBSCRIBED")
+          })
+      } else {
+        // Other rooms: ephemeral broadcast channels (live-only, no persistence)
+        setMessages([])
+
+        broadcastChannel = supabase
+          .channel(channelName)
+          .on("broadcast", { event: "message" }, (payload) => {
+            const msg = payload.payload as ChatMessage
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev
+              return [...prev, msg]
+            })
+          })
+          .subscribe((status) => {
+            setConnected(status === "SUBSCRIBED")
+          })
       }
 
-      // Subscribe to new messages via real-time
-      channel = supabase
-        .channel("chat_messages")
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "chat_messages" },
-          (payload) => {
-            const newMsg = payload.new as ChatMessage
-            setMessages((prev) => {
-              // Deduplicate
-              if (prev.some((m) => m.id === newMsg.id)) return prev
-              return [...prev, newMsg]
-            })
-          }
-        )
-        .subscribe((status) => {
-          setConnected(status === "SUBSCRIBED")
-        })
-
-      // Presence for online user count
-      const presenceChannel = supabase.channel("chat_presence", {
+      // Presence for online user count (per room)
+      const presenceChannel = supabase.channel(`presence_${activeRoom}`, {
         config: { presence: { key: myUsername } },
       })
 
@@ -137,10 +169,11 @@ export function ChatWidget() {
     init()
 
     return () => {
-      if (channel) supabase.removeChannel(channel)
-      supabase.removeChannel(supabase.channel("chat_presence"))
+      if (pgChannel) supabase.removeChannel(pgChannel)
+      if (broadcastChannel) supabase.removeChannel(broadcastChannel)
+      supabase.removeChannel(supabase.channel(`presence_${activeRoom}`))
     }
-  }, [myUsername])
+  }, [myUsername, activeRoom])
 
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault()
@@ -154,18 +187,46 @@ export function ChatWidget() {
     setIsSending(true)
     setInput("")
 
-    const { error } = await supabase
-      .from("chat_messages")
-      .insert({ username: myUsername, text })
+    if (activeRoom === "general") {
+      // Persist to database for General room
+      const { error } = await supabase
+        .from("chat_messages")
+        .insert({ username: myUsername, text })
 
-    if (error) {
-      setInput(text) // Restore input on error
+      if (error) {
+        setInput(text) // Restore input on error
+      }
+    } else {
+      // Broadcast for topic rooms (ephemeral)
+      const channelName = `chat_${activeRoom}`
+      const msg: ChatMessage = {
+        id: crypto.randomUUID(),
+        username: myUsername,
+        text,
+        created_at: new Date().toISOString(),
+      }
+
+      // Add to local state immediately
+      setMessages((prev) => [...prev, msg])
+
+      // Broadcast to others
+      const channel = supabase.channel(channelName)
+      await channel.send({
+        type: "broadcast",
+        event: "message",
+        payload: msg,
+      })
     }
 
     setLastSentAt(Date.now())
     setIsSending(false)
     inputRef.current?.focus()
-  }, [input, isSending, lastSentAt, myUsername])
+  }, [input, isSending, lastSentAt, myUsername, activeRoom])
+
+  const handleRoomChange = useCallback((room: RoomId) => {
+    setActiveRoom(room)
+    setConnected(false)
+  }, [])
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -174,21 +235,46 @@ export function ChatWidget() {
         <div className="flex items-center gap-2">
           <MessagesSquare className="size-3 text-primary" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
-            Market Chat
+            Chat
           </h2>
           <span className={`text-[9px] font-medium ${connected ? "text-green-400" : "text-muted-foreground"}`}>
             {connected ? "● LIVE" : "● Connecting..."}
           </span>
         </div>
-        <span className="text-[9px] text-muted-foreground">
+        <span className="text-[9px] text-muted-foreground font-mono">
           {userCount} online
         </span>
+      </div>
+
+      {/* Room tabs */}
+      <div className="shrink-0 flex items-center gap-0 border-b border-border bg-secondary/20 px-1 overflow-x-auto">
+        {ROOMS.map((room) => (
+          <button
+            key={room.id}
+            onClick={() => handleRoomChange(room.id)}
+            className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+              activeRoom === room.id
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+            }`}
+          >
+            {room.label}
+          </button>
+        ))}
       </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-auto">
         <div className="flex flex-col gap-0.5 p-2">
-          {messages.length === 0 && (
+          {activeRoom !== "general" && messages.length === 0 && (
+            <div className="text-center text-xs text-muted-foreground py-8 space-y-1">
+              <div>No messages in #{activeRoom} yet.</div>
+              <div className="text-[10px] text-muted-foreground/60">
+                Topic channels are live-only — messages are not persisted.
+              </div>
+            </div>
+          )}
+          {activeRoom === "general" && messages.length === 0 && (
             <div className="text-center text-xs text-muted-foreground py-8">
               No messages yet. Say something!
             </div>
@@ -220,7 +306,7 @@ export function ChatWidget() {
         className="shrink-0 flex items-center gap-2 border-t border-border bg-card px-3 py-2"
       >
         <div className="flex flex-1 items-center gap-2 rounded border border-border bg-secondary/30 px-2">
-          <span className="text-xs font-bold text-primary font-mono shrink-0">
+          <span className={`text-xs font-bold font-mono shrink-0 ${user ? "text-primary" : "text-muted-foreground"}`} title={user ? "Signed in" : "Guest — sign in for a custom name"}>
             {myUsername}{">"}
           </span>
           <input
@@ -228,7 +314,7 @@ export function ChatWidget() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={`Message #${activeRoom}...`}
             disabled={isSending}
             maxLength={300}
             className="flex-1 bg-transparent py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 font-mono"

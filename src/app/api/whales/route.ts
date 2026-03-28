@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-
-const ETHERSCAN_URL = "https://api.etherscan.io/api"
+import { etherscanFetch } from "@/lib/etherscan"
 
 // Known exchange/entity labels for identification
 const KNOWN_LABELS: Record<string, string> = {
@@ -60,19 +59,10 @@ function getLabel(addr: string): string {
 }
 
 export async function GET() {
-  const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "Etherscan API key not configured" }, { status: 500 })
-  }
-
   try {
     // 1. Get latest block number
-    const blockNumRes = await fetch(
-      `${ETHERSCAN_URL}?module=proxy&action=eth_blockNumber&apikey=${apiKey}`,
-      { next: { revalidate: 10 } }
-    )
-    const blockNumData = await blockNumRes.json()
-    const latestBlock = parseInt(blockNumData.result, 16)
+    const blockNumData = await etherscanFetch("module=proxy&action=eth_blockNumber", 10)
+    const latestBlock = parseInt(blockNumData.result as string, 16)
 
     // 2. Fetch last 10 blocks (covers ~2 minutes of activity)
     const blockNumbers = Array.from({ length: 10 }, (_, i) => latestBlock - i)
@@ -94,10 +84,7 @@ export async function GET() {
       const results = await Promise.allSettled(
         batch.map(async (blockNum) => {
           const hexBlock = "0x" + blockNum.toString(16)
-          const url = `${ETHERSCAN_URL}?module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true&apikey=${apiKey}`
-          const res = await fetch(url, { next: { revalidate: 15 } })
-          if (!res.ok) return null
-          const data = await res.json()
+          const data = await etherscanFetch(`module=proxy&action=eth_getBlockByNumber&tag=${hexBlock}&boolean=true`, 15)
           return data.result as EtherscanBlockResult | null
         })
       )

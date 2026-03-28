@@ -1,31 +1,15 @@
 import { NextResponse } from "next/server"
-
-const ETHERSCAN_URL = "https://api.etherscan.io/api"
+import { etherscanFetch } from "@/lib/etherscan"
 
 export async function GET() {
-  const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "Etherscan API key not configured" }, { status: 500 })
-  }
-
   try {
-    // Fetch gas oracle data from Etherscan
-    const res = await fetch(
-      `${ETHERSCAN_URL}?module=gastracker&action=gasoracle&apikey=${apiKey}`,
-      { next: { revalidate: 15 } } // cache for 15 seconds
-    )
-
-    if (!res.ok) {
-      throw new Error(`Etherscan API error: ${res.status}`)
-    }
-
-    const data = await res.json()
+    const data = await etherscanFetch("module=gastracker&action=gasoracle", 15)
 
     if (data.status !== "1" || !data.result) {
-      throw new Error(data.message || "Failed to fetch gas data")
+      throw new Error((data.message as string) || (data.result as string) || "Etherscan returned no gas data")
     }
 
-    const result = data.result
+    const result = data.result as Record<string, string>
 
     return NextResponse.json({
       low: Number(result.SafeGasPrice),

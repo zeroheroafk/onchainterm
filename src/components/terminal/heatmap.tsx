@@ -46,7 +46,7 @@ function formatPrice(price: number): string {
   return `$${price.toFixed(4)}`
 }
 
-export function Heatmap() {
+export function Heatmap({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
   const [coins, setCoins] = useState<HeatmapCoin[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -132,7 +132,8 @@ export function Heatmap() {
             return (
               <div
                 key={coin.id}
-                className={`rounded-sm p-1.5 flex flex-col items-center justify-center cursor-default transition-colors ${getColor(change)} ${getTextColor(change)}`}
+                className={`rounded-sm p-1.5 flex flex-col items-center justify-center cursor-pointer transition-colors hover:opacity-80 ${getColor(change)} ${getTextColor(change)}`}
+                onClick={() => onSelectSymbol?.(coin.id)}
                 style={{ width: `${width}px`, height: `${width * 0.7}px`, minHeight: "40px" }}
                 title={`${coin.name}: ${formatPrice(coin.price)} (${sign}${change.toFixed(2)}%)`}
               >

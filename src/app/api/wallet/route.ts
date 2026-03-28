@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-
-const ETHERSCAN_URL = "https://api.etherscan.io/api"
+import { etherscanFetch } from "@/lib/etherscan"
 
 function shortenAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
 
 export async function GET(req: NextRequest) {
-  const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "Etherscan API key not configured" }, { status: 500 })
-  }
-
   const address = req.nextUrl.searchParams.get("address")
   if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
     return NextResponse.json({ error: "Invalid Ethereum address" }, { status: 400 })
@@ -19,16 +13,10 @@ export async function GET(req: NextRequest) {
 
   try {
     // Fetch balance, transactions, and ERC-20 tokens in parallel
-    const [balanceRes, txRes, tokenRes] = await Promise.all([
-      fetch(`${ETHERSCAN_URL}?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`, { next: { revalidate: 15 } }),
-      fetch(`${ETHERSCAN_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=15&sort=desc&apikey=${apiKey}`, { next: { revalidate: 30 } }),
-      fetch(`${ETHERSCAN_URL}?module=account&action=tokentx&address=${address}&page=1&offset=10&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`, { next: { revalidate: 30 } }),
-    ])
-
     const [balanceData, txData, tokenData] = await Promise.all([
-      balanceRes.json(),
-      txRes.json(),
-      tokenRes.json(),
+      etherscanFetch(`module=account&action=balance&address=${address}&tag=latest`, 15),
+      etherscanFetch(`module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=15&sort=desc`, 30),
+      etherscanFetch(`module=account&action=tokentx&address=${address}&page=1&offset=10&startblock=0&endblock=99999999&sort=desc`, 30),
     ])
 
     // ETH balance

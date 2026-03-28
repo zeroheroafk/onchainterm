@@ -30,6 +30,19 @@ const WatchlistWidget = lazy(() => import("@/components/terminal/watchlist").the
 const PnlCalculator = lazy(() => import("@/components/terminal/pnl-calculator").then(m => ({ default: m.PnlCalculator })))
 const WalletTracker = lazy(() => import("@/components/terminal/wallet-tracker").then(m => ({ default: m.WalletTracker })))
 const AlertsWidget = lazy(() => import("@/components/terminal/alerts").then(m => ({ default: m.AlertsWidget })))
+const TokenScreenerWidget = lazy(() => import("@/components/terminal/token-screener").then(m => ({ default: m.TokenScreenerWidget })))
+const DominanceChart = lazy(() => import("@/components/terminal/dominance-chart").then(m => ({ default: m.DominanceChart })))
+const FundingRates = lazy(() => import("@/components/terminal/funding-rates").then(m => ({ default: m.FundingRates })))
+const MultiChart = lazy(() => import("@/components/terminal/multi-chart").then(m => ({ default: m.MultiChart })))
+const TradeJournal = lazy(() => import("@/components/terminal/trade-journal").then(m => ({ default: m.TradeJournal })))
+const CorrelationMatrix = lazy(() => import("@/components/terminal/correlation-matrix").then(m => ({ default: m.CorrelationMatrix })))
+const DexPrices = lazy(() => import("@/components/terminal/dex-prices").then(m => ({ default: m.DexPrices })))
+const NftTracker = lazy(() => import("@/components/terminal/nft-tracker").then(m => ({ default: m.NftTracker })))
+const OnchainMetrics = lazy(() => import("@/components/terminal/onchain-metrics").then(m => ({ default: m.OnchainMetrics })))
+const StakingCalculator = lazy(() => import("@/components/terminal/staking-calculator").then(m => ({ default: m.StakingCalculator })))
+const TradingSignals = lazy(() => import("@/components/terminal/trading-signals").then(m => ({ default: m.TradingSignals })))
+const UserBadges = lazy(() => import("@/components/terminal/user-badges").then(m => ({ default: m.UserBadges })))
+const ThemeCreator = lazy(() => import("@/components/terminal/theme-creator").then(m => ({ default: m.ThemeCreator })))
 
 function WidgetLoadingFallback() {
   return (
@@ -52,7 +65,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "market-overview":
       return <MarketOverview />
     case "top-movers":
-      return <TopMovers />
+      return <TopMovers onSelectSymbol={ctx.setChartSymbol} />
     case "trending":
       return <TrendingWidget />
     case "coin-detail":
@@ -68,13 +81,13 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "liquidations":
       return <LiquidationsFeed />
     case "heatmap":
-      return <Heatmap />
+      return <Heatmap onSelectSymbol={ctx.setChartSymbol} />
     case "exchange-flows":
       return <ExchangeFlows />
     case "portfolio":
-      return <PortfolioWidget />
+      return <PortfolioWidget onSelectSymbol={ctx.setChartSymbol} />
     case "watchlist":
-      return <WatchlistWidget />
+      return <WatchlistWidget onSelectSymbol={ctx.setChartSymbol} />
     case "converter":
       return <ConverterWidget />
     case "pnl-calculator":
@@ -89,6 +102,32 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <ChatWidget />
     case "news":
       return <NewsWidget />
+    case "token-screener":
+      return <TokenScreenerWidget onSelectSymbol={ctx.setChartSymbol} />
+    case "dominance-chart":
+      return <DominanceChart />
+    case "funding-rates":
+      return <FundingRates />
+    case "multi-chart":
+      return <MultiChart />
+    case "trade-journal":
+      return <TradeJournal />
+    case "correlation-matrix":
+      return <CorrelationMatrix />
+    case "dex-prices":
+      return <DexPrices />
+    case "nft-tracker":
+      return <NftTracker />
+    case "onchain-metrics":
+      return <OnchainMetrics />
+    case "staking-calculator":
+      return <StakingCalculator />
+    case "trading-signals":
+      return <TradingSignals />
+    case "user-badges":
+      return <UserBadges />
+    case "theme-creator":
+      return <ThemeCreator />
     case "private-messages":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
     default: {
@@ -100,6 +139,13 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       )
     }
   }
+}
+
+// ─── Snap-to-grid helper ────────────────────────────────────────────────
+
+/** Rounds a percentage value to the nearest grid increment (default 2%). */
+function snapToGrid(value: number, gridSize: number = 2): number {
+  return Math.round(value / gridSize) * gridSize
 }
 
 // ─── Draggable/Resizable Widget Item ─────────────────────────────────────
@@ -164,7 +210,7 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
         isDraggingRef.current = false
         el.style.transform = ""
         el.classList.remove("widget-dragging")
-        updateWidgetPosition(pos.id, { x: finalX, y: finalY })
+        updateWidgetPosition(pos.id, { x: snapToGrid(finalX), y: snapToGrid(finalY) })
       }
 
       document.body.style.userSelect = "none"
@@ -255,7 +301,12 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
         el.style.transform = ""
         el.classList.remove("widget-dragging")
         if (Object.keys(finalUpdate).length > 0) {
-          updateWidgetPosition(pos.id, finalUpdate)
+          const snapped = { ...finalUpdate }
+          if (snapped.x !== undefined) snapped.x = snapToGrid(snapped.x)
+          if (snapped.y !== undefined) snapped.y = snapToGrid(snapped.y)
+          if (snapped.w !== undefined) snapped.w = snapToGrid(snapped.w)
+          if (snapped.h !== undefined) snapped.h = snapToGrid(snapped.h)
+          updateWidgetPosition(pos.id, snapped)
         }
       }
 

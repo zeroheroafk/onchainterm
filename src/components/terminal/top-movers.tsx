@@ -12,7 +12,7 @@ interface MoverCoin {
   price_change_percentage_24h: number
 }
 
-export function TopMovers() {
+export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
   const [gainers, setGainers] = useState<MoverCoin[]>([])
   const [losers, setLosers] = useState<MoverCoin[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,7 +75,7 @@ export function TopMovers() {
         ) : (
           <div className="divide-y divide-border/50">
             {list.map((coin) => (
-              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors">
+              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer" onClick={() => onSelectSymbol?.(coin.id)}>
                 <div>
                   <span className="text-xs font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                   <span className="text-[10px] text-muted-foreground ml-1.5">{coin.name}</span>

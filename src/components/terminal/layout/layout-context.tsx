@@ -58,7 +58,7 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     loaded: presetsLoaded,
   } = usePresetPersistence(userId)
 
-  const [isLocked, setIsLocked] = useState(true)
+  const [isLocked] = useState(false)
   const [isCatalogOpen, setIsCatalogOpen] = useState(false)
   const widgetRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const nextZRef = useRef(
@@ -145,13 +145,7 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     [activeWidgets, layout, setPersistedLayout, setPersistedActiveWidgets, persistLayout, setActivePresetId]
   )
 
-  const toggleLock = useCallback(() => {
-    setIsLocked((prev) => {
-      const next = !prev
-      if (next) setIsCatalogOpen(false)
-      return next
-    })
-  }, [])
+  const toggleLock = useCallback(() => {}, [])
 
   const setCatalogOpen = useCallback((open: boolean) => {
     setIsCatalogOpen(open)
