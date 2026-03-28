@@ -53,14 +53,21 @@ function getLabel(addr: string): string {
 
 const ETHERSCAN_BASE = "https://api.etherscan.io/v2/api"
 
-async function etherscanCall(params: string): Promise<Record<string, unknown>> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function etherscanCall(params: string): Promise<any> {
   const apiKey = process.env.ETHERSCAN_API_KEY
   const chainParam = params.includes("chainid=") ? "" : "&chainid=1"
   const keyParam = apiKey ? `&apikey=${apiKey}` : ""
   const url = `${ETHERSCAN_BASE}?${params}${chainParam}${keyParam}`
   const res = await fetch(url, { next: { revalidate: 15 } })
   if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`)
-  return res.json()
+  const data = await res.json()
+  // V2 proxy calls wrap JSON-RPC in { result: { jsonrpc, id, result: ... } }
+  // Unwrap if needed so callers get the inner result directly
+  if (data.result && typeof data.result === "object" && "jsonrpc" in data.result) {
+    return { ...data, result: data.result.result }
+  }
+  return data
 }
 
 export async function GET() {
