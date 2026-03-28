@@ -8,6 +8,18 @@ import {
   LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
+import { FN_KEY_MAP, LETTER_KEY_MAP } from "@/hooks/useKeyboardShortcuts"
+
+// Build reverse map: widget ID → shortcut key label
+const WIDGET_SHORTCUT: Record<string, string> = {}
+for (const [key, def] of Object.entries(FN_KEY_MAP)) {
+  if (def.widget) WIDGET_SHORTCUT[def.widget] = key
+}
+for (const [letter, widgetId] of Object.entries(LETTER_KEY_MAP)) {
+  if (!WIDGET_SHORTCUT[widgetId]) {
+    WIDGET_SHORTCUT[widgetId] = letter.toUpperCase()
+  }
+}
 
 interface CommandItem {
   id: string
@@ -220,6 +232,11 @@ export function CommandBar() {
                   </div>
                   <span className="text-[10px] text-muted-foreground">{cmd.description}</span>
                 </div>
+                {WIDGET_SHORTCUT[cmd.id] && (
+                  <kbd className="shrink-0 inline-flex items-center justify-center min-w-[22px] h-[20px] rounded border border-border bg-secondary px-1.5 text-[9px] font-mono font-bold text-muted-foreground">
+                    {WIDGET_SHORTCUT[cmd.id]}
+                  </kbd>
+                )}
                 {cmd.category === "widget" && (
                   <button
                     onClick={(e) => handleWidgetToggle(e, cmd.id)}
