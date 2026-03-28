@@ -358,18 +358,18 @@ function ActionBar({ onShowHelp, onShowPresets }: { onShowHelp: () => void; onSh
   ]
 
   return (
-    <div className="hidden md:flex items-center border-b border-border/40 bg-gradient-to-r from-secondary/15 via-secondary/25 to-secondary/15 px-1 shrink-0 py-0.5 overflow-x-auto">
-      <div className="flex items-center gap-0 font-mono mx-auto">
+    <div className="hidden md:flex items-center border-b border-border/40 bg-gradient-to-r from-secondary/15 via-secondary/25 to-secondary/15 px-2 shrink-0 py-1.5 overflow-x-auto">
+      <div className="flex items-center gap-0.5 font-mono mx-auto">
         {FN_KEYS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => handleFnClick(key)}
             className={`flex items-center shrink-0 transition-all duration-100 hover:bg-secondary/60 active:bg-primary/20 ${
-              isBloomberg ? "" : "px-0.5 rounded-sm"
+              isBloomberg ? "" : "px-1 py-0.5 rounded"
             }`}
           >
-            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-primary/80 bg-primary/5 rounded-sm mr-0.5"}>{key}</span>
-            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[9px] text-muted-foreground/70 pr-2 font-medium"}>{label}</span>
+            <span className={isBloomberg ? "bloomberg-fn-key" : "inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-primary/80 bg-primary/8 rounded mr-1"}>{key}</span>
+            <span className={isBloomberg ? "bloomberg-fn-label" : "text-[10px] text-muted-foreground/70 pr-2.5 font-medium tracking-wide"}>{label}</span>
           </button>
         ))}
       </div>
