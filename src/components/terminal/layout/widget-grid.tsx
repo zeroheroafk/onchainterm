@@ -43,6 +43,9 @@ const StakingCalculator = lazy(() => import("@/components/terminal/staking-calcu
 const TradingSignals = lazy(() => import("@/components/terminal/trading-signals").then(m => ({ default: m.TradingSignals })))
 const UserBadges = lazy(() => import("@/components/terminal/user-badges").then(m => ({ default: m.UserBadges })))
 const ThemeCreator = lazy(() => import("@/components/terminal/theme-creator").then(m => ({ default: m.ThemeCreator })))
+const YieldTracker = lazy(() => import("@/components/terminal/yield-tracker").then(m => ({ default: m.YieldTracker })))
+const CryptoCalendar = lazy(() => import("@/components/terminal/crypto-calendar").then(m => ({ default: m.CryptoCalendar })))
+const OrderBookWidget = lazy(() => import("@/components/terminal/order-book").then(m => ({ default: m.OrderBook })))
 
 function WidgetLoadingFallback() {
   return (
@@ -130,6 +133,12 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <ThemeCreator />
     case "private-messages":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
+    case "yield-tracker":
+      return <YieldTracker />
+    case "crypto-calendar":
+      return <CryptoCalendar />
+    case "order-book":
+      return <OrderBookWidget />
     default: {
       const _exhaustive: never = widgetId
       return (
