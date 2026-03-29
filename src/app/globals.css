@@ -4,40 +4,40 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Default theme: Bloomberg (dark navy + orange) */
-  --background: #080c14;
-  --foreground: #c8cdd6;
-  --card: #0d1520;
-  --card-foreground: #c8cdd6;
-  --popover: #0d1520;
-  --popover-foreground: #c8cdd6;
-  --primary: #ff8c00;
-  --primary-foreground: #0a0e17;
-  --secondary: #131d2e;
-  --secondary-foreground: #7a8ba8;
-  --muted: #131d2e;
-  --muted-foreground: #4d5f7a;
-  --accent: #ffb800;
-  --accent-foreground: #0a0e17;
+  /* Default theme: Amber */
+  --background: #0f0f0f;
+  --foreground: #e0e0e0;
+  --card: #1a1a1a;
+  --card-foreground: #e0e0e0;
+  --popover: #1a1a1a;
+  --popover-foreground: #e0e0e0;
+  --primary: #f59e0b;
+  --primary-foreground: #0f0f0f;
+  --secondary: #252525;
+  --secondary-foreground: #b0b0b0;
+  --muted: #252525;
+  --muted-foreground: #808080;
+  --accent: #fbbf24;
+  --accent-foreground: #0f0f0f;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #1a2640;
-  --input: #131d2e;
-  --ring: #ff8c00;
-  --chart-1: #ff8c00;
-  --chart-2: #ffb800;
+  --border: #333333;
+  --input: #252525;
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
+  --chart-2: #d97706;
   --chart-3: #6b8cae;
   --chart-4: #ef4444;
   --chart-5: #8b6bbf;
   --radius: 6px;
-  --sidebar: #060a11;
-  --sidebar-foreground: #c8cdd6;
-  --sidebar-primary: #ff8c00;
-  --sidebar-primary-foreground: #0a0e17;
-  --sidebar-accent: #131d2e;
-  --sidebar-accent-foreground: #c8cdd6;
-  --sidebar-border: #1a2640;
-  --sidebar-ring: #ff8c00;
+  --sidebar: #141414;
+  --sidebar-foreground: #e0e0e0;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-accent: #252525;
+  --sidebar-accent-foreground: #e0e0e0;
+  --sidebar-border: #333333;
+  --sidebar-ring: #f59e0b;
 
   /* Terminal-specific colors (used by crypto widgets) */
   --color-positive: #22c55e;
