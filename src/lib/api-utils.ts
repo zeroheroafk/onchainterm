@@ -95,7 +95,7 @@ export function createCache<T>(ttlMs: number) {
     store.set(key, { value, ts: Date.now() })
     // Evict old entries if map grows large
     if (store.size > 200) {
-      const entries = [...store.entries()].sort((a, b) => a[1].ts - b[1].ts)
+      const entries = Array.from(store.entries()).sort((a, b) => a[1].ts - b[1].ts)
       for (let i = 0; i < 50; i++) store.delete(entries[i][0])
     }
   }
