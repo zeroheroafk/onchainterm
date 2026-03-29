@@ -47,14 +47,15 @@ function useWidgetSize(ref: React.RefObject<HTMLElement | null>) {
 }
 
 function fmtGwei(v: number, compact: boolean) {
-  if (compact) return Math.round(v).toString()
-  return v % 1 === 0 ? v.toString() : v.toFixed(1)
+  if (v % 1 === 0) return v.toString()
+  if (compact) return v.toFixed(1)
+  return v.toFixed(2)
 }
 
 function fmtEth(gwei: number, compact: boolean) {
   const eth = (gwei * 21000) / 1e9
-  if (compact) return eth.toFixed(4)
-  return eth.toFixed(6)
+  if (compact) return eth.toFixed(6)
+  return eth.toFixed(8)
 }
 
 export function GasTracker() {
@@ -173,7 +174,7 @@ export function GasTracker() {
           <div className="space-y-0.5 text-[10px]">
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground">Base Fee</span>
-              <span className="num text-foreground">{compact ? Math.round(gasData.baseFee) : gasData.baseFee.toFixed(2)} Gwei</span>
+              <span className="num text-foreground">{gasData.baseFee.toFixed(2)} Gwei</span>
             </div>
             <div className="flex items-center justify-between px-1">
               <span className="text-muted-foreground">Network</span>
