@@ -124,11 +124,12 @@ export async function GET() {
         const addresses = groupTokens.map((t) => t.tokenAddress).join(",")
         try {
           const res = await fetch(
-            `https://api.dexscreener.com/tokens/v1/${addresses}`,
+            `https://api.dexscreener.com/latest/dex/tokens/${addresses}`,
             { next: { revalidate: 60 } }
           )
           if (!res.ok) return
-          const pairs = await res.json()
+          const json = await res.json()
+          const pairs = json.pairs || json
           if (!Array.isArray(pairs)) return
 
           // For each token, find the best pair (highest liquidity)

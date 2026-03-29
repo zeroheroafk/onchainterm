@@ -1,35 +1,8 @@
 "use client"
 
-import { useRef, useMemo, useEffect } from "react"
-import { Grid3x3, Info } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Grid3x3, Info, RefreshCw } from "lucide-react"
 import { ChartSkeleton } from "@/components/terminal/widget-skeleton"
-import { useMarketData } from "@/lib/market-data-context"
-
-const TRACKED_SYMBOLS = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK", "AVAX", "DOT"]
-const MIN_DATA_POINTS = 4
-const MAX_DATA_POINTS = 24
-
-type PriceSnapshot = Record<string, number>
-
-function pearson(xs: number[], ys: number[]): number {
-  const n = xs.length
-  if (n === 0) return 0
-  const meanX = xs.reduce((a, b) => a + b, 0) / n
-  const meanY = ys.reduce((a, b) => a + b, 0) / n
-  let num = 0
-  let denomX = 0
-  let denomY = 0
-  for (let i = 0; i < n; i++) {
-    const dx = xs[i] - meanX
-    const dy = ys[i] - meanY
-    num += dx * dy
-    denomX += dx * dx
-    denomY += dy * dy
-  }
-  const denom = Math.sqrt(denomX * denomY)
-  if (denom === 0) return 0
-  return num / denom
-}
 
 function correlationColor(r: number): string {
   const clamped = Math.max(-1, Math.min(1, r))
@@ -42,57 +15,37 @@ function correlationColor(r: number): string {
   }
 }
 
+interface CorrelationData {
+  matrix: Record<string, Record<string, number>>
+  symbols: string[]
+  dataPoints: number
+}
+
 export function CorrelationMatrix() {
-  const { data, lastUpdated } = useMarketData()
-  const historyRef = useRef<PriceSnapshot[]>([])
-  const lastTimestampRef = useRef<string | null>(null)
+  const [data, setData] = useState<CorrelationData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Record a new snapshot whenever data updates
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/correlation")
+      if (!res.ok) throw new Error("Failed to fetch correlation data")
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setData(json)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
-    if (!data.length || !lastUpdated) return
-    const ts = lastUpdated.toISOString()
-    if (ts === lastTimestampRef.current) return
-    lastTimestampRef.current = ts
-
-    const snapshot: PriceSnapshot = {}
-    for (const coin of data) {
-      const sym = coin.symbol.toUpperCase()
-      if (TRACKED_SYMBOLS.includes(sym)) {
-        snapshot[sym] = coin.current_price
-      }
-    }
-    if (Object.keys(snapshot).length === 0) return
-
-    historyRef.current = [...historyRef.current, snapshot].slice(-MAX_DATA_POINTS)
-  }, [data, lastUpdated])
-
-  const history = historyRef.current
-  const pointCount = history.length
-
-  const matrix = useMemo(() => {
-    if (pointCount < MIN_DATA_POINTS) return null
-
-    const result: Record<string, Record<string, number>> = {}
-    for (const a of TRACKED_SYMBOLS) {
-      result[a] = {}
-      for (const b of TRACKED_SYMBOLS) {
-        if (a === b) {
-          result[a][b] = 1
-          continue
-        }
-        const pricesA: number[] = []
-        const pricesB: number[] = []
-        for (const snap of history) {
-          if (snap[a] !== undefined && snap[b] !== undefined) {
-            pricesA.push(snap[a])
-            pricesB.push(snap[b])
-          }
-        }
-        result[a][b] = pricesA.length >= MIN_DATA_POINTS ? pearson(pricesA, pricesB) : 0
-      }
-    }
-    return result
-  }, [pointCount, history])
+    fetchData()
+    const interval = setInterval(fetchData, 3600_000) // refresh hourly
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   return (
     <div className="h-full flex flex-col">
@@ -103,26 +56,45 @@ export function CorrelationMatrix() {
           <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
             Correlation Matrix
           </span>
+          {data && (
+            <span className="text-[8px] text-muted-foreground/50">30d</span>
+          )}
         </div>
-        <div className="relative group">
-          <Info className="size-3 text-muted-foreground cursor-help" />
-          <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-52 p-2 rounded bg-popover border border-border shadow-lg text-[9px] text-muted-foreground leading-relaxed">
-            Pearson correlation of price movements between assets. +1 means prices move together, -1 means they move opposite, 0 means no relationship. Based on last {pointCount} data points.
+        <div className="flex items-center gap-1">
+          <div className="relative group">
+            <Info className="size-3 text-muted-foreground cursor-help" />
+            <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-52 p-2 rounded bg-popover border border-border shadow-lg text-[9px] text-muted-foreground leading-relaxed">
+              Pearson correlation of 30-day daily returns between assets. +1 means prices move together, -1 means opposite, 0 means no relationship.{data ? ` Based on ${data.dataPoints} data points.` : ""}
+            </div>
           </div>
+          <button
+            onClick={fetchData}
+            className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="size-3" />
+          </button>
         </div>
       </div>
 
       {/* Matrix or fallback */}
       <div className="flex-1 overflow-auto min-h-0 p-2">
-        {!matrix ? (
+        {loading && !data ? (
           <ChartSkeleton />
-        ) : (
+        ) : error && !data ? (
+          <div className="flex flex-col items-center justify-center h-full text-xs gap-2 p-4">
+            <span className="text-red-400">{error}</span>
+            <button onClick={fetchData} className="text-primary hover:underline">
+              Retry
+            </button>
+          </div>
+        ) : data ? (
           <div className="overflow-auto">
             <table className="border-collapse w-full">
               <thead>
                 <tr>
                   <th className="sticky left-0 z-10 bg-background p-0 w-8" />
-                  {TRACKED_SYMBOLS.map((sym) => (
+                  {data.symbols.map((sym) => (
                     <th
                       key={sym}
                       className="text-[8px] font-semibold text-muted-foreground/70 px-0.5 py-1 text-center"
@@ -134,13 +106,13 @@ export function CorrelationMatrix() {
                 </tr>
               </thead>
               <tbody>
-                {TRACKED_SYMBOLS.map((rowSym) => (
+                {data.symbols.map((rowSym) => (
                   <tr key={rowSym}>
                     <td className="sticky left-0 z-10 bg-background text-[8px] font-semibold text-muted-foreground/70 pr-1 py-0.5 text-right whitespace-nowrap">
                       {rowSym}
                     </td>
-                    {TRACKED_SYMBOLS.map((colSym) => {
-                      const r = matrix[rowSym][colSym]
+                    {data.symbols.map((colSym) => {
+                      const r = data.matrix[rowSym][colSym]
                       const isDiagonal = rowSym === colSym
                       return (
                         <td
@@ -163,7 +135,7 @@ export function CorrelationMatrix() {
               </tbody>
             </table>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Legend */}

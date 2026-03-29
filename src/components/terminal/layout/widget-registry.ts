@@ -34,6 +34,8 @@ import {
   Radio,
   Award,
   Palette,
+  Sprout,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react"
 
@@ -55,6 +57,7 @@ export type WidgetId =
   | "token-screener" | "dominance-chart" | "funding-rates"
   | "multi-chart" | "trade-journal" | "correlation-matrix" | "dex-prices" | "nft-tracker"
   | "onchain-metrics" | "staking-calculator" | "trading-signals" | "user-badges" | "theme-creator"
+  | "yield-tracker" | "crypto-calendar" | "order-book"
 
 export type WidgetCategory = "market" | "trade" | "tools" | "comms"
 
@@ -434,6 +437,37 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     minSize: { w: 280, h: 300 },
     singleton: true,
     requiresAuth: true,
+  },
+  // ─── New widgets ───
+  {
+    id: "yield-tracker",
+    titleKey: "widget.yieldTracker",
+    fallbackTitle: "Yield Farming",
+    icon: Sprout,
+    category: "trade",
+    defaultSize: { w: 35, h: 60 },
+    minSize: { w: 280, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "crypto-calendar",
+    titleKey: "widget.cryptoCalendar",
+    fallbackTitle: "Crypto Calendar",
+    icon: CalendarDays,
+    category: "market",
+    defaultSize: { w: 30, h: 55 },
+    minSize: { w: 250, h: 250 },
+    singleton: true,
+  },
+  {
+    id: "order-book",
+    titleKey: "widget.orderBook",
+    fallbackTitle: "Order Book",
+    icon: BookOpen,
+    category: "trade",
+    defaultSize: { w: 25, h: 70 },
+    minSize: { w: 220, h: 350 },
+    singleton: false,
   },
 ]
 

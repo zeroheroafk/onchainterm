@@ -5,7 +5,7 @@ import {
   Search, Terminal, Eye, EyeOff, Filter, PieChart,
   LineChart, MessagesSquare, Newspaper, BarChart3, TrendingUp, Flame, Fuel, Wallet, Star,
   ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown, Percent,
-  LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette,
+  LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette, Sprout, CalendarDays,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
 import { useMarketData } from "@/lib/market-data-context"
@@ -114,6 +114,9 @@ export function CommandBar() {
     { id: "user-badges", label: "Badges & Levels", description: "Your achievements, badges, and XP level", keywords: ["badge", "level", "xp", "achievement", "gamification", "rank"], icon: Award, category: "widget", action: () => handleWidgetAction("user-badges") },
     { id: "theme-creator", label: "Theme Creator", description: "Create and manage custom color themes", keywords: ["theme", "color", "custom", "creator", "palette", "design", "skin"], icon: Palette, category: "widget", action: () => handleWidgetAction("theme-creator") },
     { id: "private-messages", label: "Messages", description: "Private messages", keywords: ["dm", "pm", "private", "inbox", "direct"], icon: MessageSquare, category: "widget", action: () => handleWidgetAction("private-messages") },
+    { id: "yield-tracker", label: "Yield Farming", description: "Top DeFi pools with APY from DeFiLlama", keywords: ["yield", "farm", "apy", "apr", "defi", "pool", "liquidity", "earn"], icon: Sprout, category: "widget", action: () => handleWidgetAction("yield-tracker") },
+    { id: "crypto-calendar", label: "Crypto Calendar", description: "Upcoming crypto events, launches, and unlocks", keywords: ["calendar", "event", "unlock", "launch", "upgrade", "fork", "airdrop", "schedule"], icon: CalendarDays, category: "widget", action: () => handleWidgetAction("crypto-calendar") },
+    { id: "order-book", label: "Order Book", description: "Real-time order book depth from Binance", keywords: ["order", "book", "depth", "bid", "ask", "spread", "buy", "sell", "orderbook"], icon: BookOpen, category: "widget", action: () => handleWidgetAction("order-book") },
 { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]
 
