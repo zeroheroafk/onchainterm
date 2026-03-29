@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import { useState, useMemo, useRef, useEffect, useCallback, useId } from "react"
 import { Download } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatLargeNumber, formatPercentage } from "@/lib/constants"
@@ -27,6 +27,9 @@ function PercentCell({ value }: { value: number | null }) {
 }
 
 function MiniSparkline({ prices, change }: { prices: number[]; change: number }) {
+  const [hover, setHover] = useState<{ x: number; y: number; price: number } | null>(null)
+  const sparkId = useId()
+
   if (!prices || prices.length < 2) return <span className="text-muted-foreground text-[10px]">—</span>
 
   const step = Math.max(1, Math.floor(prices.length / 30))
@@ -47,9 +50,7 @@ function MiniSparkline({ prices, change }: { prices: number[]; change: number })
   const polyPoints = points.map(p => `${p.x},${p.y}`).join(" ")
   const areaPoints = `0,${h} ${polyPoints} ${w},${h}`
   const color = change >= 0 ? "#2dd4a0" : "#f87171"
-  const gradId = `sparkGrad${change >= 0 ? "Up" : "Down"}${Math.random().toString(36).slice(2, 6)}`
-
-  const [hover, setHover] = useState<{ x: number; y: number; price: number } | null>(null)
+  const gradId = `sparkGrad${change >= 0 ? "Up" : "Down"}${sparkId.replace(/:/g, "")}`
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -110,7 +111,8 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
   const [flashMap, setFlashMap] = useState<Record<string, "up" | "down">>({})
-  const prevPricesRef = useRef<Record<string, number>>({})
+  const [prevPrices, setPrevPrices] = useState<Record<string, number>>({})
+  const [pendingFlashes, setPendingFlashes] = useState<Record<string, "up" | "down">>({})
   const tableRef = useRef<HTMLDivElement>(null)
   const { markUpdated, formatLastUpdated } = useLastUpdated()
 
@@ -119,35 +121,43 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
     if (data.length > 0) markUpdated()
   }, [data, markUpdated])
 
-  // Detect price changes and trigger flash animations
-  useEffect(() => {
-    if (!data.length) return
-    const prev = prevPricesRef.current
+  // Detect price changes during render and trigger flash animations
+  if (data.length > 0) {
     const newFlashes: Record<string, "up" | "down"> = {}
-    const timeouts: ReturnType<typeof setTimeout>[] = []
-
+    const updatedPrices: Record<string, number> = { ...prevPrices }
+    let pricesChanged = false
     for (const coin of data) {
-      const prevPrice = prev[coin.id]
-      if (prevPrice !== undefined && coin.current_price !== prevPrice) {
-        newFlashes[coin.id] = coin.current_price > prevPrice ? "up" : "down"
+      const prev = prevPrices[coin.id]
+      if (prev !== undefined && coin.current_price !== prev) {
+        newFlashes[coin.id] = coin.current_price > prev ? "up" : "down"
       }
-      prev[coin.id] = coin.current_price
+      if (updatedPrices[coin.id] !== coin.current_price) {
+        updatedPrices[coin.id] = coin.current_price
+        pricesChanged = true
+      }
     }
-
+    if (pricesChanged) {
+      setPrevPrices(updatedPrices)
+    }
     if (Object.keys(newFlashes).length > 0) {
+      setPendingFlashes(newFlashes)
       setFlashMap(f => ({ ...f, ...newFlashes }))
-      const timeout = setTimeout(() => {
-        setFlashMap(f => {
-          const next = { ...f }
-          for (const id of Object.keys(newFlashes)) delete next[id]
-          return next
-        })
-      }, 600)
-      timeouts.push(timeout)
     }
+  }
 
-    return () => { timeouts.forEach(clearTimeout) }
-  }, [data])
+  // Clear flashes after animation duration
+  useEffect(() => {
+    if (Object.keys(pendingFlashes).length === 0) return
+    const flashes = pendingFlashes
+    const timeout = setTimeout(() => {
+      setFlashMap(f => {
+        const next = { ...f }
+        for (const id of Object.keys(flashes)) delete next[id]
+        return next
+      })
+    }, 600)
+    return () => clearTimeout(timeout)
+  }, [pendingFlashes])
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -214,8 +224,9 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
     }
   }, [selectedIndex])
 
-  const SortHeader = ({ label, sortKeyVal, className = "" }: { label: string; sortKeyVal: SortKey; className?: string }) => (
+  const renderSortHeader = (label: string, sortKeyVal: SortKey, className = "") => (
     <th
+      key={sortKeyVal}
       className={`py-1 px-1.5 text-right text-[9px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors font-medium ${
         sortKey === sortKeyVal ? "text-primary" : "text-muted-foreground/70"
       } ${className}`}
@@ -272,15 +283,15 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
       <table className="w-full text-xs sticky-col-first">
         <thead className="sticky top-0 z-[1]">
           <tr className="border-b border-border/50">
-            <SortHeader label="#" sortKeyVal="rank" className="!text-left w-8" />
+            {renderSortHeader("#", "rank", "!text-left w-8")}
             <th className="py-1 px-1.5 text-left text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium">Asset</th>
-            <SortHeader label="Price" sortKeyVal="price" />
-            <SortHeader label="1H" sortKeyVal="1h" />
-            <SortHeader label="24H" sortKeyVal="24h" />
-            <SortHeader label="7D" sortKeyVal="7d" className="hidden xl:table-cell" />
+            {renderSortHeader("Price", "price")}
+            {renderSortHeader("1H", "1h")}
+            {renderSortHeader("24H", "24h")}
+            {renderSortHeader("7D", "7d", "hidden xl:table-cell")}
             <th className="py-1 px-1.5 text-right text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium hidden 2xl:table-cell">7D Chart</th>
-            <SortHeader label="MCap" sortKeyVal="mcap" className="hidden lg:table-cell" />
-            <SortHeader label="Vol 24H" sortKeyVal="vol" className="hidden xl:table-cell" />
+            {renderSortHeader("MCap", "mcap", "hidden lg:table-cell")}
+            {renderSortHeader("Vol 24H", "vol", "hidden xl:table-cell")}
           </tr>
         </thead>
         <tbody>

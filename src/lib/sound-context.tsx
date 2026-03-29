@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react"
+import { createContext, useContext, useState, useCallback } from "react"
 
 type SoundType = "alert" | "trade" | "whale" | "success" | "error"
 
@@ -61,12 +61,11 @@ const SOUNDS: Record<SoundType, () => void> = {
 }
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-  const [muted, setMuted] = useState(true) // Default muted
-
-  useEffect(() => {
-    const stored = localStorage.getItem("onchainterm-sound")
-    if (stored === "on") setMuted(false)
-  }, [])
+  const [muted, setMuted] = useState(() => {
+    try {
+      return localStorage.getItem("onchainterm-sound") !== "on"
+    } catch { return true }
+  }) // Default muted
 
   const toggleMute = useCallback(() => {
     setMuted(prev => {

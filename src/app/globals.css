@@ -46,9 +46,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
-  --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
-  --font-heading: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-sans: 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
+  --font-heading: 'Inter', system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

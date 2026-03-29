@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { DEFAULT_LAYOUT, DEFAULT_ACTIVE_WIDGETS, type WidgetPosition } from "./default-layouts"
 
 const STORAGE_KEY = "onchainterm_layout_v1"
@@ -30,26 +30,29 @@ function saveToStorage(data: PersistedLayout) {
 }
 
 export function useLayoutPersistence(userId?: string) {
-  const [loaded, setLoaded] = useState(false)
-  const [layout, setLayout] = useState<WidgetPosition[]>(DEFAULT_LAYOUT)
-  const [activeWidgets, setActiveWidgets] = useState<string[]>(DEFAULT_ACTIVE_WIDGETS)
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  void userId // Reserved for future Supabase integration
-
-  useEffect(() => {
+  const [loaded] = useState(true)
+  const [layout, setLayout] = useState<WidgetPosition[]>(() => {
     const persisted = loadFromStorage()
     if (persisted) {
-      // Clean up orphaned activeWidgets that have no layout position
       const layoutIds = new Set(persisted.layout.map((p) => p.id))
       const cleanedActive = persisted.activeWidgets.filter((id) => layoutIds.has(id))
-      setLayout(persisted.layout)
-      setActiveWidgets(cleanedActive)
       if (cleanedActive.length !== persisted.activeWidgets.length) {
         saveToStorage({ layout: persisted.layout, activeWidgets: cleanedActive })
       }
+      return persisted.layout
     }
-    setLoaded(true)
-  }, [])
+    return DEFAULT_LAYOUT
+  })
+  const [activeWidgets, setActiveWidgets] = useState<string[]>(() => {
+    const persisted = loadFromStorage()
+    if (persisted) {
+      const layoutIds = new Set(persisted.layout.map((p) => p.id))
+      return persisted.activeWidgets.filter((id) => layoutIds.has(id))
+    }
+    return DEFAULT_ACTIVE_WIDGETS
+  })
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  void userId // Reserved for future Supabase integration
 
   const persistLayout = useCallback((newLayout: WidgetPosition[], newActiveWidgets: string[]) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)

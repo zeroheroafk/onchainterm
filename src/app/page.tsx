@@ -3,7 +3,7 @@
 import { useCryptoPrices } from "@/hooks/useCryptoPrices"
 import { formatPrice, formatPercentage, formatLargeNumber } from "@/lib/constants"
 import Link from "next/link"
-import { ArrowRight, BarChart3, Zap, Shield, LayoutGrid, TrendingUp, TrendingDown, Activity } from "lucide-react"
+import { ArrowRight, BarChart3, Zap, Shield, LayoutGrid, TrendingUp, Activity } from "lucide-react"
 
 function LiveTicker({ data }: { data: { id: string; symbol: string; current_price: number; price_change_percentage_24h: number }[] }) {
   if (data.length === 0) return null
@@ -70,7 +70,7 @@ const FEATURES = [
 ]
 
 export default function Home() {
-  const { data, isLoading } = useCryptoPrices()
+  const { data } = useCryptoPrices()
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -139,7 +139,7 @@ export default function Home() {
               </div>
               <span className="text-[9px] text-muted-foreground/50 uppercase">Top 10 by Market Cap</span>
             </div>
-            <MiniTable data={data as any} />
+            <MiniTable data={data} />
             <div className="text-center pt-2">
               <Link href="/terminal" className="inline-flex items-center gap-1.5 text-[11px] text-primary hover:text-primary/80 transition-colors font-medium">
                 View all {data.length} assets in terminal

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { ArrowUpDown } from "lucide-react"
 
 const CONVERSIONS = [
@@ -16,7 +16,7 @@ export function ConverterWidget() {
   const [direction, setDirection] = useState<"forward" | "reverse">("forward")
   const [recentConversions, setRecentConversions] = useState<{amount: string, from: string, to: string, result: string}[]>([])
   const [resultKey, setResultKey] = useState(0)
-  const prevResult = useRef<string>("")
+  const [prevFormattedResult, setPrevFormattedResult] = useState("")
 
   const conv = CONVERSIONS[convIndex]
   const numValue = parseFloat(inputValue) || 0
@@ -37,12 +37,11 @@ export function ConverterWidget() {
     return n.toFixed(18).replace(/0+$/, "").replace(/\.$/, "")
   })()
 
-  useEffect(() => {
-    if (formattedResult !== prevResult.current) {
-      prevResult.current = formattedResult
-      setResultKey(k => k + 1)
-    }
-  }, [formattedResult])
+  // Update result key during render when result changes (React 19 pattern)
+  if (formattedResult !== prevFormattedResult) {
+    setPrevFormattedResult(formattedResult)
+    setResultKey(k => k + 1)
+  }
 
   const addRecentConversion = () => {
     if (numValue === 0) return

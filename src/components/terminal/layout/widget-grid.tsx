@@ -169,7 +169,7 @@ interface FreeWidgetProps {
 type ResizeEdge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"
 
 const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, context }: FreeWidgetProps) {
-  const { updateWidgetPosition, bringToFront, removeWidget, widgetRefs } = useLayout()
+  const { updateWidgetPosition, bringToFront, removeWidget, setWidgetRef } = useLayout()
   const def = getWidgetDef(pos.id)
   const elRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
@@ -331,6 +331,10 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
     if (!isDraggingRef.current) bringToFront(pos.id)
   }, [pos.id, bringToFront])
 
+  const widgetRefCallback = useCallback((el: HTMLDivElement | null) => {
+    setWidgetRef(pos.id, el)
+  }, [pos.id, setWidgetRef])
+
   if (!def) return null
 
   return (
@@ -348,7 +352,7 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
       onMouseDown={handleMouseDown}
     >
       <WidgetWrapper
-        ref={(el: HTMLDivElement | null) => { widgetRefs.current[pos.id] = el }}
+        ref={widgetRefCallback}
         title={def.fallbackTitle}
         icon={def.icon}
         isLocked={isLocked}
@@ -382,10 +386,46 @@ const FreeWidget = memo(function FreeWidget({ pos, isLocked, containerRef, conte
   )
 })
 
+// ─── Mobile Widget Item ─────────────────────────────────────────────────
+
+interface MobileWidgetProps {
+  pos: WidgetPosition
+  context: TerminalWidgetContext
+}
+
+const MobileWidget = memo(function MobileWidget({ pos, context }: MobileWidgetProps) {
+  const { removeWidget, setWidgetRef } = useLayout()
+  const def = getWidgetDef(pos.id)
+
+  const widgetRefCallback = useCallback((el: HTMLDivElement | null) => {
+    setWidgetRef(pos.id, el)
+  }, [pos.id, setWidgetRef])
+
+  if (!def) return null
+
+  return (
+    <div className="h-80 shrink-0">
+      <WidgetWrapper
+        ref={widgetRefCallback}
+        title={def.fallbackTitle}
+        icon={def.icon}
+        isLocked={true}
+        onRemove={() => removeWidget(pos.id)}
+      >
+        <WidgetErrorBoundary widgetTitle={def.fallbackTitle}>
+          <Suspense fallback={<WidgetLoadingFallback />}>
+            {renderWidget(pos.id as WidgetId, context)}
+          </Suspense>
+        </WidgetErrorBoundary>
+      </WidgetWrapper>
+    </div>
+  )
+})
+
 // ─── Main Grid ───────────────────────────────────────────────────────────
 
 export function WidgetGrid({ context }: WidgetGridProps) {
-  const { layout, activeWidgets, isLocked, removeWidget, widgetRefs } = useLayout()
+  const { layout, activeWidgets, isLocked } = useLayout()
   const containerRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -405,27 +445,9 @@ export function WidgetGrid({ context }: WidgetGridProps) {
     return (
       <div ref={containerRef} className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-1 p-1">
-          {visiblePositions.map((pos) => {
-            const def = getWidgetDef(pos.id)
-            if (!def) return null
-            return (
-              <div key={pos.id} className="h-80 shrink-0">
-                <WidgetWrapper
-                  ref={(el: HTMLDivElement | null) => { widgetRefs.current[pos.id] = el }}
-                  title={def.fallbackTitle}
-                  icon={def.icon}
-                  isLocked={true}
-                  onRemove={() => removeWidget(pos.id)}
-                >
-                  <WidgetErrorBoundary widgetTitle={def.fallbackTitle}>
-                    <Suspense fallback={<WidgetLoadingFallback />}>
-                      {renderWidget(pos.id as WidgetId, context)}
-                    </Suspense>
-                  </WidgetErrorBoundary>
-                </WidgetWrapper>
-              </div>
-            )
-          })}
+          {visiblePositions.map((pos) => (
+            <MobileWidget key={pos.id} pos={pos} context={context} />
+          ))}
         </div>
       </div>
     )

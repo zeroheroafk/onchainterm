@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, createContext, useContext } from "react"
-import { TrendingUp, Star, Newspaper, Calculator, Copy, ExternalLink } from "lucide-react"
+import { TrendingUp, Copy, ExternalLink } from "lucide-react"
 
 interface CoinContextMenuState {
   x: number

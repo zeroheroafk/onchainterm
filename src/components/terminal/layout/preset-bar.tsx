@@ -32,7 +32,6 @@ export function PresetBar() {
   const sanitizeName = (raw: string): string => {
     return raw
       .replace(/["\n\r]/g, "")
-      // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x1f\x7f]/g, "")
       .trim()
       .slice(0, 20)

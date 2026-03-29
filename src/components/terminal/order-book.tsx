@@ -14,6 +14,33 @@ interface OrderLevel {
 const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "SUIUSDT"]
 const DEPTH_LIMIT = 20
 
+function processLevels(
+  raw: [string, string][],
+  side: "bid" | "ask"
+): OrderLevel[] {
+  const levels = raw
+    .map(([price, qty]) => ({
+      price: parseFloat(price),
+      qty: parseFloat(qty),
+      total: 0,
+    }))
+    .filter((l) => l.qty > 0)
+
+  // Sort: bids descending, asks ascending
+  levels.sort((a, b) =>
+    side === "bid" ? b.price - a.price : a.price - b.price
+  )
+
+  // Cumulative total
+  let cumulative = 0
+  for (const level of levels) {
+    cumulative += level.qty
+    level.total = cumulative
+  }
+
+  return levels.slice(0, DEPTH_LIMIT)
+}
+
 export function OrderBook() {
   const [bids, setBids] = useState<OrderLevel[]>([])
   const [asks, setAsks] = useState<OrderLevel[]>([])
@@ -25,6 +52,7 @@ export function OrderBook() {
   const retriesRef = useRef(0)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const unmountedRef = useRef(false)
+  const connectWsRef = useRef<(() => void) | null>(null)
 
   const cleanupWs = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -126,7 +154,7 @@ export function OrderBook() {
           retriesRef.current += 1
           reconnectTimerRef.current = setTimeout(() => {
             if (!unmountedRef.current) {
-              connectWs()
+              connectWsRef.current?.()
             }
           }, delay)
         }
@@ -139,9 +167,14 @@ export function OrderBook() {
   }, [symbol, cleanupWs])
 
   useEffect(() => {
+    connectWsRef.current = connectWs
+  }, [connectWs])
+
+  useEffect(() => {
     unmountedRef.current = false
     retriesRef.current = 0
-    connectWs()
+    // connectWs sets loading state which is intentional on mount/symbol change
+    connectWs() // eslint-disable-line react-hooks/set-state-in-effect
     return () => {
       unmountedRef.current = true
       cleanupWs()
@@ -251,31 +284,4 @@ export function OrderBook() {
       )}
     </div>
   )
-}
-
-function processLevels(
-  raw: [string, string][],
-  side: "bid" | "ask"
-): OrderLevel[] {
-  const levels = raw
-    .map(([price, qty]) => ({
-      price: parseFloat(price),
-      qty: parseFloat(qty),
-      total: 0,
-    }))
-    .filter((l) => l.qty > 0)
-
-  // Sort: bids descending, asks ascending
-  levels.sort((a, b) =>
-    side === "bid" ? b.price - a.price : a.price - b.price
-  )
-
-  // Cumulative total
-  let cumulative = 0
-  for (const level of levels) {
-    cumulative += level.qty
-    level.total = cumulative
-  }
-
-  return levels.slice(0, DEPTH_LIMIT)
 }

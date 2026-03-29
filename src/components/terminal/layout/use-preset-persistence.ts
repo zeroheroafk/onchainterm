@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { BUILT_IN_PRESETS, type CustomPreset, type AnyPreset } from "./default-layouts"
 
 const PRESETS_STORAGE_KEY = "onchainterm_presets_v1"
@@ -46,20 +46,11 @@ function saveActivePresetId(id: string | null) {
 }
 
 export function usePresetPersistence(userId?: string) {
-  const [customPresets, setCustomPresets] = useState<CustomPreset[]>([])
-  const [activePresetId, setActivePresetIdState] = useState<string | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  const [customPresets, setCustomPresets] = useState<CustomPreset[]>(() => loadCustomPresetsFromStorage())
+  const [activePresetId, setActivePresetIdState] = useState<string | null>(() => loadActivePresetId())
+  const [loaded] = useState(true)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   void userId // Reserved for future Supabase integration
-
-  useEffect(() => {
-    const presets = loadCustomPresetsFromStorage()
-    if (presets.length > 0) {
-      setCustomPresets(presets)
-    }
-    setActivePresetIdState(loadActivePresetId())
-    setLoaded(true)
-  }, [])
 
   const persistPresets = useCallback((presets: CustomPreset[]) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)

@@ -90,7 +90,7 @@ function UserMenu() {
 
       await refreshUser()
       setEditMode(false)
-    } catch (err) {
+    } catch {
       setSaveError("Failed to update profile")
     } finally {
       setSaving(false)
@@ -275,7 +275,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
           </div>
         ) : isNeon ? (
           <span className="hidden sm:inline text-[9px] text-accent uppercase tracking-wider font-mono neon-text-pulse">
-            // CRYPTO MARKET INTELLIGENCE
+            {"// CRYPTO MARKET INTELLIGENCE"}
           </span>
         ) : (
           <span className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.15em] hidden sm:inline font-medium">
