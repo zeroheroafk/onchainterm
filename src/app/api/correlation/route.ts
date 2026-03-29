@@ -1,75 +1,118 @@
 import { NextResponse } from "next/server"
 
-const COINS = ["bitcoin", "ethereum", "solana", "binancecoin", "ripple", "cardano", "dogecoin", "chainlink", "avalanche-2", "polkadot"]
-const SYMBOLS = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK", "AVAX", "DOT"]
+// Binance spot symbols (USDT pairs)
+const PAIRS = [
+  { symbol: "BTCUSDT", label: "BTC" },
+  { symbol: "ETHUSDT", label: "ETH" },
+  { symbol: "SOLUSDT", label: "SOL" },
+  { symbol: "BNBUSDT", label: "BNB" },
+  { symbol: "XRPUSDT", label: "XRP" },
+  { symbol: "ADAUSDT", label: "ADA" },
+  { symbol: "DOGEUSDT", label: "DOGE" },
+  { symbol: "LINKUSDT", label: "LINK" },
+  { symbol: "AVAXUSDT", label: "AVAX" },
+  { symbol: "DOTUSDT", label: "DOT" },
+]
+
+function pearson(xs: number[], ys: number[]): number {
+  const n = xs.length
+  if (n === 0) return 0
+  const meanX = xs.reduce((a, b) => a + b, 0) / n
+  const meanY = ys.reduce((a, b) => a + b, 0) / n
+  let num = 0, denomX = 0, denomY = 0
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - meanX
+    const dy = ys[i] - meanY
+    num += dx * dy
+    denomX += dx * dx
+    denomY += dy * dy
+  }
+  const denom = Math.sqrt(denomX * denomY)
+  return denom === 0 ? 0 : num / denom
+}
+
+async function fetchFromBinance() {
+  // Fetch 30 daily candles for each pair
+  const results = await Promise.all(
+    PAIRS.map(async ({ symbol }) => {
+      const res = await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=31`,
+        { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) }
+      )
+      if (!res.ok) throw new Error(`Binance ${res.status}`)
+      const data: [number, string, string, string, string][] = await res.json()
+      // Extract close prices [timestamp, open, high, low, close, ...]
+      return data.map((candle) => parseFloat(candle[4]))
+    })
+  )
+  return results
+}
+
+async function fetchFromOKX() {
+  const okxSymbols = PAIRS.map(p => p.label + "-USDT")
+  const results = await Promise.all(
+    okxSymbols.map(async (instId) => {
+      const res = await fetch(
+        `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=1D&limit=31`,
+        { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) }
+      )
+      if (!res.ok) throw new Error(`OKX ${res.status}`)
+      const json = await res.json()
+      const candles = json.data || []
+      // OKX returns [ts, o, h, l, c, vol, ...] in reverse chronological
+      return candles.map((c: string[]) => parseFloat(c[4])).reverse()
+    })
+  )
+  return results
+}
 
 export async function GET() {
-  try {
-    // Fetch 30-day daily prices for each coin from CoinGecko
-    const results = await Promise.all(
-      COINS.map(async (id) => {
-        const res = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=30&interval=daily`,
-          { next: { revalidate: 3600 } }
-        )
-        if (!res.ok) return null
-        const data = await res.json()
-        // prices is [[timestamp, price], ...]
-        return (data.prices as [number, number][])?.map(([, p]) => p) || null
+  const sources = [
+    { name: "Binance", fn: fetchFromBinance },
+    { name: "OKX", fn: fetchFromOKX },
+  ]
+
+  for (const source of sources) {
+    try {
+      const prices = await source.fn()
+
+      // Calculate daily returns
+      const minLen = Math.min(...prices.map((p) => p.length))
+      if (minLen < 5) continue
+
+      const returns = prices.map((p) => {
+        const trimmed = p.slice(0, minLen)
+        const r: number[] = []
+        for (let i = 1; i < trimmed.length; i++) {
+          r.push(trimmed[i] / trimmed[i - 1] - 1)
+        }
+        return r
       })
-    )
 
-    // Build price arrays, ensure all have same length
-    const minLen = Math.min(...results.map((r) => r?.length ?? 0))
-    if (minLen < 5) {
-      return NextResponse.json({ error: "Not enough price data" }, { status: 502 })
-    }
+      const symbols = PAIRS.map((p) => p.label)
+      const matrix: Record<string, Record<string, number>> = {}
 
-    const prices = results.map((r) => (r ? r.slice(0, minLen) : []))
-
-    // Calculate returns (percentage changes) for better correlation
-    const returns = prices.map((p) => {
-      const r: number[] = []
-      for (let i = 1; i < p.length; i++) {
-        r.push(p[i] / p[i - 1] - 1)
-      }
-      return r
-    })
-
-    // Pearson correlation
-    function pearson(xs: number[], ys: number[]): number {
-      const n = xs.length
-      if (n === 0) return 0
-      const meanX = xs.reduce((a, b) => a + b, 0) / n
-      const meanY = ys.reduce((a, b) => a + b, 0) / n
-      let num = 0, denomX = 0, denomY = 0
-      for (let i = 0; i < n; i++) {
-        const dx = xs[i] - meanX
-        const dy = ys[i] - meanY
-        num += dx * dy
-        denomX += dx * dx
-        denomY += dy * dy
-      }
-      const denom = Math.sqrt(denomX * denomY)
-      return denom === 0 ? 0 : num / denom
-    }
-
-    // Build matrix
-    const matrix: Record<string, Record<string, number>> = {}
-    for (let i = 0; i < SYMBOLS.length; i++) {
-      matrix[SYMBOLS[i]] = {}
-      for (let j = 0; j < SYMBOLS.length; j++) {
-        if (i === j) {
-          matrix[SYMBOLS[i]][SYMBOLS[j]] = 1
-        } else {
-          matrix[SYMBOLS[i]][SYMBOLS[j]] = pearson(returns[i], returns[j])
+      for (let i = 0; i < symbols.length; i++) {
+        matrix[symbols[i]] = {}
+        for (let j = 0; j < symbols.length; j++) {
+          matrix[symbols[i]][symbols[j]] =
+            i === j ? 1 : pearson(returns[i], returns[j])
         }
       }
-    }
 
-    return NextResponse.json({ matrix, symbols: SYMBOLS, dataPoints: minLen - 1 })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to calculate correlations"
-    return NextResponse.json({ error: message }, { status: 500 })
+      return NextResponse.json({
+        matrix,
+        symbols,
+        dataPoints: minLen - 1,
+        source: source.name,
+      })
+    } catch {
+      // try next source
+    }
   }
+
+  return NextResponse.json(
+    { error: "Unable to fetch price data from any source" },
+    { status: 502 }
+  )
 }

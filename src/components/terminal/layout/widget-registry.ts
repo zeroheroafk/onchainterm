@@ -452,7 +452,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
   {
     id: "crypto-calendar",
     titleKey: "widget.cryptoCalendar",
-    fallbackTitle: "Crypto Calendar",
+    fallbackTitle: "Raises & Rounds",
     icon: CalendarDays,
     category: "market",
     defaultSize: { w: 30, h: 55 },
