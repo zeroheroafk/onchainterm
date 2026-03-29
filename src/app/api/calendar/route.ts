@@ -35,8 +35,14 @@ export async function GET() {
 
     const events = sorted.map((r) => {
       const dateStr = new Date(r.date * 1000).toISOString().split("T")[0]
-      const amountStr = r.amount
-        ? `$${r.amount >= 1_000_000 ? (r.amount / 1_000_000).toFixed(1) + "M" : (r.amount / 1000).toFixed(0) + "K"}`
+      // DeFiLlama amounts are in millions
+      const amt = r.amount || 0
+      const amountStr = amt >= 1000
+        ? `$${(amt / 1000).toFixed(1)}B`
+        : amt >= 1
+        ? `$${amt % 1 === 0 ? amt.toFixed(0) : amt.toFixed(1)}M`
+        : amt > 0
+        ? `$${(amt * 1000).toFixed(0)}K`
         : ""
 
       return {
