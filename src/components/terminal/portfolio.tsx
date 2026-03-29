@@ -341,64 +341,8 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
         </div>
       )}
 
-      {/* Entries list */}
-      <div className="flex-1 overflow-auto">
-        {pricesLoading && entries.length === 0 ? (
-          <div className="p-3">
-            <CardsSkeleton count={4} />
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-            <PieChart className="size-8 opacity-20" />
-            <span className="text-[10px]">No holdings yet</span>
-            <span className="text-[8px]">Click + below to add your first holding</span>
-          </div>
-        ) : (
-          <div className="divide-y divide-border/50">
-            {entries.map((entry, i) => {
-              const cp = getCurrentPrice(entry)
-              const value = cp ? cp * entry.amount : 0
-              const cost = entry.buyPrice * entry.amount
-              const pnl = value - cost
-              const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0
-              return (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between px-3 py-2 group cursor-pointer hover:bg-secondary/30 transition-colors"
-                  onClick={() => onSelectSymbol?.(entry.coinId)}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <div>
-                      <span className="text-xs font-bold">{entry.symbol}</span>
-                      <div className="text-[10px] text-muted-foreground">
-                        {entry.amount} @ {formatPrice(entry.buyPrice)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-xs num">{cp ? formatPrice(value) : "—"}</div>
-                      <div className={`text-[10px] num ${pnl >= 0 ? "text-positive" : "text-negative"}`}>
-                        {pnl >= 0 ? "+" : ""}{formatPrice(pnl)} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
       {/* Add form */}
-      <div className="border-t border-border px-3 py-2 shrink-0">
+      <div className="border-b border-border px-3 py-2 shrink-0">
         {showAdd ? (
           <div className="animate-slide-down flex flex-col gap-1.5">
             {/* Coin search */}
@@ -456,6 +400,62 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors">
             <Plus className="size-3" /> Add holding
           </button>
+        )}
+      </div>
+
+      {/* Entries list */}
+      <div className="flex-1 overflow-auto">
+        {pricesLoading && entries.length === 0 ? (
+          <div className="p-3">
+            <CardsSkeleton count={4} />
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <PieChart className="size-8 opacity-20" />
+            <span className="text-[10px]">No holdings yet</span>
+            <span className="text-[8px]">Add your first holding above</span>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/50">
+            {entries.map((entry, i) => {
+              const cp = getCurrentPrice(entry)
+              const value = cp ? cp * entry.amount : 0
+              const cost = entry.buyPrice * entry.amount
+              const pnl = value - cost
+              const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0
+              return (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between px-3 py-2 group cursor-pointer hover:bg-secondary/30 transition-colors"
+                  onClick={() => onSelectSymbol?.(entry.coinId)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <div>
+                      <span className="text-xs font-bold">{entry.symbol}</span>
+                      <div className="text-[10px] text-muted-foreground">
+                        {entry.amount} @ {formatPrice(entry.buyPrice)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-xs num">{cp ? formatPrice(value) : "—"}</div>
+                      <div className={`text-[10px] num ${pnl >= 0 ? "text-positive" : "text-negative"}`}>
+                        {pnl >= 0 ? "+" : ""}{formatPrice(pnl)} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-all"
+                    >
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
