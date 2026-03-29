@@ -9,56 +9,82 @@ const EXCHANGES: { name: string; addresses: string[] }[] = [
   { name: "OKX", addresses: ["0xA7EFAe728D2936e78BDA97dc267687568dD593f3", "0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b"] },
 ]
 
+const PER_CALL_TIMEOUT_MS = 5_000
+const OVERALL_TIMEOUT_MS = 12_000
+
+/** Wrapper around etherscanFetch that races against AbortSignal.timeout */
+async function timedEtherscanFetch(params: string, revalidate = 60): Promise<Record<string, unknown>> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PER_CALL_TIMEOUT_MS)
+  try {
+    return await etherscanFetch(params, revalidate)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+/** Fetch balance + txlist for a single exchange; returns partial data on failure */
+async function fetchExchangeFlow(exchange: { name: string; addresses: string[] }) {
+  const addr = exchange.addresses[0]
+  const allAddrsLower = exchange.addresses.map(a => a.toLowerCase())
+
+  // Fire both calls in parallel instead of sequentially
+  const [balResult, txResult] = await Promise.allSettled([
+    timedEtherscanFetch(`module=account&action=balance&address=${addr}&tag=latest`),
+    timedEtherscanFetch(`module=account&action=txlist&address=${addr}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`),
+  ])
+
+  const balanceEth =
+    balResult.status === "fulfilled" && balResult.value.status === "1"
+      ? Number(balResult.value.result) / 1e18
+      : 0
+
+  let inflow = 0
+  let outflow = 0
+
+  if (txResult.status === "fulfilled" && txResult.value.status === "1" && Array.isArray(txResult.value.result)) {
+    const oneDayAgo = Math.floor(Date.now() / 1000) - 86400
+    for (const tx of txResult.value.result) {
+      if (Number(tx.timeStamp) < oneDayAgo) continue
+      if (tx.isError === "1") continue
+      const valueEth = Number(tx.value) / 1e18
+      if (valueEth === 0) continue
+
+      const toLower = (tx.to ?? "").toLowerCase()
+      const fromLower = (tx.from ?? "").toLowerCase()
+
+      if (allAddrsLower.includes(toLower) && !allAddrsLower.includes(fromLower)) {
+        inflow += valueEth
+      } else if (allAddrsLower.includes(fromLower) && !allAddrsLower.includes(toLower)) {
+        outflow += valueEth
+      }
+    }
+  }
+
+  return {
+    name: exchange.name,
+    balanceEth,
+    inflow24h: inflow,
+    outflow24h: outflow,
+    netFlow: inflow - outflow,
+  }
+}
+
 export async function GET() {
   try {
-    const exchangeFlows: {
-      name: string
-      balanceEth: number
-      inflow24h: number
-      outflow24h: number
-      netFlow: number
-    }[] = []
+    // Fetch all exchanges in parallel with an overall timeout guard
+    const results = await Promise.race([
+      Promise.allSettled(EXCHANGES.map(fetchExchangeFlow)),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Exchange flow data fetch timed out")), OVERALL_TIMEOUT_MS),
+      ),
+    ])
 
-    // Fetch balances for each exchange (first address as representative)
-    for (const exchange of EXCHANGES) {
-      const addr = exchange.addresses[0]
-
-      // Get balance
-      const balData = await etherscanFetch(`module=account&action=balance&address=${addr}&tag=latest`, 60)
-      const balanceEth = balData.status === "1" ? Number(balData.result) / 1e18 : 0
-
-      // Get recent transactions to calculate inflow/outflow
-      const txData = await etherscanFetch(`module=account&action=txlist&address=${addr}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`, 60)
-
-      let inflow = 0
-      let outflow = 0
-      const oneDayAgo = Math.floor(Date.now() / 1000) - 86400
-      const addrLower = addr.toLowerCase()
-      const allAddrsLower = exchange.addresses.map(a => a.toLowerCase())
-
-      if (txData.status === "1" && Array.isArray(txData.result)) {
-        for (const tx of txData.result) {
-          if (Number(tx.timeStamp) < oneDayAgo) continue
-          if (tx.isError === "1") continue
-          const valueEth = Number(tx.value) / 1e18
-          if (valueEth === 0) continue
-
-          if (allAddrsLower.includes(tx.to.toLowerCase()) && !allAddrsLower.includes(tx.from.toLowerCase())) {
-            inflow += valueEth
-          } else if (allAddrsLower.includes(tx.from.toLowerCase()) && !allAddrsLower.includes(tx.to.toLowerCase())) {
-            outflow += valueEth
-          }
-        }
-      }
-
-      exchangeFlows.push({
-        name: exchange.name,
-        balanceEth,
-        inflow24h: inflow,
-        outflow24h: outflow,
-        netFlow: inflow - outflow,
-      })
-    }
+    const exchangeFlows = results.map((r) =>
+      r.status === "fulfilled"
+        ? r.value
+        : { name: "Unknown", balanceEth: 0, inflow24h: 0, outflow24h: 0, netFlow: 0 },
+    )
 
     const totalNet = exchangeFlows.reduce((s, e) => s + e.netFlow, 0)
 

@@ -22,13 +22,28 @@ export function OrderBook() {
   const [spread, setSpread] = useState(0)
   const wsRef = useRef<WebSocket | null>(null)
   const snapshotLoaded = useRef(false)
+  const retriesRef = useRef(0)
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const unmountedRef = useRef(false)
 
-  const connectWs = useCallback(() => {
-    // Close existing connection
+  const cleanupWs = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = null
+    }
     if (wsRef.current) {
+      wsRef.current.onopen = null
+      wsRef.current.onmessage = null
+      wsRef.current.onerror = null
+      wsRef.current.onclose = null
       wsRef.current.close()
       wsRef.current = null
     }
+  }, [])
+
+  const connectWs = useCallback(() => {
+    // Clean up any existing connection and pending reconnects
+    cleanupWs()
     snapshotLoaded.current = false
     setLoading(true)
     setBids([])
@@ -41,18 +56,20 @@ export function OrderBook() {
         return res.json()
       })
       .then((data: { bids: [string, string][]; asks: [string, string][] }) => {
+        if (unmountedRef.current) return
         const parsedBids = processLevels(data.bids, "bid")
         const parsedAsks = processLevels(data.asks, "ask")
         setBids(parsedBids)
         setAsks(parsedAsks)
         if (parsedBids.length > 0 && parsedAsks.length > 0) {
-          setSpread(parsedAsks[0].price - parsedBids[0].price)
+          const spreadVal = parsedAsks[0].price - parsedBids[0].price
+          setSpread(Math.max(0, spreadVal))
         }
         snapshotLoaded.current = true
         setLoading(false)
       })
       .catch(() => {
-        setLoading(false)
+        if (!unmountedRef.current) setLoading(false)
       })
 
     // Then connect WebSocket for live updates
@@ -60,6 +77,10 @@ export function OrderBook() {
       const ws = new WebSocket(
         `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@depth${DEPTH_LIMIT}@1000ms`
       )
+
+      ws.onopen = () => {
+        retriesRef.current = 0
+      }
 
       ws.onmessage = (event) => {
         if (!snapshotLoaded.current) return
@@ -71,23 +92,17 @@ export function OrderBook() {
             if (rawBids?.length) {
               const newBids = processLevels(rawBids, "bid")
               setBids(newBids)
-              if (newBids.length > 0) {
-                setSpread((prev) => {
-                  // Recalculate with current asks
-                  return prev // will be recalculated below
-                })
-              }
             }
             if (rawAsks?.length) {
               const newAsks = processLevels(rawAsks, "ask")
               setAsks(newAsks)
             }
 
-            // Update spread
+            // Update spread using the processed top-of-book prices
             if (rawBids?.length && rawAsks?.length) {
               const topBid = parseFloat(rawBids[0][0])
               const topAsk = parseFloat(rawAsks[0][0])
-              if (topBid > 0 && topAsk > 0) {
+              if (topBid > 0 && topAsk > 0 && topAsk >= topBid) {
                 setSpread(topAsk - topBid)
               }
             }
@@ -97,26 +112,41 @@ export function OrderBook() {
         }
       }
 
-      ws.onerror = () => ws.close()
+      ws.onerror = () => {
+        ws.close()
+      }
+
       ws.onclose = () => {
-        wsRef.current = null
+        if (wsRef.current === ws) {
+          wsRef.current = null
+        }
+        // Reconnect with exponential backoff, max 3 retries
+        if (!unmountedRef.current && retriesRef.current < 3) {
+          const delay = Math.min(1000 * Math.pow(2, retriesRef.current), 4000)
+          retriesRef.current += 1
+          reconnectTimerRef.current = setTimeout(() => {
+            if (!unmountedRef.current) {
+              connectWs()
+            }
+          }, delay)
+        }
       }
 
       wsRef.current = ws
     } catch {
       // WebSocket not available
     }
-  }, [symbol])
+  }, [symbol, cleanupWs])
 
   useEffect(() => {
+    unmountedRef.current = false
+    retriesRef.current = 0
     connectWs()
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-        wsRef.current = null
-      }
+      unmountedRef.current = true
+      cleanupWs()
     }
-  }, [connectWs])
+  }, [connectWs, cleanupWs])
 
   const maxTotal = useMemo(() => {
     const maxBid = bids.length > 0 ? bids[bids.length - 1].total : 0
@@ -185,10 +215,10 @@ export function OrderBook() {
             {/* Spread */}
             <div className="flex items-center justify-center py-1 border-y border-border shrink-0">
               <span className="text-[10px] text-muted-foreground">
-                Spread: <span className="num text-foreground font-medium">{formatPrice(spread)}</span>
-                {bids.length > 0 && bids[0].price > 0 && (
+                Spread: <span className="num text-foreground font-medium">{formatPrice(Math.abs(spread))}</span>
+                {bids.length > 0 && asks.length > 0 && bids[0].price > 0 && spread > 0 && (
                   <span className="text-muted-foreground/60 ml-1">
-                    ({((spread / bids[0].price) * 100).toFixed(3)}%)
+                    ({((spread / ((bids[0].price + asks[0].price) / 2)) * 100).toFixed(3)}%)
                   </span>
                 )}
               </span>

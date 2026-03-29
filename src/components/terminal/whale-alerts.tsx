@@ -71,12 +71,15 @@ export function WhaleAlerts() {
     } catch {}
   }, [soundEnabled])
 
-  const fetchWhales = useCallback(async () => {
+  const fetchWhales = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch("/api/whales")
+      const res = await fetch("/api/whales", { signal })
       if (!res.ok) throw new Error("Failed to fetch whale data")
       const data = await res.json()
       if (data.error) throw new Error(data.error)
+
+      // If aborted after fetch completed, don't update state
+      if (signal?.aborted) return
 
       // Check for new transactions (sound alert)
       if (seenHashesRef.current.size > 0) {
@@ -103,16 +106,23 @@ export function WhaleAlerts() {
       markHookUpdated()
       setError(null)
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : "Failed to load")
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }, [playSound, playSoundGlobal, addNotification, markHookUpdated])
 
   useEffect(() => {
-    fetchWhales()
-    const interval = setInterval(fetchWhales, 30_000) // refresh every 30s
-    return () => clearInterval(interval)
+    const controller = new AbortController()
+    fetchWhales(controller.signal)
+    const interval = setInterval(() => fetchWhales(controller.signal), 30_000) // refresh every 30s
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
   }, [fetchWhales])
 
   if (loading && transactions.length === 0) {
