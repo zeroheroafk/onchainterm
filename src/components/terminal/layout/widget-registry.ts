@@ -47,6 +47,8 @@ export interface WidgetProps {
 export interface TerminalWidgetContext {
   chartSymbol: string
   setChartSymbol: (s: string) => void
+  onOpenPM?: (recipient: { userId: string; displayName: string }) => void
+  pmRecipient?: { userId: string; displayName: string } | null
 }
 
 export type WidgetId =

@@ -46,6 +46,7 @@ const ThemeCreator = lazy(() => import("@/components/terminal/theme-creator").th
 const YieldTracker = lazy(() => import("@/components/terminal/yield-tracker").then(m => ({ default: m.YieldTracker })))
 const CryptoCalendar = lazy(() => import("@/components/terminal/crypto-calendar").then(m => ({ default: m.CryptoCalendar })))
 const OrderBookWidget = lazy(() => import("@/components/terminal/order-book").then(m => ({ default: m.OrderBook })))
+const PrivateMessagesWidget = lazy(() => import("@/components/terminal/private-messages").then(m => ({ default: m.PrivateMessages })))
 
 function WidgetLoadingFallback() {
   return (
@@ -102,7 +103,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "wallet-tracker":
       return <WalletTracker />
     case "chat":
-      return <ChatWidget />
+      return <ChatWidget onOpenPM={context.onOpenPM} pmRecipient={context.pmRecipient} />
     case "news":
       return <NewsWidget />
     case "token-screener":
@@ -132,7 +133,7 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
     case "theme-creator":
       return <ThemeCreator />
     case "private-messages":
-      return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
+      return <PrivateMessagesWidget initialRecipient={context.pmRecipient} />
     case "yield-tracker":
       return <YieldTracker />
     case "crypto-calendar":

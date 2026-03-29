@@ -16,17 +16,23 @@ import { PresetManager } from "@/components/terminal/preset-manager"
 import { CoinContextMenuProvider } from "@/components/terminal/coin-context-menu"
 import { TerminalHeader } from "@/components/terminal/terminal-header"
 import { TerminalProviders } from "@/components/terminal/terminal-providers"
-
-function TerminalContent() {
+function TerminalContentInner() {
   const [chartSymbol, setChartSymbol] = useState("bitcoin")
+  const [pmRecipient, setPmRecipient] = useState<{ userId: string; displayName: string } | null>(null)
   const { theme } = useTheme()
   const { showHelp, setShowHelp, showPresets, setShowPresets } = useKeyboardShortcuts()
   const [showDashboardBar, setShowDashboardBar] = useState(true)
   const [showActionBar, setShowActionBar] = useState(true)
 
+  const onOpenPM = useCallback((recipient: { userId: string; displayName: string }) => {
+    setPmRecipient(recipient)
+  }, [])
+
   const context: TerminalWidgetContext = {
     chartSymbol,
     setChartSymbol: useCallback((s: string) => setChartSymbol(s), []),
+    onOpenPM,
+    pmRecipient,
   }
 
   return (
@@ -57,7 +63,7 @@ function TerminalContent() {
 export function TerminalPageClient() {
   return (
     <TerminalProviders>
-      <TerminalContent />
+      <TerminalContentInner />
     </TerminalProviders>
   )
 }
