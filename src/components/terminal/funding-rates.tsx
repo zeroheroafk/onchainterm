@@ -34,13 +34,16 @@ export function FundingRates() {
   const [search, setSearch] = useState("")
   const { markUpdated, formatLastUpdated } = useLastUpdated()
 
+  const [source, setSource] = useState("Binance")
+
   const fetchFunding = useCallback(async () => {
     try {
       const res = await fetch("/api/funding")
       if (!res.ok) throw new Error("Failed to fetch funding rates")
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      setData(json)
+      setData(json.data || json)
+      if (json.source) setSource(json.source)
       markUpdated()
       setError(null)
     } catch (err) {
@@ -200,7 +203,7 @@ export function FundingRates() {
       {/* Footer */}
       <div className="mt-auto shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground/40">
-          Binance Futures{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
+          {source} Futures{formatLastUpdated() ? ` · Updated ${formatLastUpdated()}` : ""}
         </span>
       </div>
     </div>

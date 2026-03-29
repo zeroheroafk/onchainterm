@@ -24,18 +24,12 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
   useEffect(() => {
     async function fetchMovers() {
       try {
-        const [gainRes, loseRes] = await Promise.all([
-          fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc&per_page=10&page=1&sparkline=false"),
-          fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_asc&per_page=10&page=1&sparkline=false"),
-        ])
-        if (gainRes.ok) {
-          const g = await gainRes.json()
-          setGainers(g.filter((c: MoverCoin) => c.price_change_percentage_24h > 0).slice(0, 10))
-        }
-        if (loseRes.ok) {
-          const l = await loseRes.json()
-          setLosers(l.filter((c: MoverCoin) => c.price_change_percentage_24h < 0).slice(0, 10))
-        }
+        const res = await fetch("/api/top-movers")
+        if (!res.ok) throw new Error("Failed to fetch")
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        if (data.gainers) setGainers(data.gainers)
+        if (data.losers) setLosers(data.losers)
       } catch {
         // silent
       } finally {
