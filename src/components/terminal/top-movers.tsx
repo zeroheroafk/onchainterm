@@ -54,7 +54,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
       <div className="flex items-center border-b border-border shrink-0">
         <button
           onClick={() => setTab("gainers")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
             tab === "gainers" ? "text-positive widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -62,7 +62,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
         </button>
         <button
           onClick={() => setTab("losers")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors widget-tab ${
             tab === "losers" ? "text-negative widget-tab-active" : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -78,7 +78,7 @@ export function TopMovers({ onSelectSymbol }: { onSelectSymbol?: (id: string) =>
         ) : (
           <div key={tab} className="divide-y divide-border/50 tab-content">
             {list.map((coin, i) => (
-              <div key={coin.id} className="flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => onSelectSymbol?.(coin.id)} onContextMenu={(e) => showMenu(e, coin.id, coin.symbol)}>
+              <div key={coin.id} className="flex items-center justify-between px-2 py-1 hover:bg-secondary/30 transition-colors cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => onSelectSymbol?.(coin.id)} onContextMenu={(e) => showMenu(e, coin.id, coin.symbol)}>
                 <div>
                   <span className="text-xs font-bold text-foreground">{coin.symbol.toUpperCase()}</span>
                   <span className="text-[10px] text-muted-foreground ml-1.5">{coin.name}</span>

@@ -242,7 +242,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
   ]
 
   return (
-    <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-2 py-0.5" : "bg-card border-border/50 sm:px-5 px-3 py-2 sm:py-2.5"}`}>
+    <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-2 py-0.5" : "bg-card border-border/50 sm:px-4 px-2 py-1 sm:py-1"}`}>
       <div className="flex items-center gap-3">
         {isBloomberg ? (
           <h1 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
@@ -251,15 +251,15 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
         ) : (
           <h1 className={`flex items-center gap-0 ${isNeon ? "font-mono neon-glitch-text" : "font-heading"}`}>
             {/* Logo mark */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mr-1.5 shrink-0 opacity-80">
-              <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.5" className="text-primary" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mr-1.5 shrink-0 opacity-80">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" className="text-primary" />
               <path d="M8 16V11L12 8L16 11V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
               <circle cx="12" cy="12" r="2" fill="currentColor" className="text-primary/60" />
             </svg>
-            <span className="text-sm font-light tracking-[0.18em] uppercase text-foreground/90">
+            <span className="text-xs font-normal tracking-[0.15em] uppercase text-foreground/90">
               Onchain
             </span>
-            <span className="text-sm font-bold tracking-[0.18em] uppercase text-gradient">
+            <span className="text-xs font-bold tracking-[0.15em] uppercase text-gradient">
               Term
             </span>
           </h1>
@@ -284,7 +284,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
         )}
         {/* Inline F-key shortcuts */}
         {showActionBar && (
-          <div className="hidden lg:flex items-center gap-px ml-2 font-mono">
+          <div className="hidden lg:flex items-center gap-px ml-2">
             {FN_KEYS.map(({ key, label }) => (
               <button
                 key={key}

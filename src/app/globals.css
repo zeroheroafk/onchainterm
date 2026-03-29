@@ -46,9 +46,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-sans: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
-  --font-heading: var(--font-heading), 'Space Grotesk', system-ui, sans-serif;
+  --font-heading: var(--font-inter), 'Inter', system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -105,7 +105,7 @@
 
 /* ── Refined typography ── */
 .font-heading {
-  font-family: var(--font-heading), 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-heading), 'Inter', system-ui, sans-serif;
 }
 
 /* Tabular numerals everywhere for data-dense UIs */
@@ -135,9 +135,19 @@ button:focus-visible {
   outline-offset: -1px;
 }
 
-/* ── Solid borders ── */
+/* ── Solid borders — brighter for panel separation ── */
 .widget-panel {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 100%, white 15%);
+}
+
+/* ── Global dense table defaults ── */
+.widget-panel table {
+  font-size: 11px;
+}
+
+.widget-panel table th,
+.widget-panel table td {
+  padding: 2px 6px;
 }
 
 /* ── Zebra-striped tables ── */
@@ -887,15 +897,7 @@ button:focus-visible {
   padding-right: 6px;
 }
 
-/* Denser tables in Bloomberg mode */
-.bloomberg-active .widget-panel table {
-  font-size: 11px;
-}
-
-.bloomberg-active .widget-panel table th,
-.bloomberg-active .widget-panel table td {
-  padding: 2px 6px;
-}
+/* Table density now global — Bloomberg inherits */
 
 /* Tighter widget gaps in Bloomberg mode */
 .bloomberg-active .widget-grid-area {

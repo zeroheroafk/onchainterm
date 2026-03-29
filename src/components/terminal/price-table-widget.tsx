@@ -216,7 +216,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
 
   const SortHeader = ({ label, sortKeyVal, className = "" }: { label: string; sortKeyVal: SortKey; className?: string }) => (
     <th
-      className={`py-1.5 px-2 text-right text-[9px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors font-medium ${
+      className={`py-1 px-1.5 text-right text-[9px] uppercase tracking-wider cursor-pointer hover:text-primary transition-colors font-medium ${
         sortKey === sortKeyVal ? "text-primary" : "text-muted-foreground/70"
       } ${className}`}
       onClick={() => handleSort(sortKeyVal)}
@@ -260,7 +260,7 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
   return (
     <div ref={tableRef} tabIndex={0} onKeyDown={handleKeyDown} className="h-full overflow-auto focus:outline-none">
       {formatLastUpdated() && (
-        <div className="flex items-center justify-end gap-2 px-2 pt-1">
+        <div className="flex items-center justify-end gap-2 px-1.5 pt-0.5">
           <span className="text-[8px] text-muted-foreground/40">Updated {formatLastUpdated()}</span>
           {sorted.length > 0 && (
             <button onClick={exportCSV} className="text-muted-foreground hover:text-primary transition-colors" title="Export CSV">
@@ -273,12 +273,12 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
         <thead className="sticky top-0 z-[1]">
           <tr className="border-b border-border/50">
             <SortHeader label="#" sortKeyVal="rank" className="!text-left w-8" />
-            <th className="py-1.5 px-2 text-left text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium">Asset</th>
+            <th className="py-1 px-1.5 text-left text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium">Asset</th>
             <SortHeader label="Price" sortKeyVal="price" />
             <SortHeader label="1H" sortKeyVal="1h" />
             <SortHeader label="24H" sortKeyVal="24h" />
             <SortHeader label="7D" sortKeyVal="7d" className="hidden xl:table-cell" />
-            <th className="py-1.5 px-2 text-right text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium hidden 2xl:table-cell">7D Chart</th>
+            <th className="py-1 px-1.5 text-right text-[9px] uppercase tracking-wider text-muted-foreground/70 font-medium hidden 2xl:table-cell">7D Chart</th>
             <SortHeader label="MCap" sortKeyVal="mcap" className="hidden lg:table-cell" />
             <SortHeader label="Vol 24H" sortKeyVal="vol" className="hidden xl:table-cell" />
           </tr>
@@ -298,13 +298,13 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                     : "hover:bg-secondary/40"
               } ${flashMap[coin.id] === "up" ? "flash-up" : flashMap[coin.id] === "down" ? "flash-down" : ""}`}
             >
-              <td className="py-1.5 px-2 text-muted-foreground/60 num text-[10px]">
+              <td className="py-1 px-1.5 text-muted-foreground/60 num text-[10px]">
                 <span className="inline-flex items-center gap-1">
                   {selectedIndex === i && <span className="text-primary font-bold">&gt;</span>}
                   {coin.market_cap_rank}
                 </span>
               </td>
-              <td className="py-1.5 px-2">
+              <td className="py-1 px-1.5">
                 <CoinTooltip coinId={coin.id}>
                   <div className="flex items-center gap-1.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -314,28 +314,28 @@ export function PriceTableWidget({ onSelectSymbol }: PriceTableWidgetProps) {
                   </div>
                 </CoinTooltip>
               </td>
-              <td className="py-1.5 px-2 text-right num text-foreground">
+              <td className="py-1 px-1.5 text-right num text-foreground">
                 {formatPrice(coin.current_price)}
               </td>
-              <td className="py-1.5 px-2 text-right">
+              <td className="py-1 px-1.5 text-right">
                 <PercentCell value={coin.price_change_percentage_1h_in_currency} />
               </td>
-              <td className="py-1.5 px-2 text-right">
+              <td className="py-1 px-1.5 text-right">
                 <PercentCell value={coin.price_change_percentage_24h} />
               </td>
-              <td className="py-1.5 px-2 text-right hidden xl:table-cell">
+              <td className="py-1 px-1.5 text-right hidden xl:table-cell">
                 <PercentCell value={coin.price_change_percentage_7d_in_currency} />
               </td>
-              <td className="py-1.5 px-2 text-right hidden 2xl:table-cell">
+              <td className="py-1 px-1.5 text-right hidden 2xl:table-cell">
                 <MiniSparkline
                   prices={coin.sparkline_in_7d?.price || []}
                   change={coin.price_change_percentage_7d_in_currency ?? 0}
                 />
               </td>
-              <td className="py-1.5 px-2 text-right num text-muted-foreground hidden lg:table-cell">
+              <td className="py-1 px-1.5 text-right num text-muted-foreground hidden lg:table-cell">
                 {formatLargeNumber(coin.market_cap)}
               </td>
-              <td className="py-1.5 px-2 text-right num text-muted-foreground hidden xl:table-cell">
+              <td className="py-1 px-1.5 text-right num text-muted-foreground hidden xl:table-cell">
                 {formatLargeNumber(coin.total_volume)}
               </td>
             </tr>
