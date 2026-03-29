@@ -34,6 +34,7 @@ import {
   Radio,
   Award,
   Palette,
+  Hash,
   type LucideIcon,
 } from "lucide-react"
 
@@ -51,7 +52,7 @@ export type WidgetId =
   | "price-table" | "price-chart" | "market-overview" | "top-movers" | "trending" | "coin-detail"
   | "gas-tracker" | "whale-alerts" | "fear-greed" | "defi-dashboard" | "liquidations" | "heatmap" | "exchange-flows"
   | "portfolio" | "watchlist" | "converter" | "pnl-calculator" | "notes" | "alerts" | "wallet-tracker"
-  | "chat" | "news" | "private-messages"
+  | "chat" | "news" | "private-messages" | "x-feed"
   | "token-screener" | "dominance-chart" | "funding-rates"
   | "multi-chart" | "trade-journal" | "correlation-matrix" | "dex-prices" | "nft-tracker"
   | "onchain-metrics" | "staking-calculator" | "trading-signals" | "user-badges" | "theme-creator"
@@ -434,6 +435,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     minSize: { w: 280, h: 300 },
     singleton: true,
     requiresAuth: true,
+  },
+  {
+    id: "x-feed",
+    titleKey: "widget.xFeed",
+    fallbackTitle: "X / Twitter Feed",
+    icon: Hash,
+    category: "comms",
+    defaultSize: { w: 35, h: 70 },
+    minSize: { w: 280, h: 300 },
+    singleton: true,
   },
 ]
 

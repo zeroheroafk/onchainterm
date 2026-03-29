@@ -389,7 +389,7 @@ function applyTheme(theme: ThemeConfig) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeId, setThemeId] = useState<ThemeId>("bloomberg")
+  const [themeId, setThemeId] = useState<ThemeId>("amber")
   const theme = getTheme(themeId)
 
   useLayoutEffect(() => {
