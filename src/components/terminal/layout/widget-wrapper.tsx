@@ -35,7 +35,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
         className={`${fullscreen ? "fixed inset-0 z-[100]" : ""} flex h-full w-full flex-col overflow-hidden rounded border border-border/60 bg-card transition-colors widget-panel`}
       >
         <div
-          className={`flex h-6 shrink-0 items-center justify-between border-b border-border/40 px-2 ${
+          className={`flex h-5 shrink-0 items-center justify-between border-b border-border px-1.5 ${
             !isLocked ? "cursor-grab active:cursor-grabbing" : ""
           }`}
           onMouseDown={!isLocked ? onDragStart : undefined}

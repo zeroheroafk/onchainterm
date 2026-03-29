@@ -49,10 +49,10 @@ export function MarketOverview() {
   const isPositive = change24h >= 0
 
   return (
-    <div className="h-full overflow-auto p-3 space-y-3 animate-fade-in">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="h-full overflow-auto p-2 space-y-2 animate-fade-in">
+      <div className="grid grid-cols-2 gap-2">
         {/* Total Market Cap */}
-        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3 hover-3d">
+        <div className="border border-border/30 bg-secondary/10 p-2">
           <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
             <BarChart3 className="size-3 opacity-60" />
             <span className="text-[9px] uppercase tracking-wider font-medium">Total Market Cap</span>
@@ -64,7 +64,7 @@ export function MarketOverview() {
         </div>
 
         {/* 24h Volume */}
-        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3 hover-3d">
+        <div className="border border-border/30 bg-secondary/10 p-2">
           <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
             <Activity className="size-3 opacity-60" />
             <span className="text-[9px] uppercase tracking-wider font-medium">24h Volume</span>
@@ -73,7 +73,7 @@ export function MarketOverview() {
         </div>
 
         {/* BTC Dominance */}
-        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3 hover-3d">
+        <div className="border border-border/30 bg-secondary/10 p-2">
           <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
             <TrendingUp className="size-3 opacity-60" />
             <span className="text-[9px] uppercase tracking-wider font-medium">BTC Dominance</span>
@@ -85,7 +85,7 @@ export function MarketOverview() {
         </div>
 
         {/* ETH Dominance */}
-        <div className="rounded-lg border border-border/30 bg-secondary/10 p-3 hover-3d">
+        <div className="border border-border/30 bg-secondary/10 p-2">
           <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
             <TrendingDown className="size-3 opacity-60" />
             <span className="text-[9px] uppercase tracking-wider font-medium">ETH Dominance</span>
