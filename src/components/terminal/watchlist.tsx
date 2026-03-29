@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Star, Plus, X, Search, Loader2, Share2, Check, Download, ChevronDown, Pencil, Trash2, FolderPlus, GripVertical } from "lucide-react"
+import { Star, Plus, X, Search, Loader2, Share2, Check, Download, GripVertical } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
 import { TableSkeleton } from "@/components/terminal/widget-skeleton"
@@ -77,14 +77,12 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [extraPrices, setExtraPrices] = useState<Record<string, CoinPrice>>({})
   const [copied, setCopied] = useState(false)
   const [importBanner, setImportBanner] = useState<{ ids: string[] } | null>(null)
-  const [showListMenu, setShowListMenu] = useState(false)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const listMenuRef = useRef<HTMLDivElement>(null)
 
   const activeList = watchlists.find(l => l.id === activeListId) || watchlists[0]
   const watchlist = activeList?.coins || []
@@ -102,16 +100,6 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
       if (shareTimer.current) clearTimeout(shareTimer.current)
     }
   }, [])
-
-  // Close list menu on outside click
-  useEffect(() => {
-    if (!showListMenu) return
-    function handle(e: MouseEvent) {
-      if (listMenuRef.current && !listMenuRef.current.contains(e.target as Node)) setShowListMenu(false)
-    }
-    document.addEventListener("mousedown", handle)
-    return () => document.removeEventListener("mousedown", handle)
-  }, [showListMenu])
 
   // Check URL for shared watchlist on mount
   useEffect(() => {
@@ -183,18 +171,19 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
   const createList = useCallback(() => {
     if (watchlists.length >= 20) {
-      alert("Maximum of 20 watchlists reached. Please delete one before creating a new one.")
+      toast("Max 20 watchlists", "error")
       return
     }
     const id = `wl_${Date.now()}`
-    const name = `Watchlist ${watchlists.length + 1}`
+    const name = `List ${watchlists.length + 1}`
     const newList: Watchlist = { id, name, coins: [] }
     const updated = [...watchlists, newList]
     setWatchlists(updated)
     saveWatchlists(updated)
     setActiveListId(id)
-    setShowListMenu(false)
-    toast("List created", "success")
+    // Auto-start rename so user can name it immediately
+    setRenaming(id)
+    setRenameValue(name)
   }, [watchlists, toast])
 
   const deleteList = useCallback((listId: string) => {
@@ -203,7 +192,6 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     setWatchlists(updated)
     saveWatchlists(updated)
     if (activeListId === listId) setActiveListId(updated[0].id)
-    setShowListMenu(false)
   }, [watchlists, activeListId])
 
   const startRename = useCallback((listId: string) => {
@@ -302,91 +290,68 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with list selector */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <div className="flex items-center gap-2 min-w-0 flex-1" ref={listMenuRef}>
-          <Star className="size-3.5 text-amber-400 shrink-0" />
-          <button
-            onClick={() => setShowListMenu(!showListMenu)}
-            className="flex items-center gap-1 min-w-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className="truncate">{activeList?.name || "Watchlist"}</span>
-            <ChevronDown className={`size-3 shrink-0 transition-transform ${showListMenu ? "rotate-180" : ""}`} />
-          </button>
-          <span className="text-[9px] text-muted-foreground shrink-0">{watchlist.length}</span>
-
-          {/* List dropdown */}
-          {showListMenu && (
-            <div className="absolute left-0 top-full z-50 w-full border-b border-x border-border bg-card shadow-lg max-h-48 overflow-auto">
-              {watchlists.map(list => (
-                <div
-                  key={list.id}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
-                    list.id === activeListId ? "bg-primary/10 text-primary" : "hover:bg-secondary/50"
+      {/* Watchlist tabs */}
+      <div className="flex items-center border-b border-border shrink-0 min-h-0">
+        <div className="flex-1 flex items-center overflow-x-auto min-w-0 scrollbar-none">
+          {watchlists.map(list => (
+            <div key={list.id} className="shrink-0 group relative">
+              {renaming === list.id ? (
+                <div className="flex items-center px-2 py-1.5 border-r border-border bg-card">
+                  <input
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onBlur={confirmRename}
+                    onKeyDown={e => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenaming(null) }}
+                    className="w-16 bg-transparent text-[10px] outline-none border-b border-primary font-medium"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setActiveListId(list.id)}
+                  onDoubleClick={() => startRename(list.id)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium border-r border-border transition-colors whitespace-nowrap ${
+                    list.id === activeListId
+                      ? "bg-card text-primary border-b-2 border-b-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
                   }`}
                 >
-                  {renaming === list.id ? (
-                    <input
-                      value={renameValue}
-                      onChange={e => setRenameValue(e.target.value)}
-                      onBlur={confirmRename}
-                      onKeyDown={e => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenaming(null) }}
-                      className="flex-1 bg-transparent text-xs outline-none border-b border-primary"
-                      autoFocus
-                    />
-                  ) : (
-                    <button
-                      onClick={() => { setActiveListId(list.id); setShowListMenu(false) }}
-                      className="flex-1 text-left text-xs font-medium truncate"
-                    >
-                      {list.name}
-                      <span className="ml-1.5 text-[9px] text-muted-foreground">({list.coins.length})</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); startRename(list.id) }}
-                    className="p-0.5 text-muted-foreground hover:text-primary transition-colors shrink-0"
-                    title="Rename"
-                  >
-                    <Pencil className="size-2.5" />
-                  </button>
+                  {list.id === activeListId && <Star className="size-2.5 text-amber-400 shrink-0" />}
+                  <span className="truncate max-w-[80px]">{list.name}</span>
+                  <span className="text-[8px] text-muted-foreground/60">{list.coins.length}</span>
                   {watchlists.length > 1 && (
-                    <button
+                    <span
                       onClick={(e) => { e.stopPropagation(); deleteList(list.id) }}
-                      className="p-0.5 text-muted-foreground hover:text-negative transition-colors shrink-0"
-                      title="Delete"
+                      className="opacity-0 group-hover:opacity-100 ml-0.5 p-0.5 text-muted-foreground hover:text-negative transition-all cursor-pointer"
                     >
-                      <Trash2 className="size-2.5" />
-                    </button>
+                      <X className="size-2.5" />
+                    </span>
                   )}
-                </div>
-              ))}
-              <button
-                onClick={createList}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-xs text-muted-foreground hover:text-primary hover:bg-secondary/50 transition-colors border-t border-border"
-              >
-                <FolderPlus className="size-3" />
-                New watchlist
-              </button>
+                </button>
+              )}
             </div>
-          )}
+          ))}
+          {/* New tab button */}
+          <button
+            onClick={createList}
+            className="shrink-0 px-2 py-1.5 text-muted-foreground hover:text-primary hover:bg-secondary/30 transition-colors"
+            title="New watchlist"
+          >
+            <Plus className="size-3" />
+          </button>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 px-1.5 shrink-0 border-l border-border">
           <button
             onClick={shareWatchlist}
             className="relative rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
             title="Share watchlist"
           >
             {copied ? <Check className="size-3 text-positive" /> : <Share2 className="size-3" />}
-            {copied && (
-              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-positive whitespace-nowrap font-medium">
-                Copied!
-              </span>
-            )}
           </button>
           <button
             onClick={() => { setAddMode(!addMode); setSearchQuery(""); setSearchResults([]) }}
             className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
+            title={addMode ? "Cancel" : "Add coin"}
           >
             {addMode ? <X className="size-3" /> : <Plus className="size-3" />}
           </button>

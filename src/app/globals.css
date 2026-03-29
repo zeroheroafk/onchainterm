@@ -331,6 +331,15 @@ h1 svg {
   background: color-mix(in srgb, var(--border) 30%, transparent);
 }
 
+/* Hidden scrollbar utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Selection ── */
 ::selection {
   background: color-mix(in srgb, var(--primary) 20%, transparent);
