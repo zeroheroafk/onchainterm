@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { fetchWithTimeout, fetchWithFallback } from "@/lib/api-utils"
 
 // Binance spot symbols (USDT pairs)
 const PAIRS = [
@@ -35,9 +36,9 @@ async function fetchFromBinance() {
   // Fetch 30 daily candles for each pair
   const results = await Promise.all(
     PAIRS.map(async ({ symbol }) => {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=31`,
-        { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) }
+        { next: { revalidate: 3600 } }
       )
       if (!res.ok) throw new Error(`Binance ${res.status}`)
       const data: [number, string, string, string, string][] = await res.json()
@@ -52,9 +53,9 @@ async function fetchFromOKX() {
   const okxSymbols = PAIRS.map(p => p.label + "-USDT")
   const results = await Promise.all(
     okxSymbols.map(async (instId) => {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=1D&limit=31`,
-        { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) }
+        { next: { revalidate: 3600 } }
       )
       if (!res.ok) throw new Error(`OKX ${res.status}`)
       const json = await res.json()
@@ -66,53 +67,46 @@ async function fetchFromOKX() {
   return results
 }
 
-export async function GET() {
-  const sources = [
-    { name: "Binance", fn: fetchFromBinance },
-    { name: "OKX", fn: fetchFromOKX },
-  ]
+function buildCorrelationMatrix(prices: number[][], sourceName: string) {
+  const minLen = Math.min(...prices.map((p) => p.length))
+  if (minLen < 5) throw new Error("Not enough data points")
 
-  for (const source of sources) {
-    try {
-      const prices = await source.fn()
+  const returns = prices.map((p) => {
+    const trimmed = p.slice(0, minLen)
+    const r: number[] = []
+    for (let i = 1; i < trimmed.length; i++) {
+      r.push(trimmed[i] / trimmed[i - 1] - 1)
+    }
+    return r
+  })
 
-      // Calculate daily returns
-      const minLen = Math.min(...prices.map((p) => p.length))
-      if (minLen < 5) continue
+  const symbols = PAIRS.map((p) => p.label)
+  const matrix: Record<string, Record<string, number>> = {}
 
-      const returns = prices.map((p) => {
-        const trimmed = p.slice(0, minLen)
-        const r: number[] = []
-        for (let i = 1; i < trimmed.length; i++) {
-          r.push(trimmed[i] / trimmed[i - 1] - 1)
-        }
-        return r
-      })
-
-      const symbols = PAIRS.map((p) => p.label)
-      const matrix: Record<string, Record<string, number>> = {}
-
-      for (let i = 0; i < symbols.length; i++) {
-        matrix[symbols[i]] = {}
-        for (let j = 0; j < symbols.length; j++) {
-          matrix[symbols[i]][symbols[j]] =
-            i === j ? 1 : pearson(returns[i], returns[j])
-        }
-      }
-
-      return NextResponse.json({
-        matrix,
-        symbols,
-        dataPoints: minLen - 1,
-        source: source.name,
-      })
-    } catch {
-      // try next source
+  for (let i = 0; i < symbols.length; i++) {
+    matrix[symbols[i]] = {}
+    for (let j = 0; j < symbols.length; j++) {
+      matrix[symbols[i]][symbols[j]] =
+        i === j ? 1 : pearson(returns[i], returns[j])
     }
   }
 
-  return NextResponse.json(
-    { error: "Unable to fetch price data from any source" },
-    { status: 502 }
-  )
+  return { matrix, symbols, dataPoints: minLen - 1, source: sourceName }
+}
+
+export async function GET() {
+  try {
+    const { data: prices, source } = await fetchWithFallback<number[][]>([
+      { name: "Binance", fetch: fetchFromBinance },
+      { name: "OKX", fetch: fetchFromOKX },
+    ])
+
+    const result = buildCorrelationMatrix(prices, source)
+    return NextResponse.json(result)
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to fetch price data from any source" },
+      { status: 502 }
+    )
+  }
 }

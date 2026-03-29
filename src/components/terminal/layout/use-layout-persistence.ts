@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { DEFAULT_LAYOUT, DEFAULT_ACTIVE_WIDGETS, type WidgetPosition } from "./default-layouts"
 
 const STORAGE_KEY = "onchainterm_layout_v1"
@@ -29,6 +29,47 @@ function saveToStorage(data: PersistedLayout) {
   } catch {}
 }
 
+async function loadFromSupabase(userId: string): Promise<PersistedLayout | null> {
+  try {
+    const { supabase } = await import("@/lib/supabase")
+    const { data, error } = await supabase
+      .from("user_layouts")
+      .select("layout, active_widgets")
+      .eq("user_id", userId)
+      .single()
+    if (error || !data) return null
+    const layout = data.layout as WidgetPosition[]
+    const activeWidgets = data.active_widgets as string[]
+    if (!Array.isArray(layout) || !Array.isArray(activeWidgets)) return null
+    return { layout, activeWidgets }
+  } catch (err) {
+    console.error("[layout] Supabase load error:", err)
+    return null
+  }
+}
+
+async function saveToSupabase(userId: string, data: PersistedLayout) {
+  try {
+    const { supabase } = await import("@/lib/supabase")
+    const { error } = await supabase
+      .from("user_layouts")
+      .upsert(
+        {
+          user_id: userId,
+          layout: data.layout,
+          active_widgets: data.activeWidgets,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      )
+    if (error) {
+      console.error("[layout] Supabase save error:", error)
+    }
+  } catch (err) {
+    console.error("[layout] Supabase save error:", err)
+  }
+}
+
 export function useLayoutPersistence(userId?: string) {
   const [loaded] = useState(true)
   const [layout, setLayout] = useState<WidgetPosition[]>(() => {
@@ -51,15 +92,47 @@ export function useLayoutPersistence(userId?: string) {
     }
     return DEFAULT_ACTIVE_WIDGETS
   })
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  void userId // Reserved for future Supabase integration
+  const localSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cloudSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cloudLoadedRef = useRef(false)
 
-  const persistLayout = useCallback((newLayout: WidgetPosition[], newActiveWidgets: string[]) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      saveToStorage({ layout: newLayout, activeWidgets: newActiveWidgets })
-    }, 500)
-  }, [])
+  // On mount (or userId change): load from Supabase and merge
+  useEffect(() => {
+    if (!userId) return
+    cloudLoadedRef.current = false
+    let cancelled = false
+
+    loadFromSupabase(userId).then((cloudData) => {
+      if (cancelled || !cloudData) return
+      cloudLoadedRef.current = true
+      // Cloud data takes precedence
+      setLayout(cloudData.layout)
+      setActiveWidgets(cloudData.activeWidgets)
+      // Also update localStorage with cloud data
+      saveToStorage(cloudData)
+    })
+
+    return () => { cancelled = true }
+  }, [userId])
+
+  const persistLayout = useCallback(
+    (newLayout: WidgetPosition[], newActiveWidgets: string[]) => {
+      // Always save to localStorage (debounced 500ms)
+      if (localSaveTimer.current) clearTimeout(localSaveTimer.current)
+      localSaveTimer.current = setTimeout(() => {
+        saveToStorage({ layout: newLayout, activeWidgets: newActiveWidgets })
+      }, 500)
+
+      // Save to Supabase if authenticated (debounced 2s)
+      if (userId) {
+        if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current)
+        cloudSaveTimer.current = setTimeout(() => {
+          saveToSupabase(userId, { layout: newLayout, activeWidgets: newActiveWidgets })
+        }, 2000)
+      }
+    },
+    [userId]
+  )
 
   return {
     layout,

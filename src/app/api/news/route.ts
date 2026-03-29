@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { createCache } from "@/lib/api-utils"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// In-memory cache
-let cachedNews: NewsItem[] | null = null
-let cacheTimestamp = 0
-const CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+// In-memory cache (2 min TTL, stale data served for 10 min as fallback)
+const newsCache = createCache<NewsItem[]>(2 * 60 * 1000)
+const CACHE_KEY = "news"
+const STALE_TTL = 10 * 60 * 1000
 
 interface NewsItem {
   title: string
@@ -116,8 +117,9 @@ async function fetchFromRSS(): Promise<NewsItem[]> {
 export async function GET() {
   try {
     // Return cached data if fresh
-    if (cachedNews && Date.now() - cacheTimestamp < CACHE_TTL) {
-      return NextResponse.json({ news: cachedNews, cached: true })
+    const cached = newsCache.get(CACHE_KEY)
+    if (cached) {
+      return NextResponse.json({ news: cached, cached: true })
     }
 
     let news: NewsItem[] = []
@@ -139,14 +141,14 @@ export async function GET() {
     news = news.slice(0, 30)
 
     // Update cache
-    cachedNews = news
-    cacheTimestamp = Date.now()
+    newsCache.set(CACHE_KEY, news)
 
     return NextResponse.json({ news })
   } catch (err) {
     // If we have stale cache, serve it rather than error
-    if (cachedNews) {
-      return NextResponse.json({ news: cachedNews, cached: true })
+    const stale = newsCache.getStale(CACHE_KEY, STALE_TTL)
+    if (stale) {
+      return NextResponse.json({ news: stale, cached: true })
     }
     const message = err instanceof Error ? err.message : "Failed to fetch news"
     return NextResponse.json({ error: message }, { status: 500 })
