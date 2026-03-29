@@ -149,6 +149,16 @@ export async function GET() {
               token.liquidity = best.liquidity?.usd ?? null
               token.pairAddress = best.pairAddress || null
               if (best.url) token.url = best.url
+              // Fill in name/symbol from pair data if missing
+              if ((!token.name || token.name === "Unknown") && best.baseToken?.name) {
+                token.name = best.baseToken.name
+              }
+              if ((!token.symbol || token.symbol === "???") && best.baseToken?.symbol) {
+                token.symbol = best.baseToken.symbol
+              }
+              if (!token.icon && best.info?.imageUrl) {
+                token.icon = best.info.imageUrl
+              }
             }
           }
         } catch {
@@ -159,7 +169,10 @@ export async function GET() {
 
     await Promise.all(pairFetches)
 
-    return NextResponse.json({ tokens })
+    // Filter out tokens that still have no symbol or price
+    const enriched = tokens.filter(t => t.symbol !== "???" && t.priceUsd !== null)
+
+    return NextResponse.json({ tokens: enriched })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch DEX data"
     return NextResponse.json({ error: message }, { status: 500 })
