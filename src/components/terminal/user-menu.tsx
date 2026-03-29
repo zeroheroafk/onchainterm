@@ -1,15 +1,17 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { LogIn, LogOut, User, Pencil, Save, X } from "lucide-react"
+import { LogIn, LogOut, User, Pencil, Save, X, Shield } from "lucide-react"
 import { useTheme } from "@/lib/theme-context"
 import { useAuth } from "@/lib/auth-context"
 import { AuthModal } from "@/components/terminal/auth-modal"
+import { UserProfileModal } from "@/components/terminal/user-profile-modal"
 
 export function UserMenu() {
   const { user, username, signOut, refreshUser } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editUsername, setEditUsername] = useState("")
   const [saving, setSaving] = useState(false)
@@ -140,11 +142,18 @@ export function UserMenu() {
                   <p className="text-[9px] text-muted-foreground truncate">{user.email}</p>
                 </div>
                 <button
+                  onClick={() => { closeMenu(); setShowProfileModal(true) }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                >
+                  <User className="size-3" />
+                  My Profile
+                </button>
+                <button
                   onClick={handleEditProfile}
                   className="flex w-full items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-secondary transition-colors"
                 >
                   <Pencil className="size-3" />
-                  Edit Profile
+                  Edit Username
                 </button>
               </>
             )}
@@ -158,6 +167,11 @@ export function UserMenu() {
           </div>
         </>
       )}
+
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   )
 }

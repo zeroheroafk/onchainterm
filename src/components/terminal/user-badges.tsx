@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   Footprints,
   MessageSquare,
@@ -15,8 +15,10 @@ import {
   Lock,
   Award,
   Star,
+  ShieldCheck,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabase"
 import type { LucideIcon } from "lucide-react"
 
 const ACTIVITY_KEY = "onchainterm_activity"
@@ -28,6 +30,7 @@ interface ActivityData {
   widgets_opened: number
   days_active: number
   signals_posted: number
+  portfolio_verified?: boolean
 }
 
 const DEFAULT_ACTIVITY: ActivityData = {
@@ -130,13 +133,13 @@ const BADGES: BadgeDef[] = [
   {
     id: "whale",
     name: "Whale",
-    description: "Portfolio value > $100k",
+    description: "Verified portfolio > $100k",
     icon: Fish,
-    requirement: "Portfolio value exceeds $100,000",
-    check: (a) => ((a as ActivityData & { portfolio_value?: number }).portfolio_value ?? 0) > 100000,
+    requirement: "Verify portfolio value exceeds $100,000",
+    check: (a) => a.portfolio_verified === true,
     progress: (a) => ({
-      current: Math.min((a as ActivityData & { portfolio_value?: number }).portfolio_value ?? 0, 100000),
-      target: 100000,
+      current: a.portfolio_verified ? 1 : 0,
+      target: 1,
     }),
   },
   {
@@ -202,7 +205,7 @@ const ACTIVITY_LABELS: Record<keyof ActivityData, string> = {
 
 export function UserBadges() {
   const { user, username } = useAuth()
-  const [activity] = useState<ActivityData>(() => {
+  const [activity, setActivity] = useState<ActivityData>(() => {
     try {
       const stored = localStorage.getItem(ACTIVITY_KEY)
       if (stored) {
@@ -215,6 +218,21 @@ export function UserBadges() {
     return DEFAULT_ACTIVITY
   })
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
+
+  // Fetch portfolio_verified from profile
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from("profiles")
+      .select("portfolio_verified")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.portfolio_verified) {
+          setActivity(prev => ({ ...prev, portfolio_verified: true }))
+        }
+      })
+  }, [user])
 
   const xp = useMemo(() => calculateXP(activity), [activity])
   const level = useMemo(() => calculateLevel(xp), [xp])
