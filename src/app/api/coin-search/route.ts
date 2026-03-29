@@ -21,7 +21,10 @@ export async function GET(request: Request) {
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`,
-      { next: { revalidate: 300 } }
+      {
+        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(5000),
+      }
     )
 
     if (!res.ok) throw new Error("CoinGecko search failed")
@@ -45,7 +48,16 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(result)
-  } catch {
-    return NextResponse.json({ coins: [] }, { status: 500 })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { coins: [], error: "Request timed out" },
+        { status: 504 }
+      )
+    }
+    return NextResponse.json(
+      { coins: [], error: "Failed to fetch search results" },
+      { status: 500 }
+    )
   }
 }
