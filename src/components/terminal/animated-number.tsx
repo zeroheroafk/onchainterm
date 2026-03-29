@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface AnimatedNumberProps {
   value: number
@@ -8,17 +8,23 @@ interface AnimatedNumberProps {
 }
 
 export function AnimatedNumber({ value, format, className = "" }: AnimatedNumberProps) {
-  const prevRef = useRef(value)
+  const [prevValue, setPrevValue] = useState(value)
   const [flash, setFlash] = useState<"up" | "down" | null>(null)
 
+  // Detect value changes during render using state (React 19 pattern)
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setFlash(value > prevValue ? "up" : "down")
+  }
+
+  const clearFlash = useCallback(() => setFlash(null), [])
+
   useEffect(() => {
-    if (prevRef.current !== value) {
-      setFlash(value > prevRef.current ? "up" : "down")
-      prevRef.current = value
-      const timeout = setTimeout(() => setFlash(null), 600)
+    if (flash !== null) {
+      const timeout = setTimeout(clearFlash, 600)
       return () => clearTimeout(timeout)
     }
-  }, [value])
+  }, [flash, clearFlash])
 
   const flashClass = flash === "up" ? "flash-up" : flash === "down" ? "flash-down" : ""
   const colorClass = flash === "up" ? "text-positive" : flash === "down" ? "text-negative" : ""

@@ -116,7 +116,7 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
   }, [])
 
   const filtered = useMemo(() => {
-    let coins = marketData.filter(c =>
+    const coins = marketData.filter(c =>
       matchMarketCap(c, mcFilter) &&
       matchChange(c, changeFilter) &&
       matchVolume(c, volFilter)
@@ -158,7 +158,7 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
     URL.revokeObjectURL(url)
   }, [filtered])
 
-  const SortIcon = ({ column }: { column: SortKey }) => {
+  const renderSortIcon = (column: SortKey) => {
     if (sortKey !== column) return null
     return sortDir === "asc"
       ? <ChevronUp className="size-3 inline-block ml-0.5" />
@@ -214,25 +214,25 @@ export function TokenScreenerWidget({ onSelectSymbol }: { onSelectSymbol?: (id: 
           <thead className="sticky top-0 bg-card z-10">
             <tr className="border-b border-border/40 text-muted-foreground">
               <th className="px-2 py-1.5 text-left font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("market_cap_rank")}>
-                #<SortIcon column="market_cap_rank" />
+                #{renderSortIcon("market_cap_rank")}
               </th>
               <th className="px-2 py-1.5 text-left font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("name")}>
-                Name<SortIcon column="name" />
+                Name{renderSortIcon("name")}
               </th>
               <th className="px-2 py-1.5 text-right font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("current_price")}>
-                Price<SortIcon column="current_price" />
+                Price{renderSortIcon("current_price")}
               </th>
               <th className="px-2 py-1.5 text-right font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("price_change_percentage_24h")}>
-                24h%<SortIcon column="price_change_percentage_24h" />
+                24h%{renderSortIcon("price_change_percentage_24h")}
               </th>
               <th className="px-2 py-1.5 text-right font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("price_change_percentage_7d_in_currency")}>
-                7d%<SortIcon column="price_change_percentage_7d_in_currency" />
+                7d%{renderSortIcon("price_change_percentage_7d_in_currency")}
               </th>
               <th className="px-2 py-1.5 text-right font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("market_cap")}>
-                MCap<SortIcon column="market_cap" />
+                MCap{renderSortIcon("market_cap")}
               </th>
               <th className="px-2 py-1.5 text-right font-medium cursor-pointer hover:text-primary select-none" onClick={() => handleSort("total_volume")}>
-                Volume<SortIcon column="total_volume" />
+                Volume{renderSortIcon("total_volume")}
               </th>
             </tr>
           </thead>

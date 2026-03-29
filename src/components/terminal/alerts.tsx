@@ -47,21 +47,17 @@ export function AlertsWidget() {
   const { data: marketData } = useMarketData()
   const { playSound: playSoundGlobal } = useSound()
   const { addNotification } = useNotifications()
-  const [alerts, setAlerts] = useState<PriceAlert[]>([])
+  const [alerts, setAlerts] = useState<PriceAlert[]>(() => loadAlerts())
   const [showAdd, setShowAdd] = useState(false)
   const [symbol, setSymbol] = useState("")
   const [targetPrice, setTargetPrice] = useState("")
   const [direction, setDirection] = useState<"above" | "below">("above")
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => loadNotificationPref())
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const notifiedRef = useRef<Set<string>>(new Set())
-  const prevPricesRef = useRef<Map<string, number>>(new Map())
-
-  useEffect(() => {
-    setAlerts(loadAlerts())
-    setNotificationsEnabled(loadNotificationPref())
-  }, [])
+  const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set())
+  const [prevPrices, setPrevPrices] = useState<Map<string, number>>(new Map())
+  const [triggeredAlertInfos, setTriggeredAlertInfos] = useState<{symbol: string; targetPrice: number; direction: string; image?: string}[]>([])
 
   const toggleNotifications = useCallback(async () => {
     if (notificationsEnabled) {
@@ -84,64 +80,75 @@ export function AlertsWidget() {
     }
   }, [notificationsEnabled])
 
-  // Check alerts against current prices
-  useEffect(() => {
-    if (!marketData.length || !alerts.length) return
-
-    let updated = false
+  // Check alerts against current prices - detect during render
+  if (marketData.length > 0 && alerts.length > 0) {
+    const newTriggeredInfos: {symbol: string; targetPrice: number; direction: string; image?: string}[] = []
+    const newNotifiedIds = new Set(notifiedIds)
     const newAlerts = alerts.map(alert => {
       if (alert.triggered) return alert
       const coin = marketData.find(c => c.id === alert.coinId || c.symbol.toLowerCase() === alert.symbol.toLowerCase())
       if (!coin) return alert
 
       const currentPrice = coin.current_price
-      const prevPrice = prevPricesRef.current.get(coin.id) ?? currentPrice
+      const prev = prevPrices.get(coin.id) ?? currentPrice
 
       const shouldTrigger =
-        (alert.direction === "above" && prevPrice < alert.targetPrice && currentPrice >= alert.targetPrice) ||
-        (alert.direction === "below" && prevPrice > alert.targetPrice && currentPrice <= alert.targetPrice)
+        (alert.direction === "above" && prev < alert.targetPrice && currentPrice >= alert.targetPrice) ||
+        (alert.direction === "below" && prev > alert.targetPrice && currentPrice <= alert.targetPrice)
 
-      if (shouldTrigger && !notifiedRef.current.has(alert.id)) {
-        updated = true
-        notifiedRef.current.add(alert.id)
-
-        // Browser notification
-        if (notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
-          new Notification(`Price Alert: ${alert.symbol.toUpperCase()}`, {
-            body: `${alert.symbol.toUpperCase()} crossed ${formatPrice(alert.targetPrice)} (${alert.direction} target)`,
-            icon: coin.image || undefined,
-          })
-        }
-
-        // Sound (local widget toggle)
-        if (soundEnabled) {
-          try {
-            if (!audioRef.current) audioRef.current = new Audio(ALERT_SOUND_URL)
-            audioRef.current.play().catch(() => {})
-          } catch {}
-        }
-
-        // Global sound system
-        playSoundGlobal("alert")
-
-        // Notification center
-        addNotification("alert", "Price Alert", `${alert.symbol} hit ${alert.direction === "above" ? "above" : "below"} $${alert.targetPrice}`)
-
+      if (shouldTrigger && !notifiedIds.has(alert.id)) {
+        newNotifiedIds.add(alert.id)
+        newTriggeredInfos.push({ symbol: alert.symbol, targetPrice: alert.targetPrice, direction: alert.direction, image: coin.image })
         return { ...alert, triggered: true }
       }
       return alert
     })
 
-    if (updated) {
+    if (newTriggeredInfos.length > 0) {
       setAlerts(newAlerts)
       saveAlerts(newAlerts)
+      setNotifiedIds(newNotifiedIds)
+      setTriggeredAlertInfos(newTriggeredInfos)
     }
 
-    // Update previous prices for crossing detection on next tick
-    for (const coin of marketData) {
-      prevPricesRef.current.set(coin.id, coin.current_price)
+    // Update previous prices for crossing detection
+    const updatedPrices = new Map(prevPrices)
+    const pricesChanged = marketData.some(coin => updatedPrices.get(coin.id) !== coin.current_price)
+    if (pricesChanged) {
+      for (const coin of marketData) {
+        updatedPrices.set(coin.id, coin.current_price)
+      }
+      setPrevPrices(updatedPrices)
     }
-  }, [marketData, alerts, soundEnabled, notificationsEnabled, playSoundGlobal, addNotification])
+  }
+
+  // Fire side effects for triggered alerts
+  useEffect(() => {
+    if (triggeredAlertInfos.length === 0) return
+    for (const info of triggeredAlertInfos) {
+      // Browser notification
+      if (notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(`Price Alert: ${info.symbol.toUpperCase()}`, {
+          body: `${info.symbol.toUpperCase()} crossed ${formatPrice(info.targetPrice)} (${info.direction} target)`,
+          icon: info.image || undefined,
+        })
+      }
+
+      // Notification center
+      addNotification("alert", "Price Alert", `${info.symbol} hit ${info.direction === "above" ? "above" : "below"} $${info.targetPrice}`)
+    }
+
+    // Sound (local widget toggle)
+    if (soundEnabled) {
+      try {
+        if (!audioRef.current) audioRef.current = new Audio(ALERT_SOUND_URL)
+        audioRef.current.play().catch(() => {})
+      } catch {}
+    }
+
+    // Global sound system
+    playSoundGlobal("alert")
+  }, [triggeredAlertInfos, soundEnabled, notificationsEnabled, playSoundGlobal, addNotification])
 
   const addAlert = useCallback(() => {
     const sym = symbol.trim()
@@ -166,7 +173,7 @@ export function AlertsWidget() {
   }, [symbol, targetPrice, direction, alerts, marketData])
 
   const removeAlert = (id: string) => {
-    notifiedRef.current.delete(id)
+    setNotifiedIds(prev => { const next = new Set(prev); next.delete(id); return next })
     const updated = alerts.filter(a => a.id !== id)
     setAlerts(updated)
     saveAlerts(updated)

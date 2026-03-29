@@ -22,6 +22,7 @@ interface LayoutContextType {
   isWidgetActive: (widgetId: string) => boolean
   focusWidget: (widgetId: string) => void
   widgetRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>
+  setWidgetRef: (id: string, el: HTMLDivElement | null) => void
   activePresetId: string | null
   allPresets: AnyPreset[]
   applyPreset: (presetId: string) => void
@@ -174,6 +175,10 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
     [activeWidgets]
   )
 
+  const setWidgetRef = useCallback((id: string, el: HTMLDivElement | null) => {
+    widgetRefs.current[id] = el
+  }, [])
+
   const focusWidget = useCallback((widgetId: string) => {
     const el = widgetRefs.current[widgetId]
     if (el) {
@@ -225,7 +230,7 @@ export function LayoutProvider({ children, userId }: { children: ReactNode; user
         layout, activeWidgets, isLocked, isCatalogOpen,
         setLayout, updateWidgetPosition, bringToFront,
         addWidget, removeWidget, toggleLock, setCatalogOpen,
-        resetToDefault, isWidgetActive, focusWidget, widgetRefs,
+        resetToDefault, isWidgetActive, focusWidget, widgetRefs, setWidgetRef,
         activePresetId, allPresets, applyPreset,
         saveCurrentAsPreset, deletePreset, renamePreset,
       }}

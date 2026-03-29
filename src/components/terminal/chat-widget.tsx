@@ -93,6 +93,7 @@ export function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
   const initialLoadDoneRef = useRef(false)
   const animatedIdsRef = useRef<Set<string>>(new Set())
+  const [animatedIds, setAnimatedIds] = useState<Set<string>>(new Set())
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -110,6 +111,7 @@ export function ChatWidget() {
     async function init() {
       initialLoadDoneRef.current = false
       animatedIdsRef.current.clear()
+      setAnimatedIds(new Set())
 
       if (activeRoom === "general") {
         // General room: persisted via postgres_changes (backward compatible)
@@ -133,6 +135,7 @@ export function ChatWidget() {
               const newMsg = payload.new as ChatMessage
               if (initialLoadDoneRef.current) {
                 animatedIdsRef.current.add(newMsg.id)
+                setAnimatedIds(prev => new Set(prev).add(newMsg.id))
               }
               setMessages((prev) => {
                 if (prev.some((m) => m.id === newMsg.id)) return prev
@@ -300,7 +303,7 @@ export function ChatWidget() {
             </div>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${msg.username === myUsername ? " bg-primary/8 border-l-2 border-l-primary/40 rounded-r-lg pl-2" : " bg-secondary/15 rounded-lg"}${animatedIdsRef.current.has(msg.id) ? " animate-slide-in" : ""}`}>
+            <div key={msg.id} className={`flex items-baseline gap-2 rounded px-1.5 py-1 hover:bg-secondary/30${msg.username === myUsername ? " bg-primary/8 border-l-2 border-l-primary/40 rounded-r-lg pl-2" : " bg-secondary/15 rounded-lg"}${animatedIds.has(msg.id) ? " animate-slide-in" : ""}`}>
               <span className="shrink-0 text-[10px] text-muted-foreground/50 tabular-nums num">
                 {formatTime(msg.created_at)}
               </span>

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
+import { createCache, fetchWithTimeout } from "@/lib/api-utils"
 
-// In-memory cache (2 min TTL, stale data served for 10 min as fallback)
-const cache = new Map<string, { data: PriceResult; ts: number }>()
 const CACHE_TTL = 2 * 60 * 1000
 const STALE_TTL = 10 * 60 * 1000
+const priceCache = createCache<PriceResult>(CACHE_TTL)
 
 type PriceResult = {
   prices: Record<string, { usd: number; usd_24h_change: number | null }>
@@ -17,11 +17,10 @@ async function fetchFromCoinGecko(
   idList: string[]
 ): Promise<Record<string, { usd: number; usd_24h_change: number | null }> | null> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.coingecko.com/api/v3/simple/price?ids=${idList.join(",")}&vs_currencies=usd&include_24hr_change=true`,
       {
         headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(8000),
         cache: "no-store",
       }
     )
@@ -62,11 +61,10 @@ async function fetchFromCoinCap(
     const prices: Record<string, { usd: number; usd_24h_change: number | null }> = {}
 
     // CoinCap supports fetching multiple assets; we use the /assets endpoint with ids param
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.coincap.io/v2/assets?ids=${idList.join(",")}`,
       {
         headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(8000),
         cache: "no-store",
       }
     )
@@ -97,13 +95,6 @@ async function fetchFromCoinCap(
   }
 }
 
-function evictOldCacheEntries() {
-  if (cache.size > 100) {
-    const oldest = [...cache.entries()].sort((a, b) => a[1].ts - b[1].ts)
-    for (let i = 0; i < 30; i++) cache.delete(oldest[i][0])
-  }
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const ids = searchParams.get("ids")?.trim()
@@ -120,12 +111,11 @@ export async function GET(request: Request) {
   }
 
   const cacheKey = idList.sort().join(",")
-  const cached = cache.get(cacheKey)
-  const now = Date.now()
 
   // Return fresh cached data
-  if (cached && now - cached.ts < CACHE_TTL) {
-    return NextResponse.json(cached.data)
+  const cached = priceCache.get(cacheKey)
+  if (cached) {
+    return NextResponse.json(cached)
   }
 
   // Try CoinGecko first, then CoinCap as fallback
@@ -137,15 +127,15 @@ export async function GET(request: Request) {
 
   if (prices) {
     const result: PriceResult = { prices }
-    cache.set(cacheKey, { data: result, ts: now })
-    evictOldCacheEntries()
+    priceCache.set(cacheKey, result)
     return NextResponse.json(result)
   }
 
   // All APIs failed -- serve stale cache if available
-  if (cached && now - cached.ts < STALE_TTL) {
+  const stale = priceCache.getStale(cacheKey, STALE_TTL)
+  if (stale) {
     return NextResponse.json({
-      ...cached.data,
+      ...stale,
       _stale: true,
     })
   }

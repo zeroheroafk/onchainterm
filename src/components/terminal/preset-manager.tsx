@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Save, FolderOpen, Trash2, Layout, X } from "lucide-react"
 import { useLayout } from "./layout/layout-context"
-import type { WidgetPosition, AnyPreset } from "./layout/default-layouts"
+import type { WidgetPosition } from "./layout/default-layouts"
 
 /* ── Built-in preset definitions ─────────────────────────────── */
 
@@ -104,19 +104,14 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
 
   const [internalOpen, setInternalOpen] = useState(false)
   const open = externalOpen ?? internalOpen
-  const setOpen = (v: boolean) => {
+  const setOpen = useCallback((v: boolean) => {
     if (!v && onExternalClose) onExternalClose()
     setInternalOpen(v)
-  }
-  const [userPresets, setUserPresets] = useState<UserPreset[]>([])
+  }, [onExternalClose])
+  const [userPresets, setUserPresets] = useState<UserPreset[]>(() => loadUserPresets())
   const [saveName, setSaveName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-
-  // Load user presets from localStorage on mount
-  useEffect(() => {
-    setUserPresets(loadUserPresets())
-  }, [])
 
   // Focus the input when the panel opens
   useEffect(() => {
@@ -133,7 +128,7 @@ export function PresetManager({ externalOpen, onExternalClose }: { externalOpen?
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
-  }, [open])
+  }, [open, setOpen])
 
   /* ── Save ─────────────────────────────────── */
 

@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
@@ -60,6 +61,11 @@ export function CardsSkeleton({ count = 4 }: { count?: number }) {
 }
 
 export function ChartSkeleton() {
+  const barHeights = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => 20 + ((i * 37 + 13) % 60)),
+    []
+  )
+
   return (
     <div className="flex flex-col h-full p-2 gap-2">
       <div className="flex justify-between">
@@ -67,11 +73,11 @@ export function ChartSkeleton() {
         <Skeleton className="h-3 w-16 skeleton-shimmer" />
       </div>
       <div className="flex-1 flex items-end gap-1 px-2 pb-2">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {barHeights.map((height, i) => (
           <Skeleton
             key={i}
             className="flex-1 skeleton-shimmer rounded-t-sm animate-fade-in"
-            style={{ height: `${20 + Math.random() * 60}%`, animationDelay: `${i * 40}ms`, animationFillMode: 'backwards' }}
+            style={{ height: `${height}%`, animationDelay: `${i * 40}ms`, animationFillMode: 'backwards' }}
           />
         ))}
       </div>

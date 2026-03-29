@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { fetchWithTimeout, fetchWithFallback } from "@/lib/api-utils"
 
 interface FundingItem {
   symbol: string
@@ -17,9 +18,8 @@ const OKX_INSTRUMENTS = [
 ]
 
 async function fetchFromBinance(): Promise<FundingItem[]> {
-  const res = await fetch("https://fapi.binance.com/fapi/v1/premiumIndex", {
+  const res = await fetchWithTimeout("https://fapi.binance.com/fapi/v1/premiumIndex", {
     next: { revalidate: 60 },
-    signal: AbortSignal.timeout(8000),
   })
   if (!res.ok) throw new Error(`Binance ${res.status}`)
   const data: {
@@ -51,14 +51,12 @@ async function fetchFromOKX(): Promise<FundingItem[]> {
   // OKX requires individual instrument queries for funding rate, but we can
   // batch the ticker data and funding rate calls
   const [tickerRes, ...fundingResults] = await Promise.all([
-    fetch("https://www.okx.com/api/v5/market/tickers?instType=SWAP", {
+    fetchWithTimeout("https://www.okx.com/api/v5/market/tickers?instType=SWAP", {
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(8000),
     }),
     ...OKX_INSTRUMENTS.map((instId) =>
-      fetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`, {
+      fetchWithTimeout(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`, {
         next: { revalidate: 60 },
-        signal: AbortSignal.timeout(8000),
       }).catch(() => null)
     ),
   ])
@@ -104,25 +102,24 @@ async function fetchFromOKX(): Promise<FundingItem[]> {
 }
 
 export async function GET() {
-  // Try Binance first, fall back to OKX
-  const sources = [
-    { name: "Binance", fn: fetchFromBinance },
-    { name: "OKX", fn: fetchFromOKX },
-  ]
+  try {
+    const { data, source } = await fetchWithFallback<FundingItem[]>([
+      { name: "Binance", fetch: fetchFromBinance },
+      { name: "OKX", fetch: fetchFromOKX },
+    ])
 
-  for (const source of sources) {
-    try {
-      const data = await source.fn()
-      if (data.length > 0) {
-        return NextResponse.json({ data, source: source.name })
-      }
-    } catch {
-      // try next source
+    if (data.length === 0) {
+      return NextResponse.json(
+        { error: "Unable to fetch funding rates from any source" },
+        { status: 502 }
+      )
     }
-  }
 
-  return NextResponse.json(
-    { error: "Unable to fetch funding rates from any source" },
-    { status: 502 }
-  )
+    return NextResponse.json({ data, source })
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to fetch funding rates from any source" },
+      { status: 502 }
+    )
+  }
 }

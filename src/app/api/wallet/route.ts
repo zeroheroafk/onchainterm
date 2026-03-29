@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { etherscanFetch } from "@/lib/etherscan"
 
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_TTL = 60_000
 const TIMEOUT_MS = 8_000
 

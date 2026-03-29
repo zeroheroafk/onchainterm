@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import {
   Footprints,
   MessageSquare,
@@ -202,20 +202,19 @@ const ACTIVITY_LABELS: Record<keyof ActivityData, string> = {
 
 export function UserBadges() {
   const { user, username } = useAuth()
-  const [activity, setActivity] = useState<ActivityData>(DEFAULT_ACTIVITY)
-  const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
-
-  useEffect(() => {
+  const [activity] = useState<ActivityData>(() => {
     try {
       const stored = localStorage.getItem(ACTIVITY_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        setActivity({ ...DEFAULT_ACTIVITY, ...parsed })
+        return { ...DEFAULT_ACTIVITY, ...parsed }
       }
     } catch {
       // ignore parse errors
     }
-  }, [])
+    return DEFAULT_ACTIVITY
+  })
+  const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
 
   const xp = useMemo(() => calculateXP(activity), [activity])
   const level = useMemo(() => calculateLevel(xp), [xp])

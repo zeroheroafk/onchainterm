@@ -5,17 +5,14 @@ import { useState, useEffect, useCallback, useRef } from "react"
 const STORAGE_KEY = "onchainterm_notes"
 
 export function NotesWidget() {
-  const [content, setContent] = useState("")
+  const [content, setContent] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY) ?? ""
+    } catch { return "" }
+  })
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) setContent(saved)
-    } catch {}
-  }, [])
 
   useEffect(() => {
     return () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef, type FormEvent } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo, type FormEvent } from "react"
 import { TrendingUp, TrendingDown, ThumbsUp, ThumbsDown, Send, Radio, Plus } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { useToast } from "@/lib/toast-context"
@@ -75,28 +75,22 @@ function timeAgo(dateStr: string): string {
 export function TradingSignals() {
   const { user, username } = useAuth()
   const { toast } = useToast()
-  const [signals, setSignals] = useState<Signal[]>([])
-  const [votes, setVotes] = useState<Record<string, "up" | "down">>({})
+  const initialSignals = useMemo(() => loadSignals(), [])
+  const seenIdsRef = useRef<Set<string>>(new Set(initialSignals.map((s: Signal) => s.id)))
+  const [signals, setSignals] = useState<Signal[]>(initialSignals)
+  const [votes, setVotes] = useState<Record<string, "up" | "down">>(() => loadVotes())
   const [sortMode, setSortMode] = useState<SortMode>("latest")
   const [connected, setConnected] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const seenIdsRef = useRef<Set<string>>(new Set())
   const animatedIdsRef = useRef<Set<string>>(new Set())
+  const [animatedIds, setAnimatedIds] = useState<Set<string>>(new Set())
 
   // Form state
   const [coin, setCoin] = useState("")
   const [direction, setDirection] = useState<"bullish" | "bearish">("bullish")
   const [timeframe, setTimeframe] = useState<string>("4H")
   const [note, setNote] = useState("")
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const loaded = loadSignals()
-    loaded.forEach((s) => seenIdsRef.current.add(s.id))
-    setSignals(loaded)
-    setVotes(loadVotes())
-  }, [])
 
   // Subscribe to broadcast channel
   useEffect(() => {
@@ -106,6 +100,7 @@ export function TradingSignals() {
         const incoming = payload.payload as Signal
         if (!seenIdsRef.current.has(incoming.id)) {
           animatedIdsRef.current.add(incoming.id)
+          setAnimatedIds(prev => new Set(prev).add(incoming.id))
           seenIdsRef.current.add(incoming.id)
         }
         setSignals((prev) => {
@@ -160,6 +155,7 @@ export function TradingSignals() {
 
       // Add locally
       animatedIdsRef.current.add(newSignal.id)
+      setAnimatedIds(prev => new Set(prev).add(newSignal.id))
       seenIdsRef.current.add(newSignal.id)
       setSignals((prev) => {
         const next = [newSignal, ...prev]
@@ -297,7 +293,7 @@ export function TradingSignals() {
             return (
               <div
                 key={signal.id}
-                className={`rounded border border-border bg-secondary/20 px-2.5 py-2 space-y-1${animatedIdsRef.current.has(signal.id) ? " animate-slide-in animate-item-glow" : ""}`}
+                className={`rounded border border-border bg-secondary/20 px-2.5 py-2 space-y-1${animatedIds.has(signal.id) ? " animate-slide-in animate-item-glow" : ""}`}
               >
                 {/* Top row: coin + direction + timeframe + time */}
                 <div className="flex items-center gap-2">

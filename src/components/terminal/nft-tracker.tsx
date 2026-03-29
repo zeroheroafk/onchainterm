@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Image, RefreshCw } from "lucide-react"
+import { Image as ImageIcon, RefreshCw } from "lucide-react"
 import { formatPrice, formatLargeNumber } from "@/lib/constants"
 
 interface NftCollection {
@@ -72,7 +72,7 @@ export function NftTracker() {
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Image className="size-3.5 opacity-60" />
+          <ImageIcon className="size-3.5 opacity-60" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.1em]">
             NFT Floor Prices
           </span>

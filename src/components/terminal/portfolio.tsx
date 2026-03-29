@@ -78,12 +78,10 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
   const cy = size / 2
   const r = 32
 
-  let cumulativeAngle = -90
-
-  const paths = slices.map((slice, i) => {
-    const startAngle = cumulativeAngle
+  const { elements: paths } = slices.reduce<{ elements: React.ReactNode[]; cumulativeAngle: number }>(
+    (acc, slice, i) => {
+    const startAngle = acc.cumulativeAngle
     const angle = (slice.pct / 100) * 360
-    cumulativeAngle += angle
 
     const startRad = (startAngle * Math.PI) / 180
     const endRad = ((startAngle + angle) * Math.PI) / 180
@@ -95,19 +93,19 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
 
     const largeArc = angle > 180 ? 1 : 0
 
-    if (slices.length === 1) {
-      return <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }} />
-    }
+    const element = slices.length === 1
+      ? <circle key={i} cx={cx} cy={cy} r={r} fill={slice.color} style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }} />
+      : (
+        <path
+          key={i}
+          d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+          fill={slice.color}
+          style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
+        />
+      )
 
-    return (
-      <path
-        key={i}
-        d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-        fill={slice.color}
-        style={{ animation: 'fade-in 0.5s ease-out', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
-      />
-    )
-  })
+    return { elements: [...acc.elements, element], cumulativeAngle: startAngle + angle }
+  }, { elements: [], cumulativeAngle: -90 })
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -120,9 +118,27 @@ function MiniPieChart({ slices }: { slices: { pct: number; color: string; label:
 export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: string) => void }) {
   const { data: marketData, isLoading: pricesLoading } = useMarketData()
   const { toast } = useToast()
-  const [entries, setEntries] = useState<PortfolioEntry[]>([])
-  const [valueHistory, setValueHistory] = useState<{t: number, v: number}[]>([])
-  const lastHistoryTime = useRef<number>(0)
+  const [entries, setEntries] = useState<PortfolioEntry[]>(() => loadPortfolio())
+  const [valueHistory, setValueHistory] = useState<{t: number, v: number}[]>(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        return parsed
+      }
+    } catch {}
+    return []
+  })
+  const lastHistoryTime = useRef<number>((() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.length > 0) return parsed[parsed.length - 1].t as number
+      }
+    } catch {}
+    return 0
+  })())
   const [showAdd, setShowAdd] = useState(false)
   const [amount, setAmount] = useState("")
   const [buyPrice, setBuyPrice] = useState("")
@@ -135,17 +151,7 @@ export function PortfolioWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const [selectedCoin, setSelectedCoin] = useState<SearchCoin | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    setEntries(loadPortfolio())
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        setValueHistory(parsed)
-        if (parsed.length > 0) lastHistoryTime.current = parsed[parsed.length - 1].t
-      }
-    } catch {}
-  }, [])
+  // Portfolio entries and history are loaded via useState initializers above
 
   // Fetch prices for coins not in marketData
   useEffect(() => {

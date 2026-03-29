@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Star, Plus, X, Search, Loader2, Share2, Check, Download, GripVertical } from "lucide-react"
 import { useMarketData } from "@/lib/market-data-context"
 import { formatPrice, formatPercentage } from "@/lib/constants"
@@ -67,16 +67,31 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const { data: marketData, isLoading: marketLoading } = useMarketData()
   const { toast } = useToast()
   const { showMenu } = useCoinContextMenu()
-  const [watchlists, setWatchlists] = useState<Watchlist[]>([])
-  const [activeListId, setActiveListId] = useState("default")
-  const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>({})
+  const [watchlists, setWatchlists] = useState<Watchlist[]>(() => loadWatchlists())
+  const [activeListId, setActiveListId] = useState(() => {
+    const lists = loadWatchlists()
+    return lists[0]?.id || "default"
+  })
+  const [meta, setMeta] = useState<Record<string, WatchlistCoinMeta>>(() => loadMeta())
   const [addMode, setAddMode] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<WatchlistCoinMeta[]>([])
   const [searching, setSearching] = useState(false)
   const [extraPrices, setExtraPrices] = useState<Record<string, CoinPrice>>({})
   const [copied, setCopied] = useState(false)
-  const [importBanner, setImportBanner] = useState<{ ids: string[] } | null>(null)
+  const [importBanner, setImportBanner] = useState<{ ids: string[] } | null>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const encoded = params.get("watchlist")
+      if (encoded) {
+        const decoded = JSON.parse(atob(encoded)) as string[]
+        if (Array.isArray(decoded) && decoded.length > 0 && decoded.every(id => typeof id === "string")) {
+          return { ids: decoded }
+        }
+      }
+    } catch {}
+    return null
+  })
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [dragIndex, setDragIndex] = useState<number | null>(null)
@@ -85,34 +100,13 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeList = watchlists.find(l => l.id === activeListId) || watchlists[0]
-  const watchlist = activeList?.coins || []
-
-  useEffect(() => {
-    const lists = loadWatchlists()
-    setWatchlists(lists)
-    setActiveListId(lists[0]?.id || "default")
-    setMeta(loadMeta())
-  }, [])
+  const watchlist = useMemo(() => activeList?.coins || [], [activeList])
 
   // Cleanup share timer on unmount
   useEffect(() => {
     return () => {
       if (shareTimer.current) clearTimeout(shareTimer.current)
     }
-  }, [])
-
-  // Check URL for shared watchlist on mount
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const encoded = params.get("watchlist")
-      if (encoded) {
-        const decoded = JSON.parse(atob(encoded)) as string[]
-        if (Array.isArray(decoded) && decoded.length > 0 && decoded.every(id => typeof id === "string")) {
-          setImportBanner({ ids: decoded })
-        }
-      }
-    } catch {}
   }, [])
 
   // Fetch prices for coins not in marketData
@@ -136,12 +130,18 @@ export function WatchlistWidget({ onSelectSymbol }: { onSelectSymbol?: (id: stri
     return () => { cancelled = true; clearInterval(interval) }
   }, [watchlist, marketData])
 
-  // Debounced search
-  useEffect(() => {
+  // Clear search results when query is empty (derived during render)
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery)
     if (!searchQuery.trim()) {
       setSearchResults([])
-      return
     }
+  }
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchQuery.trim()) return
 
     if (searchTimer.current) clearTimeout(searchTimer.current)
     searchTimer.current = setTimeout(async () => {

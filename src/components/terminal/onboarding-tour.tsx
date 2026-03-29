@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 const STORAGE_KEY = "onchainterm_onboarding_done"
 
@@ -43,18 +43,14 @@ const STEPS: TourStep[] = [
 ]
 
 export function OnboardingTour() {
-  const [visible, setVisible] = useState(false)
-  const [step, setStep] = useState(0)
-
-  useEffect(() => {
+  const [visible, setVisible] = useState(() => {
     try {
-      if (localStorage.getItem(STORAGE_KEY) !== "true") {
-        setVisible(true)
-      }
+      return localStorage.getItem(STORAGE_KEY) !== "true"
     } catch {
-      // localStorage unavailable
+      return false
     }
-  }, [])
+  })
+  const [step, setStep] = useState(0)
 
   function finish() {
     try {

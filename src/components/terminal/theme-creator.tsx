@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Palette, Save, Trash2, Download, Upload, RotateCcw, Eye } from "lucide-react"
 
 // ---------------------------------------------------------------------------
@@ -92,17 +92,11 @@ function removeCustomColors() {
 export function ThemeCreator() {
   const [colors, setColors] = useState<CustomThemeColors>({ ...DEFAULT_COLORS })
   const [themeName, setThemeName] = useState("")
-  const [savedThemes, setSavedThemes] = useState<CustomTheme[]>([])
-  const [activeCustomId, setActiveCustomId] = useState<string | null>(null)
+  const [savedThemes, setSavedThemes] = useState<CustomTheme[]>(() => loadThemes())
+  const [activeCustomId, setActiveCustomId] = useState<string | null>(() => {
+    try { return localStorage.getItem(ACTIVE_KEY) } catch { return null }
+  })
   const importRef = useRef<HTMLInputElement>(null)
-
-  // Load saved themes on mount
-  useEffect(() => {
-    setSavedThemes(loadThemes())
-    try {
-      setActiveCustomId(localStorage.getItem(ACTIVE_KEY))
-    } catch {}
-  }, [])
 
   const updateColor = useCallback((key: keyof CustomThemeColors, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }))
