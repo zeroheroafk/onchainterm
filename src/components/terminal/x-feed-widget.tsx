@@ -20,86 +20,104 @@ declare global {
   interface Window {
     twttr?: {
       widgets: {
-        createTimeline: (
-          source: { sourceType: string; screenName?: string; id?: string },
-          el: HTMLElement,
-          options?: Record<string, unknown>
-        ) => Promise<HTMLElement>
+        load: (el?: HTMLElement) => void
       }
       _e?: (() => void)[]
+      ready: (cb: (twttr: Window["twttr"]) => void) => void
     }
   }
 }
 
-function loadTwitterScript(): Promise<void> {
-  return new Promise((resolve) => {
-    if (window.twttr?.widgets) {
+function ensureTwitterScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Already loaded
+    if (window.twttr?.widgets?.load) {
       resolve()
       return
     }
+
+    // Script tag exists, wait for it
     if (document.getElementById("twitter-wjs")) {
-      // Script tag exists but hasn't loaded yet
+      const t0 = Date.now()
       const check = () => {
-        if (window.twttr?.widgets) resolve()
-        else setTimeout(check, 100)
+        if (window.twttr?.widgets?.load) return resolve()
+        if (Date.now() - t0 > 10000) return reject(new Error("timeout"))
+        setTimeout(check, 200)
       }
       check()
       return
     }
+
+    // Inject script
     const script = document.createElement("script")
     script.id = "twitter-wjs"
     script.src = "https://platform.twitter.com/widgets.js"
     script.async = true
+    script.charset = "utf-8"
+
+    const t0 = Date.now()
     script.onload = () => {
       const check = () => {
-        if (window.twttr?.widgets) resolve()
-        else setTimeout(check, 100)
+        if (window.twttr?.widgets?.load) return resolve()
+        if (Date.now() - t0 > 10000) return reject(new Error("timeout"))
+        setTimeout(check, 200)
       }
       check()
     }
+    script.onerror = () => reject(new Error("Failed to load X widgets.js"))
     document.head.appendChild(script)
   })
 }
 
 function TimelineEmbed({ handle }: { handle: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
 
   useEffect(() => {
     let cancelled = false
     const el = containerRef.current
     if (!el) return
 
+    // Build the anchor tag that X's widgets.js will convert to an embedded timeline
     el.innerHTML = ""
-    setLoading(true)
-    setError(false)
+    const anchor = document.createElement("a")
+    anchor.className = "twitter-timeline"
+    anchor.setAttribute("data-theme", "dark")
+    anchor.setAttribute("data-chrome", "noheader nofooter noborders transparent")
+    anchor.setAttribute("data-tweet-limit", "15")
+    anchor.setAttribute("data-dnt", "true")
+    anchor.href = `https://twitter.com/${handle}`
+    anchor.textContent = `Tweets by @${handle}`
+    el.appendChild(anchor)
 
-    loadTwitterScript()
+    setStatus("loading")
+
+    ensureTwitterScript()
       .then(() => {
-        if (cancelled || !window.twttr?.widgets) return
-        return window.twttr.widgets.createTimeline(
-          { sourceType: "profile", screenName: handle },
-          el,
-          {
-            theme: "dark",
-            chrome: "noheader nofooter noborders transparent",
-            height: 2000,
-            dnt: true,
-            tweetLimit: 20,
-          }
-        )
-      })
-      .then((widget) => {
         if (cancelled) return
-        setLoading(false)
-        if (!widget) setError(true)
+        window.twttr?.widgets.load(el)
+
+        // Watch for the iframe to appear (means embed loaded)
+        let attempts = 0
+        const checkLoaded = () => {
+          if (cancelled) return
+          const iframe = el.querySelector("iframe")
+          if (iframe) {
+            setStatus("ready")
+            return
+          }
+          attempts++
+          if (attempts > 50) {
+            // After ~10s, if no iframe appeared, show error
+            setStatus("error")
+            return
+          }
+          setTimeout(checkLoaded, 200)
+        }
+        checkLoaded()
       })
       .catch(() => {
-        if (!cancelled) {
-          setLoading(false)
-          setError(true)
-        }
+        if (!cancelled) setStatus("error")
       })
 
     return () => { cancelled = true }
@@ -107,18 +125,30 @@ function TimelineEmbed({ handle }: { handle: string }) {
 
   return (
     <div className="h-full overflow-auto">
-      {loading && (
-        <div className="flex items-center justify-center py-8 text-muted-foreground text-[11px]">
-          Loading @{handle} feed...
+      {status === "loading" && (
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <div className="size-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground text-[11px]">Loading @{handle}...</span>
         </div>
       )}
-      {error && (
-        <div className="flex flex-col items-center justify-center py-8 gap-2 text-[11px]">
+      {status === "error" && (
+        <div className="flex flex-col items-center justify-center py-12 gap-2 text-[11px] px-4 text-center">
           <p className="text-muted-foreground">Could not load @{handle}</p>
-          <p className="text-muted-foreground/50">X embeds may be blocked by your browser or ad blocker</p>
+          <p className="text-muted-foreground/50 leading-relaxed">
+            X/Twitter embeds may be blocked by your browser, ad blocker, or network.
+            Try disabling ad blockers for this site.
+          </p>
+          <a
+            href={`https://x.com/${handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 text-primary hover:text-primary/80 transition-colors font-medium"
+          >
+            Open @{handle} on X &rarr;
+          </a>
         </div>
       )}
-      <div ref={containerRef} />
+      <div ref={containerRef} style={{ display: status === "loading" ? "none" : "block" }} />
     </div>
   )
 }
