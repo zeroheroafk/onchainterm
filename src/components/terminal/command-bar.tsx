@@ -5,7 +5,7 @@ import {
   Search, Terminal, Eye, EyeOff, Filter, PieChart,
   LineChart, MessagesSquare, Newspaper, BarChart3, TrendingUp, Flame, Fuel, Wallet, Star,
   ArrowLeftRight, Calculator, StickyNote, BellRing, MessageSquare, Activity, TrendingDown, Percent,
-  LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette, Hash,
+  LayoutGrid, BookOpen, Grid3x3, Zap, Image, Cpu, Coins, Radio, Award, Palette,
 } from "lucide-react"
 import { useLayout } from "@/components/terminal/layout/layout-context"
 import { useMarketData } from "@/lib/market-data-context"
@@ -114,8 +114,7 @@ export function CommandBar() {
     { id: "user-badges", label: "Badges & Levels", description: "Your achievements, badges, and XP level", keywords: ["badge", "level", "xp", "achievement", "gamification", "rank"], icon: Award, category: "widget", action: () => handleWidgetAction("user-badges") },
     { id: "theme-creator", label: "Theme Creator", description: "Create and manage custom color themes", keywords: ["theme", "color", "custom", "creator", "palette", "design", "skin"], icon: Palette, category: "widget", action: () => handleWidgetAction("theme-creator") },
     { id: "private-messages", label: "Messages", description: "Private messages", keywords: ["dm", "pm", "private", "inbox", "direct"], icon: MessageSquare, category: "widget", action: () => handleWidgetAction("private-messages") },
-    { id: "x-feed", label: "X / Twitter Feed", description: "Live crypto posts from X/Twitter", keywords: ["twitter", "x", "tweet", "social", "feed", "whale alert", "crypto twitter", "ct"], icon: Hash, category: "widget", action: () => handleWidgetAction("x-feed") },
-    { id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
+{ id: "catalog", label: "Widget Catalog", description: "Browse and add widgets", keywords: ["widget", "catalog", "add", "browse", "panel", "all"], icon: BarChart3, category: "action", action: () => setCatalogOpen(true) },
   ]
 
   // Sort priority: F-keys first (by number), then letters A-Z, then digits, then no shortcut

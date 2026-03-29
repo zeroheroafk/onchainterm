@@ -43,7 +43,6 @@ const StakingCalculator = lazy(() => import("@/components/terminal/staking-calcu
 const TradingSignals = lazy(() => import("@/components/terminal/trading-signals").then(m => ({ default: m.TradingSignals })))
 const UserBadges = lazy(() => import("@/components/terminal/user-badges").then(m => ({ default: m.UserBadges })))
 const ThemeCreator = lazy(() => import("@/components/terminal/theme-creator").then(m => ({ default: m.ThemeCreator })))
-const XFeedWidget = lazy(() => import("@/components/terminal/x-feed-widget").then(m => ({ default: m.XFeedWidget })))
 
 function WidgetLoadingFallback() {
   return (
@@ -131,8 +130,6 @@ function renderWidget(widgetId: WidgetId, ctx: TerminalWidgetContext) {
       return <ThemeCreator />
     case "private-messages":
       return <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">Messages coming soon</div>
-    case "x-feed":
-      return <XFeedWidget />
     default: {
       const _exhaustive: never = widgetId
       return (
