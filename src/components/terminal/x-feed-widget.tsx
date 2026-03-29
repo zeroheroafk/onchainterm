@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState, useRef, useEffect } from "react"
+import { ExternalLink } from "lucide-react"
 
 // Crypto X/Twitter accounts to show in tabs
 const FEEDS = [
@@ -16,139 +17,60 @@ const FEEDS = [
   { handle: "AltcoinGordon", label: "Gordon" },
 ] as const
 
-declare global {
-  interface Window {
-    twttr?: {
-      widgets: {
-        load: (el?: HTMLElement) => void
-      }
-      _e?: (() => void)[]
-      ready: (cb: (twttr: Window["twttr"]) => void) => void
-    }
-  }
-}
-
-function ensureTwitterScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // Already loaded
-    if (window.twttr?.widgets?.load) {
-      resolve()
-      return
-    }
-
-    // Script tag exists, wait for it
-    if (document.getElementById("twitter-wjs")) {
-      const t0 = Date.now()
-      const check = () => {
-        if (window.twttr?.widgets?.load) return resolve()
-        if (Date.now() - t0 > 10000) return reject(new Error("timeout"))
-        setTimeout(check, 200)
-      }
-      check()
-      return
-    }
-
-    // Inject script
-    const script = document.createElement("script")
-    script.id = "twitter-wjs"
-    script.src = "https://platform.twitter.com/widgets.js"
-    script.async = true
-    script.charset = "utf-8"
-
-    const t0 = Date.now()
-    script.onload = () => {
-      const check = () => {
-        if (window.twttr?.widgets?.load) return resolve()
-        if (Date.now() - t0 > 10000) return reject(new Error("timeout"))
-        setTimeout(check, 200)
-      }
-      check()
-    }
-    script.onerror = () => reject(new Error("Failed to load X widgets.js"))
-    document.head.appendChild(script)
-  })
-}
-
 function TimelineEmbed({ handle }: { handle: string }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
-    let cancelled = false
-    const el = containerRef.current
-    if (!el) return
-
-    // Build the anchor tag that X's widgets.js will convert to an embedded timeline
-    el.innerHTML = ""
-    const anchor = document.createElement("a")
-    anchor.className = "twitter-timeline"
-    anchor.setAttribute("data-theme", "dark")
-    anchor.setAttribute("data-chrome", "noheader nofooter noborders transparent")
-    anchor.setAttribute("data-tweet-limit", "15")
-    anchor.setAttribute("data-dnt", "true")
-    anchor.href = `https://twitter.com/${handle}`
-    anchor.textContent = `Tweets by @${handle}`
-    el.appendChild(anchor)
-
-    setStatus("loading")
-
-    ensureTwitterScript()
-      .then(() => {
-        if (cancelled) return
-        window.twttr?.widgets.load(el)
-
-        // Watch for the iframe to appear (means embed loaded)
-        let attempts = 0
-        const checkLoaded = () => {
-          if (cancelled) return
-          const iframe = el.querySelector("iframe")
-          if (iframe) {
-            setStatus("ready")
-            return
-          }
-          attempts++
-          if (attempts > 50) {
-            // After ~10s, if no iframe appeared, show error
-            setStatus("error")
-            return
-          }
-          setTimeout(checkLoaded, 200)
-        }
-        checkLoaded()
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error")
-      })
-
-    return () => { cancelled = true }
+    setLoaded(false)
+    setError(false)
+    // Timeout: if iframe doesn't load in 12s, show error
+    const timeout = setTimeout(() => {
+      if (!loaded) setError(true)
+    }, 12000)
+    return () => clearTimeout(timeout)
   }, [handle])
 
+  // Syndication URL — this is what X's own embed system uses under the hood
+  const src = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${handle}?dnt=true&embedId=twitter-widget-0&frame=false&hideBorder=true&hideFooter=true&hideHeader=true&hideScrollBar=false&lang=en&theme=dark&transparent=true`
+
   return (
-    <div className="h-full overflow-auto">
-      {status === "loading" && (
-        <div className="flex flex-col items-center justify-center py-12 gap-2">
+    <div className="h-full relative">
+      {!loaded && !error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
           <div className="size-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           <span className="text-muted-foreground text-[11px]">Loading @{handle}...</span>
         </div>
       )}
-      {status === "error" && (
-        <div className="flex flex-col items-center justify-center py-12 gap-2 text-[11px] px-4 text-center">
-          <p className="text-muted-foreground">Could not load @{handle}</p>
-          <p className="text-muted-foreground/50 leading-relaxed">
-            X/Twitter embeds may be blocked by your browser, ad blocker, or network.
-            Try disabling ad blockers for this site.
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-[11px] px-4 text-center z-10">
+          <p className="text-muted-foreground">Could not load @{handle} feed</p>
+          <p className="text-muted-foreground/50 leading-relaxed max-w-[220px]">
+            X embeds may be blocked by ad blockers or browser privacy settings
           </p>
           <a
             href={`https://x.com/${handle}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 text-primary hover:text-primary/80 transition-colors font-medium"
+            className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-medium"
           >
-            Open @{handle} on X &rarr;
+            <ExternalLink className="size-3" />
+            Open @{handle} on X
           </a>
         </div>
       )}
-      <div ref={containerRef} style={{ display: status === "loading" ? "none" : "block" }} />
+      <iframe
+        ref={iframeRef}
+        src={src}
+        className="w-full h-full border-0"
+        style={{ opacity: loaded ? 1 : 0, colorScheme: "dark" }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        loading="lazy"
+        onLoad={() => { setLoaded(true); setError(false) }}
+        onError={() => setError(true)}
+        title={`@${handle} X timeline`}
+      />
     </div>
   )
 }
@@ -175,7 +97,7 @@ export function XFeedWidget() {
         ))}
       </div>
 
-      {/* Timeline embed */}
+      {/* Timeline iframe */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <TimelineEmbed key={activeHandle} handle={activeHandle} />
       </div>
