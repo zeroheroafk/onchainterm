@@ -115,31 +115,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Subtle background texture ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
+/* Background texture removed for flat professional look */
 
-/* ── Enhanced widget panel depth ── */
+/* ── Flat widget panel ── */
 .widget-panel {
-  background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 95%, black) 100%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  background: var(--card);
 }
 
 .widget-panel > div:first-child {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--secondary) 80%, var(--card)) 0%,
-    color-mix(in srgb, var(--secondary) 40%, var(--card)) 100%
-  ) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent) !important;
+  background: var(--secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 /* ── Better focus states ── */
@@ -150,45 +135,27 @@ button:focus-visible {
   outline-offset: -1px;
 }
 
-/* ── Refined borders ── */
+/* ── Solid borders ── */
 .widget-panel {
-  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-}
-
-.widget-panel:hover {
-  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+  border: 1px solid var(--border);
 }
 
 /* ── Zebra-striped tables ── */
 .widget-panel tbody tr:nth-child(even) {
-  background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
+  background-color: color-mix(in srgb, var(--secondary) 10%, transparent);
 }
 
-/* ── Table row hover accent ── */
+/* ── Table row hover ── */
 .widget-panel tbody tr {
   transition: background-color 0.1s ease;
-  position: relative;
 }
 
-.widget-panel tbody tr::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--primary);
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.widget-panel tbody tr:hover::before {
-  opacity: 0.6;
+.widget-panel tbody tr:hover {
+  background-color: color-mix(in srgb, var(--secondary) 30%, transparent);
 }
 
 .widget-panel thead {
-  background: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 97%, var(--secondary)) 100%);
-  backdrop-filter: blur(8px);
+  background: var(--card);
 }
 
 .widget-panel thead th {
@@ -211,13 +178,12 @@ button:focus-visible {
 .widget-panel textarea:focus,
 .widget-panel select:focus {
   border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 8%, transparent), inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Tab styling ── */
 .widget-tab {
   position: relative;
-  padding: 4px 10px;
+  padding: 3px 8px;
   font-size: 10px;
   font-weight: 500;
   color: var(--muted-foreground);
@@ -241,31 +207,11 @@ button:focus-visible {
   right: 20%;
   height: 2px;
   background: var(--primary);
-  border-radius: 1px;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
-/* ── Ambient header glow ── */
-.header-glow::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 30%, transparent), transparent);
-  pointer-events: none;
-}
+/* Header glow removed for flat design */
 
-/* ── Logo mark subtle animation ── */
-@keyframes logo-breathe {
-  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 0px transparent); }
-  50% { opacity: 1; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--primary) 25%, transparent)); }
-}
-
-h1 svg {
-  animation: logo-breathe 4s ease-in-out infinite;
-}
+/* Logo breathe animation removed for flat design */
 
 /* ── Live status dot ── */
 @keyframes status-pulse {
@@ -288,15 +234,13 @@ h1 svg {
   letter-spacing: -0.01em;
 }
 
-/* ── Refined positive/negative colors ── */
+/* ── Positive/negative colors ── */
 .text-positive {
   color: #2dd4a0;
-  text-shadow: 0 0 12px rgba(45, 212, 160, 0.15);
 }
 
 .text-negative {
   color: #f87171;
-  text-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
 }
 
 .bg-positive-subtle {
@@ -411,9 +355,7 @@ h1 svg {
   transition: none !important;
   will-change: transform;
   opacity: 0.85;
-  filter: brightness(1.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px color-mix(in srgb, var(--primary) 40%, transparent);
-  transform: scale(1.02);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .widget-grid-editing .widget-panel {
@@ -510,15 +452,7 @@ h1 svg {
   animation: dropdown-slide 0.15s ease-out;
 }
 
-/* Scale up on hover for interactive cards */
-.hover-lift {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
-}
+/* hover-lift removed for flat design */
 
 /* Tab crossfade transition */
 .tab-content {
@@ -547,16 +481,7 @@ h1 svg {
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--border) 50%, transparent) 30%, color-mix(in srgb, var(--border) 50%, transparent) 70%, transparent);
 }
 
-/* ── 3D perspective hover on cards ── */
-.hover-3d {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  transform-style: preserve-3d;
-}
-
-.hover-3d:hover {
-  transform: translateY(-2px) perspective(800px) rotateX(1deg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
-}
+/* hover-3d removed for flat design */
 
 /* ── Gradient text for key numbers ── */
 .text-gradient {
@@ -566,12 +491,12 @@ h1 svg {
   background-clip: text;
 }
 
-/* ── Refined badge/pill ── */
+/* ── Badge/pill ── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 8px;
+  padding: 1px 6px;
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -647,10 +572,9 @@ h1 svg {
   animation: row-update-flash 1s ease-out;
 }
 
-/* ── Widget keyboard focus glow ── */
+/* ── Widget keyboard focus ── */
 .widget-panel:focus-within {
   border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 15%, transparent), 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 /* ── Sticky first column for wide tables ── */
@@ -952,7 +876,30 @@ h1 svg {
 
 /* Dense widget panels */
 .bloomberg-active .widget-panel {
-  border: 1px solid #1e2d4a !important;
+  border: 1px solid #2a3d5a !important;
+}
+
+/* Denser widget headers in Bloomberg mode */
+.bloomberg-active .widget-panel > div:first-child {
+  height: 20px;
+  min-height: 20px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* Denser tables in Bloomberg mode */
+.bloomberg-active .widget-panel table {
+  font-size: 11px;
+}
+
+.bloomberg-active .widget-panel table th,
+.bloomberg-active .widget-panel table td {
+  padding: 2px 6px;
+}
+
+/* Tighter widget gaps in Bloomberg mode */
+.bloomberg-active .widget-grid-area {
+  gap: 2px;
 }
 
 /* Selection override for Bloomberg orange */

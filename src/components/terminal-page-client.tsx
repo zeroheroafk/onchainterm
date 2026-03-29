@@ -242,7 +242,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
   ]
 
   return (
-    <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-3 py-1" : "bg-gradient-to-r from-card via-card to-card/95 border-border/50 sm:px-5 px-3 py-2 sm:py-2.5 header-glow"}`}>
+    <div className={`relative flex items-center justify-between border-b shrink-0 ${isBloomberg ? "bg-card border-border px-2 py-0.5" : "bg-card border-border/50 sm:px-5 px-3 py-2 sm:py-2.5"}`}>
       <div className="flex items-center gap-3">
         {isBloomberg ? (
           <h1 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
@@ -332,7 +332,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
           {showViewMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowViewMenu(false)} />
-              <div className={`absolute right-0 top-full mt-1.5 z-50 w-48 border bg-card/95 backdrop-blur-sm py-1 ${isBloomberg ? "border-border" : "rounded-lg shadow-2xl border-border/50 ring-1 ring-white/5"}`}>
+              <div className={`absolute right-0 top-full mt-1.5 z-50 w-48 border border-border bg-card py-1 ${isBloomberg ? "" : "rounded-lg"}`}>
                 <button
                   onClick={() => { onToggleDashboardBar(); setShowViewMenu(false) }}
                   className="flex w-full items-center justify-between px-3 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
@@ -369,7 +369,7 @@ function TerminalHeader({ onToggleDashboardBar, onToggleActionBar, showDashboard
           {showThemes && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowThemes(false)} />
-              <div className={`absolute right-0 top-full mt-1.5 z-50 w-44 border bg-card/95 backdrop-blur-sm py-1 ${isBloomberg ? "border-border" : "rounded-lg shadow-2xl border-border/50 ring-1 ring-white/5"}`}>
+              <div className={`absolute right-0 top-full mt-1.5 z-50 w-44 border border-border bg-card py-1 ${isBloomberg ? "" : "rounded-lg"}`}>
                 {THEMES.map((t) => (
                   <button
                     key={t.id}

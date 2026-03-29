@@ -199,7 +199,7 @@ export function CommandBar() {
   return (
     <div ref={containerRef} className="relative">
       {/* Inline search bar */}
-      <div className="flex items-center gap-2.5 border-b border-border/40 bg-gradient-to-r from-secondary/20 via-secondary/30 to-secondary/20 px-4 py-1.5">
+      <div className="flex items-center gap-2.5 border-b border-border/40 bg-secondary/20 px-3 py-1">
         <Terminal className="size-3.5 text-primary/70 shrink-0" />
         <span className="text-xs font-bold text-primary/60 shrink-0 font-mono">{">"}</span>
         <input
@@ -234,7 +234,7 @@ export function CommandBar() {
 
       {/* Dropdown results */}
       {isOpen && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border/50 bg-card/95 backdrop-blur-sm shadow-2xl animate-dropdown">
+        <div className="absolute left-0 right-0 top-full z-50 max-h-80 overflow-y-auto border-b border-x border-border bg-card animate-dropdown">
           {!query.trim() && coins.length > 0 && (
             <div className="border-b border-border px-2 py-1.5">
               <span className="text-[8px] text-muted-foreground/50 uppercase tracking-[0.15em] font-medium">Quick Prices</span>
@@ -263,7 +263,7 @@ export function CommandBar() {
                 key={cmd.id}
                 onClick={() => handleSelect(cmd)}
                 onMouseEnter={() => setSelectedIndex(i)}
-                className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-all duration-100 ${
+                className={`flex w-full items-center gap-3 px-3 py-1.5 text-left transition-all duration-100 ${
                   i === selectedIndex
                     ? "bg-primary/8 text-primary border-l-2 border-l-primary/60"
                     : "text-foreground/70 hover:bg-secondary/30 border-l-2 border-l-transparent"

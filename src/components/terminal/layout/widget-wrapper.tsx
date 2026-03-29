@@ -35,7 +35,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
         className={`${fullscreen ? "fixed inset-0 z-[100]" : ""} flex h-full w-full flex-col overflow-hidden rounded border border-border/60 bg-card transition-colors widget-panel`}
       >
         <div
-          className={`flex h-7 shrink-0 items-center justify-between border-b border-border/40 px-2.5 ${
+          className={`flex h-6 shrink-0 items-center justify-between border-b border-border/40 px-2 ${
             !isLocked ? "cursor-grab active:cursor-grabbing" : ""
           }`}
           onMouseDown={!isLocked ? onDragStart : undefined}
@@ -48,7 +48,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
               </div>
             )}
             <Icon className="size-3 shrink-0 text-primary/70" />
-            <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/90 select-none">
+            <span className="truncate text-[9px] font-semibold uppercase tracking-[0.12em] text-primary/90 select-none">
               {title}
             </span>
             {status && (
@@ -88,7 +88,7 @@ export const WidgetWrapper = forwardRef<HTMLDivElement, WidgetWrapperProps>(
           </div>
         </div>
         {collapsed && collapsedPreview && (
-          <div className="px-2.5 py-1 text-[9px] text-muted-foreground/60 num truncate border-b border-border/20 bg-secondary/5">
+          <div className="px-2 py-0.5 text-[9px] text-muted-foreground/60 num truncate border-b border-border/20">
             {collapsedPreview}
           </div>
         )}
