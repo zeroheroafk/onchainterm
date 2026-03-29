@@ -1,101 +1,67 @@
 import { NextResponse } from "next/server"
 
-interface CoinGeckoEvent {
-  title?: string
-  description?: string
-  date?: { date?: string }
-  coin?: { id?: string; name?: string; symbol?: string }
-  category?: { name?: string }
-}
-
-interface CalendarEvent {
-  title: string
-  date: string
-  coin: string
-  symbol: string
-  category: string
+interface Raise {
+  date: number // unix timestamp
+  name: string
+  round?: string
+  amount?: number
+  chains?: string[]
+  sector?: string
+  category?: string
+  leadInvestors?: string[]
+  otherInvestors?: string[]
 }
 
 export async function GET() {
   try {
-    // CoinGecko events endpoint (free)
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/events?type=Event&upcoming_events_only=true",
-      { next: { revalidate: 1800 } }
-    )
+    const res = await fetch("https://api.llama.fi/raises", {
+      next: { revalidate: 1800 },
+    })
 
-    if (res.ok) {
-      const json = await res.json()
-      const events: CalendarEvent[] = (json.data || [])
-        .filter((e: CoinGeckoEvent) => e.title && e.date?.date)
-        .slice(0, 30)
-        .map((e: CoinGeckoEvent) => ({
-          title: e.title || "Unknown Event",
-          date: e.date?.date || "",
-          coin: e.coin?.name || "",
-          symbol: e.coin?.symbol?.toUpperCase() || "",
-          category: e.category?.name || "Event",
-        }))
+    if (!res.ok) throw new Error(`DeFiLlama raises API error: ${res.status}`)
 
-      if (events.length > 0) {
-        return NextResponse.json({ events, source: "CoinGecko" })
-      }
+    const json = await res.json()
+    const raises: Raise[] = json.raises || []
+
+    if (!Array.isArray(raises) || raises.length === 0) {
+      return NextResponse.json({ events: [], source: "DeFiLlama" })
     }
 
-    // Fallback: generate calendar from known upcoming events data
-    // Use CoinGecko's coins list to get upcoming events via status_updates
-    const fallbackEvents = await fetchFallbackEvents()
-    return NextResponse.json({ events: fallbackEvents, source: "aggregated" })
+    // Sort by date descending (most recent first), take last 40
+    const sorted = raises
+      .filter((r) => r.date && r.name)
+      .sort((a, b) => b.date - a.date)
+      .slice(0, 40)
+
+    const events = sorted.map((r) => {
+      const dateStr = new Date(r.date * 1000).toISOString().split("T")[0]
+      // DeFiLlama amounts are in millions
+      const amt = r.amount || 0
+      const amountStr = amt >= 1000
+        ? `$${(amt / 1000).toFixed(1)}B`
+        : amt >= 1
+        ? `$${amt % 1 === 0 ? amt.toFixed(0) : amt.toFixed(1)}M`
+        : amt > 0
+        ? `$${(amt * 1000).toFixed(0)}K`
+        : ""
+
+      return {
+        title: amountStr
+          ? `${r.name} raises ${amountStr}${r.round ? ` (${r.round})` : ""}`
+          : `${r.name}${r.round ? ` — ${r.round}` : ""}`,
+        date: dateStr,
+        coin: r.name,
+        symbol: "",
+        category: r.round || r.category || "Fundraise",
+        chain: r.chains?.[0] || "",
+        amount: r.amount || 0,
+        investors: r.leadInvestors?.slice(0, 3).join(", ") || "",
+      }
+    })
+
+    return NextResponse.json({ events, source: "DeFiLlama" })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch events"
     return NextResponse.json({ error: message }, { status: 500 })
-  }
-}
-
-async function fetchFallbackEvents(): Promise<CalendarEvent[]> {
-  // Try CoinGecko global data for any scheduled events
-  try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false",
-      { next: { revalidate: 3600 } }
-    )
-    if (!res.ok) return []
-    const coins: { id: string; symbol: string; name: string }[] = await res.json()
-    if (!Array.isArray(coins)) return []
-
-    // Check status updates for top coins (limited to avoid rate limits)
-    const topCoins = coins.slice(0, 10)
-    const events: CalendarEvent[] = []
-
-    const results = await Promise.allSettled(
-      topCoins.map(async (coin) => {
-        const statusRes = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${coin.id}/status_updates`,
-          { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) }
-        )
-        if (!statusRes.ok) return []
-        const statusJson = await statusRes.json()
-        return (statusJson.status_updates || []).slice(0, 3).map(
-          (u: { title?: string; created_at?: string; category?: string }) => ({
-            title: u.title || "Update",
-            date: u.created_at?.split("T")[0] || "",
-            coin: coin.name,
-            symbol: coin.symbol.toUpperCase(),
-            category: u.category || "Update",
-          })
-        )
-      })
-    )
-
-    for (const r of results) {
-      if (r.status === "fulfilled") events.push(...r.value)
-    }
-
-    return events
-      .filter((e) => e.date)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 30)
-  } catch {
-    return []
   }
 }

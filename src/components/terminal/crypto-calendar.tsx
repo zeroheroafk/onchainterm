@@ -9,38 +9,43 @@ interface CalendarEvent {
   title: string
   date: string
   coin: string
-  symbol: string
   category: string
+  chain?: string
+  amount?: number
+  investors?: string
 }
 
 function formatEventDate(dateStr: string): string {
   try {
-    const date = new Date(dateStr)
+    const date = new Date(dateStr + "T00:00:00")
     const now = new Date()
-    const diffMs = date.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffMs / 86_400_000)
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / 86_400_000)
 
     const formatted = date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     })
 
-    if (diffDays === 0) return `Today`
-    if (diffDays === 1) return `Tomorrow`
-    if (diffDays > 0 && diffDays <= 7) return `${formatted} (${diffDays}d)`
+    if (diffDays === 0) return "Today"
+    if (diffDays === 1) return "Yesterday"
+    if (diffDays <= 7) return `${formatted} (${diffDays}d ago)`
     return formatted
   } catch {
     return dateStr
   }
 }
 
-function categoryColor(cat: string): string {
+function roundColor(cat: string): string {
   const lower = cat.toLowerCase()
-  if (lower.includes("hard fork") || lower.includes("upgrade")) return "text-amber-400 bg-amber-400/10"
-  if (lower.includes("launch") || lower.includes("mainnet")) return "text-positive bg-positive/10"
-  if (lower.includes("unlock") || lower.includes("vest")) return "text-negative bg-negative/10"
-  if (lower.includes("airdrop")) return "text-purple-400 bg-purple-400/10"
-  if (lower.includes("burn")) return "text-orange-400 bg-orange-400/10"
+  if (lower.includes("seed")) return "text-emerald-400 bg-emerald-400/10"
+  if (lower.includes("series a")) return "text-blue-400 bg-blue-400/10"
+  if (lower.includes("series b")) return "text-violet-400 bg-violet-400/10"
+  if (lower.includes("series c") || lower.includes("series d")) return "text-purple-400 bg-purple-400/10"
+  if (lower.includes("strategic")) return "text-amber-400 bg-amber-400/10"
+  if (lower.includes("pre-seed") || lower.includes("pre seed")) return "text-teal-400 bg-teal-400/10"
+  if (lower.includes("private")) return "text-rose-400 bg-rose-400/10"
+  if (lower.includes("public") || lower.includes("ido") || lower.includes("ico")) return "text-positive bg-positive/10"
   return "text-muted-foreground bg-secondary/50"
 }
 
@@ -68,7 +73,7 @@ export function CryptoCalendar() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 1800_000) // 30 min
+    const interval = setInterval(fetchData, 1800_000)
     return () => clearInterval(interval)
   }, [fetchData])
 
@@ -89,7 +94,7 @@ export function CryptoCalendar() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <CalendarDays className="size-3.5 text-primary" />
-          <span className="text-xs font-bold text-foreground">Crypto Calendar</span>
+          <span className="text-xs font-bold text-foreground">Raises & Rounds</span>
         </div>
         <div className="flex items-center gap-1.5">
           {formatLastUpdated() && (
@@ -105,26 +110,28 @@ export function CryptoCalendar() {
       <div className="flex-1 overflow-auto">
         {events.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-4">
-            No upcoming events found
+            No recent raises found
           </div>
         ) : (
           <div className="divide-y divide-border/50">
             {events.map((event, i) => (
               <div
-                key={`${event.date}-${event.title}-${i}`}
+                key={`${event.date}-${event.coin}-${i}`}
                 className="px-3 py-2 hover:bg-secondary/30 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-medium text-foreground leading-snug truncate">
+                    <div className="text-[11px] font-medium text-foreground leading-snug">
                       {event.title}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {event.symbol && (
-                        <span className="text-[9px] font-bold text-primary">{event.symbol}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {event.chain && (
+                        <span className="text-[9px] text-primary font-medium">{event.chain}</span>
                       )}
-                      {event.coin && event.coin !== event.symbol && (
-                        <span className="text-[9px] text-muted-foreground">{event.coin}</span>
+                      {event.investors && (
+                        <span className="text-[9px] text-muted-foreground truncate max-w-[180px]">
+                          by {event.investors}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -132,7 +139,7 @@ export function CryptoCalendar() {
                     <span className="text-[10px] num text-foreground font-medium">
                       {formatEventDate(event.date)}
                     </span>
-                    <span className={`text-[8px] px-1.5 py-0.5 rounded font-medium ${categoryColor(event.category)}`}>
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded font-medium ${roundColor(event.category)}`}>
                       {event.category}
                     </span>
                   </div>
@@ -146,7 +153,7 @@ export function CryptoCalendar() {
       {/* Footer */}
       <div className="border-t border-border px-3 py-1 shrink-0 text-center">
         <span className="text-[8px] text-muted-foreground/40">
-          {events.length} event{events.length !== 1 ? "s" : ""}
+          DeFiLlama · {events.length} raise{events.length !== 1 ? "s" : ""}
         </span>
       </div>
     </div>
